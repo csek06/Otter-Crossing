@@ -370,7 +370,7 @@ for (const start of [0, 120, 400]) {
     return { t: e && e.t, slots: document.querySelectorAll('.hud-power').length, active: [...document.querySelectorAll('.hud-power.is-active')].map((c) => c.getAttribute('aria-label')) };
   });
   check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
-  check(r.slots === 4, `the tracker has a slot for each released power-up (${r.slots})`);
+  check(r.slots === 5, `the tracker has a slot for each released power-up (${r.slots})`);
   check(r.active.length === 1 && r.active[0] === 'Otter Notetaker, active', `the tracker shows the active power-up (${r.active})`);
   await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
   check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
@@ -397,9 +397,9 @@ for (const size of SIZES) {
     };
   });
   const a = await read();
-  check(a.labels.length === 4 && a.below && a.clear && a.inside, `${size.name}: tracker sits under the score, inside the screen, clear of pause`);
+  check(a.labels.length === 5 && a.below && a.clear && a.inside, `${size.name}: tracker sits under the score, inside the screen, clear of pause`);
   check(a.group === 'Power-ups', `${size.name}: tracker is a labeled group`);
-  check(a.labels.includes('AI Chat, ready') && a.labels.filter((l) => l.endsWith('not found yet')).length === 3, `${size.name}: held and not found states (${a.labels})`);
+  check(a.labels.includes('AI Chat, ready') && a.labels.filter((l) => l.endsWith('not found yet')).length === 4, `${size.name}: held and not found states (${a.labels})`);
   await page.screenshot({ path: join(shots, `${size.name}-6-tracker.png`) });
   await page.evaluate(() => window.__otter.game.kill('meeting', null));
   await wait(page, 120);
@@ -504,7 +504,7 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
-// Live Assist (unreleased): only by debug grant; lights safe tiles for 4 seconds.
+// Live Assist: lights safe tiles for 4 seconds.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=12&start=40&powerup=liveAssist');
   await page.click('#btn-play');

@@ -164,11 +164,9 @@ export const CONTENT = {
       helpUrl: 'https://help.otter.ai/hc/en-us/articles/21557292299287-Add-highlights-to-your-conversation',
     },
     // Live for Enterprise since July 21, 2026, with positioning still being finalized.
-    // Only used when FLAGS.SHOW_UNRELEASED is true. No help center article yet, so the
-    // link is the launch how-to blog post.
+    // No help center article yet, so the link is the launch how-to blog post.
     liveAssist: {
       draft: true,
-      unreleased: true,
       name: 'Live Assist',
       tagline: 'Private tips during your live calls',
       description: 'Live Assist follows your call and shows tips only you can see, like the next question to ask.',

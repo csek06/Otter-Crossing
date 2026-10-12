@@ -1,6 +1,5 @@
-// Live Assist (behind FLAGS.SHOW_UNRELEASED): lights a safe path through the next
-// few lanes for 4 seconds, like a tip on what to do next. Live for Enterprise
-// since July 2026; the flag stays off until positioning is final.
+// Live Assist: lights a safe path through the next few lanes for 4 seconds, like a
+// tip on what to do next. Live for Enterprise since July 2026.
 
 import { GRID } from '../config.js';
 
@@ -9,7 +8,7 @@ const AHEAD = 4;
 export default {
   id: 'liveAssist',
   featureId: 'liveAssist',
-  unreleased: true,
+  unreleased: false,
   duration: 4,
   weight: 0.7,
 

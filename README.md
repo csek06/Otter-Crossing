@@ -94,7 +94,7 @@ Flags live in `src/config.js`. Change one, then run `npm run build`.
 | Flag | Default | What it does |
 |---|---|---|
 | `AUDIENCE` | `"external"` | `"internal"` swaps in internal meeting titles (for example "Forecast call") and hides the Try Otter button. |
-| `SHOW_UNRELEASED` | `false` | `true` lets unreleased features spawn and appear in the river. Today that is Live Assist, with placeholder copy. |
+| `SHOW_UNRELEASED` | `false` | `true` lets unreleased features spawn and appear in the river. Nothing is held back today; Live Assist is released. |
 | `BOOTH_MODE` | `false` | `true` turns on booth mode: idle reset, email sign-up and the admin screen. See [Booth mode](#booth-mode). `?booth=1` does the same without a rebuild. |
 
 Tuning numbers (hop time, camera speed, difficulty ramp) are in `TUNING`. Generator rules that the tests check (traffic density caps, river timing, breather spacing, all-hands warning, hawk timing, power-up spacing) are in `RULES`.
@@ -184,7 +184,7 @@ Add these to the URL, for example `otter-crossing.html?debug=1&lane=river`:
 | `?debug=1` | FPS counter, hitboxes and an invincibility toggle (keys H and I) |
 | `?lane=<type>` | only `focus`, `meetings`, `river` or `allhands` lanes, plus breathers |
 | `?start=<lanes>` | start at a later difficulty, for example `?start=300` |
-| `?powerup=<id>` | grant `notetaker`, `aiChat`, `summary`, `actionItems` or `liveAssist` at the start (works even with `SHOW_UNRELEASED` off) |
+| `?powerup=<id>` | grant `notetaker`, `aiChat`, `summary`, `actionItems` or `liveAssist` at the start (works even for power-ups held back by `SHOW_UNRELEASED`) |
 | `?seed=<n>` | replay the same course |
 | `?booth=1` | booth mode, without changing the flag |
 | `?idle=<seconds>` | with `?debug=1`, a shorter booth idle timeout for testing |

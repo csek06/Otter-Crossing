@@ -347,14 +347,18 @@ test('power-ups are spread across lane types, columns and gaps', () => {
 
 test('unreleased power-ups spawn only when the flag allows', () => {
   assert.ok(spawnable(false).every((p) => !p.unreleased));
-  assert.ok(spawnable(true).some((p) => p.id === 'liveAssist'));
-  const gen = createGenerator({ seed: 77, powerups: spawnable(true) });
+  assert.equal(spawnable(true).length, POWERUPS.length);
+});
+
+test('Live Assist is released and spawns in normal runs', () => {
+  assert.ok(spawnable(false).some((p) => p.id === 'liveAssist'));
+  const gen = createGenerator({ seed: 77 });
   const seen = new Set();
   for (let r = 0; r < 4000; r++) {
     const l = gen.fill(newLane(), r);
     if (l.powerup) seen.add(l.powerup.id);
   }
-  assert.ok(seen.has('liveAssist'), 'liveAssist never spawned with the flag on');
+  assert.ok(seen.has('liveAssist'), 'liveAssist never spawned');
 });
 
 test('every power-up module has the shared interface and content', () => {

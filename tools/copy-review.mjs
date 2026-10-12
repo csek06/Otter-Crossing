@@ -35,7 +35,7 @@ export function buildCopyReview() {
     '',
     'These lines say a little more than the taglines, or depend on product details I could not confirm. Each one is a judgment call for you or PMM.',
     '',
-    box('**Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. Confirm the tagline with PMM before turning on `SHOW_UNRELEASED`. There is no help center article yet, so the link is the launch how-to blog post.'),
+    box('**Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. It is now switched on and shows in every run, so confirm the tagline with PMM. There is no help center article yet, so the link is the launch how-to blog post.'),
     box('**Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.'),
     box('**Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.'),
     box('**Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.'),
@@ -49,7 +49,7 @@ export function buildCopyReview() {
     summary: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     actionItems: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     highlights: 'river (name, tagline), recap after riding a highlighted log (name, description, link)',
-    liveAssist: 'only with SHOW_UNRELEASED: pickup card, river and recap',
+    liveAssist: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
   };
   add(
     '## Validation, October 12, 2026',

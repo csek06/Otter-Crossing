@@ -10,7 +10,7 @@ Everything below is marked draft in the code until you sign off.
 
 These lines say a little more than the taglines, or depend on product details I could not confirm. Each one is a judgment call for you or PMM.
 
-- [ ] **Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. Confirm the tagline with PMM before turning on `SHOW_UNRELEASED`. There is no help center article yet, so the link is the launch how-to blog post.
+- [ ] **Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. It is now switched on and shows in every run, so confirm the tagline with PMM. There is no help center article yet, so the link is the launch how-to blog post.
 - [ ] **Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.
 - [ ] **Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.
 - [ ] **Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.
@@ -88,9 +88,9 @@ Checked against: Add highlights to your conversation (help center): highlight du
 - [ ] Help link: https://help.otter.ai/hc/en-us/articles/21557292299287-Add-highlights-to-your-conversation
 - Key in content.js: `features.highlights`
 
-### Live Assist (behind SHOW_UNRELEASED)
+### Live Assist
 
-Appears on: only with SHOW_UNRELEASED: pickup card, river and recap.
+Appears on: pickup card (name, tagline), river (name, tagline), recap (name, description, link).
 
 Checked against: Notion: Live Assist roadmap card (GA July 21, 2026) and the Live Assist + Agent Builder GTM Enablement Hub (draft): private tip cards such as the next question to ask, visible only to the person being coached, Enterprise only.
 
@@ -125,6 +125,7 @@ The water is a stream of these lines, built from the feature names and taglines 
 - [ ] "Summary: Get the gist without listening back"
 - [ ] "Action Items: Captures to-dos and who owns them"
 - [ ] "Highlights: Mark key moments as they happen"
+- [ ] "Live Assist: Private tips during your live calls"
 
 The floating logs you ride carry these short phrases on a highlighter stripe (`river.phrases`):
 

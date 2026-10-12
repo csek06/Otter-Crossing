@@ -6,7 +6,8 @@
 // - Descriptions stay within what the tagline claims. No statistics or invented claims.
 // - No em-dashes.
 // - Anything marked draft: true is waiting on review. See COPY_REVIEW.md.
-// - Links marked PLACEHOLDER must be replaced before launch.
+// - Links marked REVIEW point at general pages. Swap in specific ones before launch.
+// - Every reviewable line is listed in COPY_REVIEW.md.
 
 export const CONTENT = {
   game: {
@@ -24,7 +25,7 @@ export const CONTENT = {
     muteOn: 'Sound on',
     muteOff: 'Sound off',
     lanes: 'lanes',
-    actionItems: 'action items',
+    actionItems: 'Action items',
     score: 'Lanes crossed',
     best: 'Best',
     newBest: 'New best',
@@ -39,11 +40,10 @@ export const CONTENT = {
     prevLetter: 'Previous letter',
     letter: 'Letter',
     saveScore: 'Save score',
-    saved: 'Saved',
     recapHeading: 'Features you used',
     recapEmpty: 'Grab a glowing pickup next run to try an Otter feature.',
     learnMore: 'Learn more',
-    held: 'Ready',
+    held: 'ready',
     itemsShort: 'items',
   },
 
@@ -162,7 +162,6 @@ export const CONTENT = {
       2: ['Quick sync?', 'Weekly 1:1', 'Forecast call', 'Demo dry run', 'Account plan', 'QBR prep'],
       3: ['MEDDPICC deal review', 'Territory planning', 'Win/loss review', 'Renewal strategy'],
     },
-    durations: { 1: '30m', 2: '60m', 3: '90m' },
   },
 
   // The river. Its water is a stream of feature blurbs: each feature's name and

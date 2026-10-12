@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "description": "Otter Crossing: an endless lane-hopper for Otter.ai",
   "scripts": {
-    "build": "node tools/build.mjs",
+    "build": "node tools/copy-review.mjs && node tools/build.mjs",
     "watch": "node tools/build.mjs --watch",
     "test": "node --test test/generator.test.mjs",
-    "smoke": "node tools/build.mjs && node test/smoke.mjs"
+    "smoke": "node tools/build.mjs && node test/smoke.mjs",
+    "copy-review": "node tools/copy-review.mjs"
   },
   "repository": {
     "type": "git",

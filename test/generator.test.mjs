@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GRID, RULES, TUNING } from '../src/config.js';
+import { GRID, RULES, TUNING, FLAGS } from '../src/config.js';
 import { CONTENT } from '../src/content.js';
 import { createGenerator, newLane, maxHazardRun, difficultyAt } from '../src/game/generator.js';
 import { meetingCap, bigGapFor } from '../src/lanes/meetings.js';
@@ -366,4 +366,33 @@ test('no em-dashes anywhere in source, copy or docs', () => {
   }
   const dist = join(root, 'dist', 'otter-crossing.html');
   if (existsSync(dist)) assert.ok(!readFileSync(dist, 'utf8').includes(EM_DASH), 'em-dash in dist');
+});
+
+test('COPY_REVIEW.md is up to date with content.js', async () => {
+  const { buildCopyReview } = await import('../tools/copy-review.mjs');
+  const onDisk = readFileSync(join(root, 'COPY_REVIEW.md'), 'utf8');
+  assert.equal(onDisk, buildCopyReview(), 'run npm run copy-review');
+});
+
+test('AUDIENCE internal uses internal meeting titles', () => {
+  const was = FLAGS.AUDIENCE;
+  try {
+    for (const aud of ['external', 'internal']) {
+      FLAGS.AUDIENCE = aud;
+      const allowed = new Set(Object.values(CONTENT.meetingTitles[aud]).flat());
+      const gen = createGenerator({ seed: 42, only: 'meetings' });
+      let n = 0;
+      for (let r = 0; r < 400; r++) {
+        const l = gen.fill(newLane(), r);
+        for (const car of l.cars) {
+          if (l.type !== 'meetings') continue;
+          assert.ok(allowed.has(car.title), `${aud}: unexpected title ${car.title}`);
+          n++;
+        }
+      }
+      assert.ok(n > 100);
+    }
+  } finally {
+    FLAGS.AUDIENCE = was;
+  }
 });

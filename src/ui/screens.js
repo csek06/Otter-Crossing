@@ -233,6 +233,11 @@ export function createScreens(handlers) {
           powersEl.appendChild(chip);
           chips.set(it.id, chip);
         }
+        if (chip.classList.contains('is-held') !== !!it.held) {
+          const f = CONTENT.features[it.featureId];
+          const name = f ? f.name : it.id;
+          chip.setAttribute('aria-label', it.held ? `${name}, ${C.held}` : name);
+        }
         chip.classList.toggle('is-held', !!it.held);
         const off = RING * (1 - Math.max(0, Math.min(1, it.k)));
         if (Math.abs((chip.lastOff || 0) - off) > 0.2) {

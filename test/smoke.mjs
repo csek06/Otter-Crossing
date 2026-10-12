@@ -534,6 +534,37 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
+// prefers-reduced-motion: no shake, no splash droplets.
+{
+  const { ctx, page, errors } = await open(SIZES[0], '?debug=1&lane=river&seed=21');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.click('#btn-play');
+  const r = await page.evaluate(() => {
+    const g = window.__otter.game;
+    g.fx.splash(4, g.player.row, matchMedia('(prefers-reduced-motion: reduce)').matches);
+    return { drops: g.fx.live.filter((f) => f.kind === 'drop').length, rings: g.fx.live.filter((f) => f.kind === 'ring').length };
+  });
+  check(r.drops === 0 && r.rings === 1, `reduced motion: ripple only, no droplets (${r.drops} drops)`);
+  check(errors.length === 0, `reduced motion: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Keyboard: the menus are reachable and show a focus ring.
+{
+  const { ctx, page, errors } = await open(SIZES[3], '?seed=7');
+  await page.keyboard.press('Tab');
+  const focus = await page.evaluate(() => {
+    const el = document.activeElement;
+    const cs = getComputedStyle(el);
+    return { tag: el.tagName, outline: cs.outlineStyle, width: parseFloat(cs.outlineWidth) };
+  });
+  check(focus.tag === 'BUTTON' && focus.outline !== 'none' && focus.width >= 2, `keyboard focus is visible (${focus.tag}, ${focus.outline} ${focus.width}px)`);
+  await page.keyboard.press('Enter');
+  await wait(page, 200);
+  check(errors.length === 0, `keyboard: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 await browser.close();
 if (failures.length) {
   console.log(`\n${failures.length} check(s) failed`);

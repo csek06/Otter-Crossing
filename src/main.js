@@ -36,6 +36,7 @@ game = createGame({
   params: PARAMS,
   input,
   sfx,
+  reducedMotion: () => reduced.matches,
   events: {
     score: (g) => screens && screens.score(g),
     hint: (id) => screens && CONTENT.hints[id] && screens.hint(CONTENT.hints[id]),

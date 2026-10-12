@@ -19,6 +19,8 @@ export function createPlayer() {
     deathCar: null,
     deathLane: null,
     invuln: 0,
+    swim: -1,              // seconds in the water, -1 when not swimming
+    riding: null,          // the highlight the otter is standing on
   };
 }
 
@@ -37,6 +39,8 @@ export function resetPlayer(p, row) {
   p.deathCar = null;
   p.deathLane = null;
   p.invuln = 0;
+  p.swim = -1;
+  p.riding = null;
 }
 
 export function isHopping(p) {

@@ -5,6 +5,8 @@
 // - Every meeting lane stays under the density cap and has a crossable gap.
 // - Focus-time breather lanes come regularly, more often early on.
 // - Stacked focus lanes never wall the otter in.
+// - A highlight passes every river column at least every RIVER_MAX_WAIT seconds.
+// - The all-hands signal fires at least ALLHANDS_MIN_WARNING seconds ahead.
 
 import { GRID, RULES, TUNING } from '../config.js';
 import { createRng } from '../core/rng.js';
@@ -26,7 +28,7 @@ export function breatherChance(d) {
 }
 
 export function newLane() {
-  return { row: 0, type: 'focus', mod: null, obstacles: [], blocked: 0, cars: [], first: false };
+  return { row: 0, type: 'focus', mod: null, obstacles: [], blocked: 0, cars: [], platforms: [], tokens: [], first: false };
 }
 
 // only: restrict hazard lanes to one type id (debug ?lane=). Breathers still appear,
@@ -39,15 +41,41 @@ export function createGenerator({ seed, startRow = 0, only = null }) {
   if (only && only !== 'focus') hazards = HAZARDS.filter((h) => h.id === only);
   if (!hazards.length) hazards = HAZARDS;
 
-  function pickHazard(d) {
+  function pickHazard(d, row) {
+    // Rivers come in short clusters, the way real water does.
+    if (ctx.lastType === 'river' && rng.chance(0.4)) {
+      const r = hazards.find((h) => h.id === 'river');
+      if (r) return r;
+    }
     let total = 0;
-    for (const h of hazards) total += h.weight(d);
+    for (const h of hazards) total += h.weight(d, row);
+    // Debug ?lane= can ask for a type before its usual first row.
+    if (total <= 0) return hazards[0];
     let r = rng.next() * total;
     for (const h of hazards) {
-      r -= h.weight(d);
-      if (r <= 0) return h;
+      r -= h.weight(d, row);
+      if (r <= 0 && h.weight(d, row) > 0) return h;
     }
-    return hazards[hazards.length - 1];
+    return hazards.find((h) => h.weight(d, row) > 0);
+  }
+
+  // Action item tokens. Never on a blocked tile; in the river they ride a highlight.
+  function placeTokens(lane, row) {
+    lane.tokens.length = 0;
+    if (row < startRow + 2) return;
+    if (lane.type === 'allhands') return;
+    if (!rng.chance(RULES.TOKEN_CHANCE)) return;
+    if (lane.type === 'river') {
+      rng.pick(lane.platforms).token = true;
+      return;
+    }
+    for (let i = 0; i < 6; i++) {
+      const col = rng.int(0, GRID.COLS - 1);
+      if (!lane.mod.blocks(lane, col)) {
+        lane.tokens.push({ col, taken: false, t: 0 });
+        return;
+      }
+    }
   }
 
   // Fill a lane object for the next row. Rows must be requested in order.
@@ -69,7 +97,7 @@ export function createGenerator({ seed, startRow = 0, only = null }) {
     } else if (ctx.hazardRun > 0 && rng.chance(breatherChance(d))) {
       mod = LANES.focus;
     } else {
-      mod = pickHazard(d);
+      mod = pickHazard(d, row);
     }
 
     lane.row = row;
@@ -77,6 +105,8 @@ export function createGenerator({ seed, startRow = 0, only = null }) {
     lane.mod = mod;
     lane.difficulty = d;
     mod.generate(lane, row, d, rng, ctx);
+    placeTokens(lane, row);
+    ctx.lastType = mod.id;
     lane.first = !seen.has(mod.id) && row >= startRow;
     if (row >= startRow) seen.add(mod.id);
 

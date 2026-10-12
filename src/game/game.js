@@ -1,16 +1,20 @@
-// Game state: lanes, the otter, the camera, scoring and deaths.
-// Rendering and UI live elsewhere and listen through the events object.
+// Game state: lanes, the otter, the camera, the Deadline Hawk, tokens, scoring
+// and deaths. Rendering and UI live elsewhere and listen through the events object.
 
-import { GRID, TUNING } from '../config.js';
+import { GRID, TUNING, RULES } from '../config.js';
 import { Pool } from '../core/pool.js';
 import { randomSeed } from '../core/rng.js';
 import { createGenerator, difficultyAt, newLane } from './generator.js';
 import { createPlayer, resetPlayer, tryHop, updatePlayer, logicalRow, visualRow, isHopping } from './player.js';
+import { createFx } from './fx.js';
 import { load, save } from '../core/storage.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
-export function createGame({ params, events, input, sfx }) {
+// How long each death plays before the game over screen.
+const DEATH_TIME = { meeting: TUNING.DEATH_DELAY, allhands: TUNING.DEATH_DELAY, river: 1.0, hawk: 1.35 };
+
+export function createGame({ params, events, input, sfx, reducedMotion }) {
   const lanePool = new Pool(newLane);
   const game = {
     state: 'title', // title, playing, paused, dying, over
@@ -26,9 +30,13 @@ export function createGame({ params, events, input, sfx }) {
     time: 0,
     moved: false,
     shake: 0,
+    stall: 0,          // seconds since the last forward progress
+    hawk: { warn: 0, swoopT: -1 },
     gen: null,
     seed: 0,
     hintsShown: new Set(),
+    stats: { highlights: 0 },
+    fx: createFx(),
     debug: { invincible: false, hitboxes: false },
     viewRows: 20,
   };
@@ -67,7 +75,12 @@ export function createGame({ params, events, input, sfx }) {
     game.time = 0;
     game.moved = false;
     game.shake = 0;
+    game.stall = 0;
+    game.hawk.warn = 0;
+    game.hawk.swoopT = -1;
+    game.stats.highlights = 0;
     game.hintsShown.clear();
+    game.fx.clear();
     // Prime lanes and let traffic settle so the first frame looks lived in.
     ensureLanes();
     for (let i = 0; i < 30; i++) for (const l of game.lanes) l.mod.update(l, 0.1);
@@ -96,7 +109,15 @@ export function createGame({ params, events, input, sfx }) {
   function kill(cause, hit) {
     const p = game.player;
     if (p.dead) return;
-    if (game.debug.invincible || p.invuln > 0) return;
+    if (game.debug.invincible || p.invuln > 0) {
+      // Keep debug runs playable: pull the otter out of trouble.
+      if (cause === 'river') {
+        p.swim = 0;
+        p.x = Math.min(GRID.COLS - 1, Math.max(0, p.x));
+      }
+      if (cause === 'hawk') game.stall = 0;
+      return;
+    }
     p.dead = true;
     p.deathCause = cause;
     p.deathT = 0;
@@ -104,9 +125,17 @@ export function createGame({ params, events, input, sfx }) {
     p.deathLane = hit && hit.lane ? hit.lane : null;
     p.hopT = -1;
     game.state = 'dying';
-    game.shake = 0.3;
     input.setEnabled(false);
-    sfx.hit();
+    if (cause === 'hawk') {
+      game.hawk.swoopT = 0;
+      sfx.screech();
+    } else if (cause === 'river') {
+      game.fx.splash(p.x + 0.5, p.row, reducedMotion());
+      sfx.splash();
+    } else {
+      game.shake = 0.3;
+      sfx.hit();
+    }
     events.state(game);
   }
   game.kill = kill;
@@ -122,18 +151,66 @@ export function createGame({ params, events, input, sfx }) {
     events.state(game);
   }
 
+  function hint(id) {
+    if (game.hintsShown.has(id)) return;
+    game.hintsShown.add(id);
+    events.hint(id);
+  }
+
   function checkHints() {
     const pr = game.player.row;
     for (let r = pr; r <= pr + 4; r++) {
       const lane = getLane(r);
-      if (!lane || !lane.first || !lane.mod.hint) continue;
-      if (game.hintsShown.has(lane.mod.hint)) continue;
-      game.hintsShown.add(lane.mod.hint);
-      events.hint(lane.mod.hint);
+      if (lane && lane.first && lane.mod.hint) hint(lane.mod.hint);
+    }
+  }
+
+  function collectTokens(lane) {
+    const p = game.player;
+    if (lane.type === 'river') {
+      const plat = p.riding;
+      if (plat && plat.token && !plat.taken) {
+        plat.taken = true;
+        takeToken(p.x + 0.5, lane.row);
+      }
+      return;
+    }
+    for (const tok of lane.tokens) {
+      if (!tok.taken && Math.abs(p.x - tok.col) < 0.5) {
+        tok.taken = true;
+        takeToken(tok.col + 0.5, lane.row);
+      }
+    }
+  }
+
+  function takeToken(x, row) {
+    game.actionItems++;
+    game.fx.check(x, row);
+    sfx.pickup();
+    events.score(game);
+  }
+
+  // One bell per lamp flash, from the nearest active all-hands lane on screen.
+  function ringBells() {
+    let nearest = null;
+    let best = Infinity;
+    const top = game.camRow + game.viewRows;
+    for (const l of game.lanes) {
+      if (l.type !== 'allhands' || l.state !== 'warn') continue;
+      if (l.row < game.camRow || l.row > top) continue;
+      const d = Math.abs(l.row - game.player.row);
+      if (d < best) { best = d; nearest = l; }
+    }
+    for (const l of game.lanes) {
+      if (l.type !== 'allhands') continue;
+      const ph = l.mod.lampPhase(l);
+      if (l === nearest && ph !== l.lastPhase) sfx.bell();
+      l.lastPhase = ph;
     }
   }
 
   game.update = function update(dt) {
+    game.fx.update(dt);
     if (game.state === 'title' || game.state === 'over') {
       // Keep traffic moving behind the menus.
       for (const l of game.lanes) l.mod.update(l, dt);
@@ -148,9 +225,10 @@ export function createGame({ params, events, input, sfx }) {
     const p = game.player;
     if (game.state === 'dying') {
       p.deathT += dt;
-      // Pulled along by the meeting that caught you.
-      if (p.deathCar && p.deathLane) p.x += p.deathLane.speed * p.deathLane.dir * dt;
-      if (p.deathT >= TUNING.DEATH_DELAY) finish();
+      if (game.hawk.swoopT >= 0) game.hawk.swoopT += dt;
+      // Pulled along by whatever caught you.
+      if (p.deathLane && p.deathLane.speed && p.deathCause === 'meeting') p.x += p.deathLane.speed * p.deathLane.dir * dt;
+      if (p.deathT >= (DEATH_TIME[p.deathCause] || TUNING.DEATH_DELAY)) finish();
       return;
     }
 
@@ -169,20 +247,61 @@ export function createGame({ params, events, input, sfx }) {
     }
 
     const landed = updatePlayer(p, dt);
-    if (landed && p.row > game.maxRow) {
-      game.maxRow = p.row;
-      game.score = game.maxRow - game.startRow;
-      events.score(game);
+    if (landed) {
+      const l = getLane(p.row);
+      if (!l || !l.mod.carry) {
+        p.swim = -1;
+        p.riding = null;
+      }
+      if (p.row > game.maxRow) {
+        game.maxRow = p.row;
+        game.score = game.maxRow - game.startRow;
+        game.stall = 0;
+        events.score(game);
+      }
     }
 
-    // Collisions in the otter's current row.
+    // Lanes that move the otter (the river current).
+    if (!isHopping(p)) {
+      const l = getLane(p.row);
+      if (l && l.mod.carry) {
+        const res = l.mod.carry(l, p, dt);
+        if (res === 'splash') {
+          game.fx.splash(p.x + 0.5, p.row, reducedMotion());
+          sfx.splash();
+        } else if (res === 'ride') {
+          game.stats.highlights++;
+        }
+      }
+    }
+
+    // Collisions and pickups in the otter's current row.
     const lane = getLane(logicalRow(p));
     if (lane) {
+      collectTokens(lane);
       const hit = lane.mod.collide(lane, p);
       if (hit) {
         hit.lane = lane;
         kill(hit.cause, hit);
+        if (p.dead) return;
       }
+    }
+
+    // The Deadline Hawk: stall too long and it strikes. The shadow warns first.
+    game.stall += dt;
+    game.hawk.warn = Math.max(0, Math.min(1, (game.stall - RULES.HAWK_WARN) / (RULES.HAWK_STRIKE - RULES.HAWK_WARN)));
+    if (game.stall >= RULES.HAWK_WARN) {
+      if (!game.hawk.warned) {
+        game.hawk.warned = true;
+        sfx.flap();
+      }
+      hint('hawk');
+    } else {
+      game.hawk.warned = false;
+    }
+    if (game.stall >= RULES.HAWK_STRIKE) {
+      kill('hawk', null);
+      if (p.dead) return;
     }
 
     // Camera: follows the otter and creeps forward on its own once play begins.
@@ -196,6 +315,7 @@ export function createGame({ params, events, input, sfx }) {
     // Fell behind the camera: the Deadline Hawk takes the otter.
     if (!p.dead && visualRow(p) < game.camRow - 0.35) kill('hawk', null);
 
+    ringBells();
     ensureLanes();
     checkHints();
   };

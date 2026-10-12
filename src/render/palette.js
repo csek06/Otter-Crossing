@@ -38,7 +38,21 @@ export function loadPalette() {
   PAL.wallDark = mix(PAL.ink, PAL.paper, 0.55);
   PAL.screen = mix(PAL.teal, PAL.paper, 0.12);
   PAL.screenFace = mix(PAL.teal, PAL.paper, 0.45);
-  PAL.shadow = 'rgba(42, 33, 28, 0.18)';
+  PAL.shadow = rgba(PAL.ink, 0.18);
+  // Transcript river.
+  PAL.riverText = mix(PAL.teal, PAL.paper, 0.42);
+  PAL.riverSpeaker = mix(PAL.teal, PAL.paper, 0.7);
+  PAL.riverLine = mix(PAL.teal, PAL.ink, 0.4);
+  PAL.highlighterEdge = mix(PAL.highlighter, PAL.ink, 0.35);
+  PAL.glow = rgba(PAL.highlighter, 0.16);
+  PAL.glowStrong = rgba(PAL.highlighter, 0.38);
+  PAL.ripple = rgba(PAL.paper, 0.55);
+  // All-hands rail.
+  PAL.rail = mix(PAL.ink, PAL.paper, 0.22);
+  PAL.railTie = mix(PAL.ink, PAL.paper, 0.38);
+  PAL.railSteel = mix(PAL.ink, PAL.paper, 0.6);
+  PAL.redSoft = rgba(PAL.red, 0.35);
+  PAL.redDim = mix(PAL.red, PAL.ink, 0.6);
   return PAL;
 }
 
@@ -47,6 +61,11 @@ function hexToRgb(hex) {
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
   const n = parseInt(h, 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+export function rgba(hex, a) {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
 // Mix color a toward color b by t (0 to 1).

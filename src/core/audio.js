@@ -49,7 +49,7 @@ function tone({ type = 'square', from, to, time, gain = 0.2, delay = 0 }) {
   osc.stop(t0 + time + 0.02);
 }
 
-function noise({ time, gain = 0.2, freq = 1200, delay = 0 }) {
+function noise({ time, gain = 0.2, freq = 1200, delay = 0, type = 'bandpass' }) {
   const a = ensure();
   if (!a || muted) return;
   const t0 = a.currentTime + delay;
@@ -60,7 +60,7 @@ function noise({ time, gain = 0.2, freq = 1200, delay = 0 }) {
   const src = a.createBufferSource();
   src.buffer = buf;
   const f = a.createBiquadFilter();
-  f.type = 'bandpass';
+  f.type = type;
   f.frequency.value = freq;
   const g = a.createGain();
   g.gain.value = gain;
@@ -74,6 +74,26 @@ export const sfx = {
   hit: () => {
     tone({ type: 'sawtooth', from: 300, to: 60, time: 0.35, gain: 0.18 });
     noise({ time: 0.2, gain: 0.25, freq: 600 });
+  },
+  splash: () => {
+    noise({ time: 0.35, gain: 0.35, freq: 900, type: 'lowpass' });
+    tone({ type: 'sine', from: 420, to: 140, time: 0.2, gain: 0.12 });
+  },
+  pickup: () => {
+    tone({ type: 'sine', from: 880, to: 880, time: 0.06, gain: 0.12 });
+    tone({ type: 'sine', from: 1320, to: 1320, time: 0.1, gain: 0.12, delay: 0.06 });
+  },
+  bell: () => {
+    tone({ type: 'sine', from: 1480, to: 1460, time: 0.22, gain: 0.08 });
+    tone({ type: 'sine', from: 2220, to: 2200, time: 0.16, gain: 0.04 });
+  },
+  flap: () => {
+    noise({ time: 0.12, gain: 0.18, freq: 300, type: 'lowpass' });
+    noise({ time: 0.12, gain: 0.18, freq: 300, type: 'lowpass', delay: 0.18 });
+  },
+  screech: () => {
+    tone({ type: 'sawtooth', from: 1800, to: 900, time: 0.45, gain: 0.1 });
+    tone({ type: 'square', from: 2400, to: 1300, time: 0.35, gain: 0.05, delay: 0.03 });
   },
   start: () => {
     tone({ type: 'square', from: 440, to: 440, time: 0.08, gain: 0.08 });

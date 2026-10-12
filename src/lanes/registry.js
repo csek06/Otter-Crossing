@@ -6,12 +6,18 @@
 //   drawObjects(ctx, lane, view, y)           raised objects for the row
 //   collide(lane, player)                     null, or { cause }
 //   blocks(lane, col)                         truthy if a static obstacle fills the tile
-// Hazard lanes also have weight(difficulty) for how often they are picked.
+// Optional:
+//   carry(lane, player, dt)                   move the otter while it stands in the lane
+//   hitboxes(lane)                            [[left, right], ...] for ?debug=1
+//   drawSignals(ctx, lane, view, y)           art in the facade margins
+// Hazard lanes also have weight(difficulty, row) for how often they are picked.
 // To add a lane type: write one module, register it here, add its hint to content.js.
 
 import { focus } from './focus.js';
 import { meetings } from './meetings.js';
+import { river } from './river.js';
+import { allhands } from './allhands.js';
 
-export const LANES = { focus, meetings };
+export const LANES = { focus, meetings, river, allhands };
 
-export const HAZARDS = [meetings];
+export const HAZARDS = [meetings, river, allhands];

@@ -1,14 +1,16 @@
 // Draws the world: ground for every visible row, then raised objects far to near
 // so nearer things overlap farther ones. The camera is a fixed tilt.
 
-import { GRID } from '../config.js';
+import { GRID, RULES } from '../config.js';
 import { PAL } from './palette.js';
 import { roundRect } from './primitives.js';
 import { drawOtter } from './otter.js';
+import { drawToken } from './token.js';
+import { drawHawk, drawHawkShadow } from './hawk.js';
 import { visualRow, logicalRow } from '../game/player.js';
 
 export function createRenderer(stage, game, opts) {
-  const v = { tile: 0, rowH: 0, ox: 0, line: 1, scale: 1, w: 0, h: 0 };
+  const v = { tile: 0, rowH: 0, ox: 0, line: 1, scale: 1, w: 0, h: 0, time: 0 };
 
   function layout() {
     v.w = stage.w;
@@ -64,6 +66,7 @@ export function createRenderer(stage, game, opts) {
   function draw(fps) {
     _ctx = stage.ctx;
     const c = _ctx;
+    v.time = performance.now() / 1000;
     c.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0);
     c.fillStyle = PAL.ink;
     c.fillRect(0, 0, v.w, v.h);
@@ -82,6 +85,7 @@ export function createRenderer(stage, game, opts) {
       const y = rowY(r);
       if (lane) lane.mod.drawGround(c, lane, v, y);
       drawFacade(r, y);
+      if (lane && lane.mod.drawSignals) lane.mod.drawSignals(c, lane, v, y);
     }
     // Object pass, far to near. Clipped to the playfield so traffic slides out
     // from behind the office facades.
@@ -94,10 +98,20 @@ export function createRenderer(stage, game, opts) {
     for (let r = last; r >= first; r--) {
       const lane = game.getLane(r);
       const y = rowY(r);
-      if (lane) lane.mod.drawObjects(c, lane, v, y);
+      if (lane) {
+        for (const tok of lane.tokens) {
+          if (!tok.taken) drawToken(c, v.ox + (tok.col + 0.5) * v.tile, y - v.rowH * 0.3, v, v.time);
+        }
+        lane.mod.drawObjects(c, lane, v, y);
+      }
       if (r === pRow && game.state !== 'title') drawPlayer(c);
     }
+    drawFx(c);
+    if (game.state === 'playing' && game.hawk.warn > 0) {
+      drawHawkShadow(c, v.ox + (p.x + 0.5) * v.tile, rowY(visualRow(p)) - v.rowH * 0.32, v, game.hawk.warn, v.time);
+    }
     c.restore();
+    if (game.hawk.swoopT >= 0 && game.state !== 'title') drawSwoop(c);
 
     // Facade edges.
     c.fillStyle = PAL.wallDark;
@@ -116,6 +130,26 @@ export function createRenderer(stage, game, opts) {
     }
   }
 
+  // Where the hawk carries the otter during its swoop: [hawk y, otter lift].
+  function swoop(gy) {
+    const t = v.tile;
+    const k = game.hawk.swoopT;
+    const dive = 0.35;
+    if (k < dive) {
+      const e = k / dive;
+      return { hawkY: lerp(-t * 2, gy - t * 0.9, e * e), lift: 0 };
+    }
+    const up = (k - dive) * t * 9;
+    return { hawkY: gy - t * 0.9 - up, lift: up };
+  }
+
+  function drawSwoop(c) {
+    const p = game.player;
+    const gy = rowY(visualRow(p)) - v.rowH * 0.32;
+    const s = swoop(gy);
+    drawHawk(c, v.ox + (p.x + 0.5) * v.tile, s.hawkY, v, v.time);
+  }
+
   function drawPlayer(c) {
     const p = game.player;
     const t = v.tile;
@@ -126,6 +160,8 @@ export function createRenderer(stage, game, opts) {
     let sx = 1;
     let sy = 1;
     let alpha = 1;
+    let sink = 0;
+    const swimming = p.swim >= 0 && p.hopT < 0;
     if (p.hopT >= 0) {
       const k = Math.sin(Math.PI * p.hopT);
       lift = k * t * 0.32;
@@ -140,17 +176,76 @@ export function createRenderer(stage, game, opts) {
       cx += p.bumpDir.dx * k * t * 0.08;
       lift += p.bumpDir.dy * k * t * 0.05;
     }
+    if (swimming) sink = t * 0.2 + Math.sin(v.time * 8) * t * 0.02;
     if (p.dead) {
-      if (p.deathCause === 'meeting') {
+      if (p.deathCause === 'meeting' || p.deathCause === 'allhands') {
         sx = 1.3;
         sy = 0.35;
       } else if (p.deathCause === 'hawk') {
-        lift = p.deathT * t * 6;
-        alpha = Math.max(0, 1 - p.deathT / 0.6);
+        lift = swoop(gy).lift;
+      } else if (p.deathCause === 'river') {
+        sink = t * 0.2 + p.deathT * t * 0.6;
+        alpha = Math.max(0, 1 - p.deathT / 0.8);
       }
     }
     if (p.invuln > 0 && Math.floor(p.invuln * 6) % 2 === 1) alpha *= 0.4;
-    drawOtter(c, cx, gy, v, { facing: p.facing, lift, sx, sy, alpha });
+    if (sink > 0) {
+      // In the water: only the top of the otter shows above the waterline.
+      c.save();
+      c.beginPath();
+      c.rect(0, 0, v.w, gy);
+      c.clip();
+      drawOtter(c, cx, gy + sink, v, { facing: p.facing, lift, sx, sy, alpha });
+      c.restore();
+      c.strokeStyle = PAL.ripple;
+      c.lineWidth = v.line;
+      const rr = (v.time * 1.5) % 1;
+      c.globalAlpha = 1 - rr;
+      c.beginPath();
+      c.ellipse(cx, gy, t * (0.3 + rr * 0.25), v.rowH * (0.1 + rr * 0.08), 0, 0, Math.PI * 2);
+      c.stroke();
+      c.globalAlpha = 1;
+      if (swimming && !p.dead) drawSwimTimer(c, cx, gy - t * 0.78, 1 - p.swim / RULES.SWIM_TIME);
+    } else {
+      drawOtter(c, cx, gy, v, { facing: p.facing, lift, sx, sy, alpha });
+    }
+  }
+
+  // How long the otter can keep swimming, as a shrinking ring.
+  function drawSwimTimer(c, x, y, k) {
+    const r = v.tile * 0.18;
+    c.lineWidth = v.line * 2.4;
+    c.strokeStyle = PAL.ink;
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.stroke();
+    c.strokeStyle = PAL.paper;
+    c.beginPath();
+    c.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, k));
+    c.stroke();
+  }
+
+  function drawFx(c) {
+    const t = v.tile;
+    for (const f of game.fx.live) {
+      const x = v.ox + f.x * t;
+      const gy = rowY(f.row) - v.rowH * 0.32;
+      const k = f.life / f.max;
+      if (f.kind === 'drop') {
+        c.fillStyle = PAL.paper;
+        c.beginPath();
+        c.arc(x, gy - f.h * t * 0.5, t * 0.05, 0, Math.PI * 2);
+        c.fill();
+      } else if (f.kind === 'ring') {
+        c.strokeStyle = PAL.ripple;
+        c.lineWidth = v.line * 1.5;
+        c.beginPath();
+        c.ellipse(x, gy, t * (0.2 + (1 - k) * 0.5), v.rowH * (0.08 + (1 - k) * 0.15), 0, 0, Math.PI * 2);
+        c.stroke();
+      } else if (f.kind === 'check') {
+        drawToken(c, x, gy - f.h * t * 0.4, v, 0, true, Math.min(1, k * 2));
+      }
+    }
   }
 
   function drawHitboxes(c) {
@@ -173,6 +268,10 @@ export function createRenderer(stage, game, opts) {
   }
 
   return { draw, layout, view: v };
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
 }
 
 function hash(n) {

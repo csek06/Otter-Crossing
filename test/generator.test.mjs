@@ -12,6 +12,8 @@ import { CONTENT } from '../src/content.js';
 import { createGenerator, newLane, maxHazardRun, difficultyAt } from '../src/game/generator.js';
 import { meetingCap, bigGapFor } from '../src/lanes/meetings.js';
 import { spread, bitCount } from '../src/lanes/focus.js';
+import { river } from '../src/lanes/river.js';
+import { allhands } from '../src/lanes/allhands.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ALL = (1 << GRID.COLS) - 1;
@@ -152,8 +154,10 @@ test('stacked focus lanes never wall the otter in', () => {
 test('only=<type> restricts hazards (debug ?lane=)', () => {
   const gen = createGenerator({ seed: 5, only: 'focus' });
   for (let r = 0; r < 300; r++) assert.equal(gen.fill(newLane(), r).type, 'focus');
-  const gen2 = createGenerator({ seed: 5, only: 'meetings' });
-  for (let r = 0; r < 300; r++) assert.ok(['focus', 'meetings'].includes(gen2.fill(newLane(), r).type));
+  for (const only of ['meetings', 'river', 'allhands']) {
+    const gen2 = createGenerator({ seed: 5, only });
+    for (let r = 0; r < 300; r++) assert.ok(['focus', only].includes(gen2.fill(newLane(), r).type));
+  }
 });
 
 test('the same seed makes the same course', () => {
@@ -166,6 +170,110 @@ test('the same seed makes the same course', () => {
     assert.equal(la.blocked, lb.blocked);
     assert.deepEqual(la.cars, lb.cars);
   }
+});
+
+test('river highlights: every gap is at most 2 seconds of current', () => {
+  let n = 0;
+  for (const run of RUNS) {
+    for (const l of playable(run)) {
+      if (l.type !== 'river') continue;
+      n++;
+      const ps = [...l.platforms].sort((a, b) => a.x - b.x);
+      assert.ok(ps.length >= 3, `row ${l.row}: only ${ps.length} highlights`);
+      for (let i = 0; i < ps.length; i++) {
+        const next = ps[(i + 1) % ps.length];
+        let g = next.x - (ps[i].x + ps[i].len);
+        if (i === ps.length - 1) g += l.ring;
+        assert.ok(g >= 0, `row ${l.row}: highlights overlap`);
+        assert.ok(g / l.speed <= RULES.RIVER_MAX_WAIT + EPS, `row ${l.row}: gap of ${(g / l.speed).toFixed(2)}s`);
+      }
+      const maxLen = Math.max(...ps.map((p) => p.len));
+      assert.ok(l.pad >= maxLen, `row ${l.row}: wrap point would be visible`);
+    }
+  }
+  assert.ok(n > 1500, `expected many river lanes, got ${n}`);
+});
+
+test('river highlights: simulated, one passes every column at least every 2 seconds', () => {
+  const dt = 1 / 60;
+  let checked = 0;
+  for (const run of RUNS.slice(0, 3)) {
+    for (const l of playable(run).filter((x) => x.type === 'river').slice(0, 150)) {
+      const lane = { ...l, platforms: l.platforms.map((p) => ({ ...p })) };
+      const lastSeen = new Array(GRID.COLS).fill(0);
+      let worst = 0;
+      for (let step = 0; step < 20 / dt; step++) {
+        river.update(lane, dt);
+        const time = step * dt;
+        for (let c = 0; c < GRID.COLS; c++) {
+          if (river.platformAt(lane, c)) {
+            worst = Math.max(worst, time - lastSeen[c]);
+            lastSeen[c] = time;
+          }
+        }
+      }
+      for (let c = 0; c < GRID.COLS; c++) worst = Math.max(worst, 20 - lastSeen[c]);
+      assert.ok(worst <= RULES.RIVER_MAX_WAIT + 0.1, `row ${l.row}: a column waited ${worst.toFixed(2)}s`);
+      checked++;
+    }
+  }
+  assert.ok(checked >= 300);
+});
+
+test('all-hands: the signal fires at least 1 second before the train reaches the lane', () => {
+  const dt = 1 / 120;
+  let trains = 0;
+  for (const run of RUNS) {
+    for (const l of playable(run)) {
+      if (l.type !== 'allhands') continue;
+      assert.ok(l.warnTime >= RULES.ALLHANDS_MIN_WARNING, `row ${l.row}: warn time ${l.warnTime}`);
+      const lane = { ...l };
+      let signalSince = null;
+      let visible = false;
+      let flips = 0;
+      let lastPhase = allhands.lampPhase(lane);
+      for (let step = 0; step < 40 / dt; step++) {
+        allhands.update(lane, dt);
+        const time = step * dt;
+        if (allhands.signalOn(lane)) {
+          if (signalSince == null) signalSince = time;
+        } else {
+          signalSince = null;
+        }
+        const ph = allhands.lampPhase(lane);
+        if (ph !== lastPhase) flips++;
+        lastPhase = ph;
+        const s = allhands.span(lane);
+        const onScreen = !!s && s[1] > 0 && s[0] < GRID.COLS;
+        if (onScreen && !visible) {
+          trains++;
+          assert.ok(signalSince != null, `row ${l.row}: train arrived with the signal off`);
+          const lead = time - signalSince;
+          assert.ok(lead >= RULES.ALLHANDS_MIN_WARNING - EPS, `row ${l.row}: only ${lead.toFixed(2)}s of warning`);
+        }
+        visible = onScreen;
+      }
+      // Each lamp flips on and off: flashes per second is flips / 2 per lamp pair, at most 3.
+      assert.ok(RULES.ALLHANDS_BLINK_HZ <= 3);
+      assert.ok(flips / 2 / 40 <= 3, `row ${l.row}: blinking too fast`);
+    }
+  }
+  assert.ok(trains > 1000, `expected many trains, got ${trains}`);
+});
+
+test('action item tokens sit on reachable tiles', () => {
+  let n = 0;
+  for (const run of RUNS) {
+    for (const l of playable(run)) {
+      for (const tok of l.tokens) {
+        n++;
+        assert.ok(!((l.blocked >> tok.col) & 1), `row ${l.row}: token on an obstacle`);
+        assert.notEqual(l.type, 'allhands');
+      }
+      if (l.type === 'river') n += l.platforms.filter((p) => p.token).length;
+    }
+  }
+  assert.ok(n > 1000, `expected tokens, got ${n}`);
 });
 
 // Copy rules.

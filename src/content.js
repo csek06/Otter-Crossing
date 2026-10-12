@@ -174,6 +174,11 @@ export const CONTENT = {
     },
   },
 
+  // Short labels drawn on game art.
+  labels: {
+    allHandsTrain: 'All-hands',
+  },
+
   debug: {
     invincible: 'Invincible',
     hitboxes: 'Hitboxes',

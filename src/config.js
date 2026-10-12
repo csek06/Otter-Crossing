@@ -42,4 +42,11 @@ export const RULES = {
   MAX_HAZARD_RUN_MAX: 5,      // and late
   BREATHER_CHANCE_MIN: 0.15,  // chance of an extra breather lane, late
   BREATHER_CHANCE_MAX: 0.38,  // and early
+  RIVER_MAX_WAIT: 2,          // a highlight passes any river column at least this often (seconds)
+  SWIM_TIME: 1,               // seconds the otter can swim before it is swept away
+  ALLHANDS_MIN_WARNING: 1,    // signal fires at least this many seconds before the train arrives
+  ALLHANDS_BLINK_HZ: 2,       // signal lamp flashes per second, never above 3
+  HAWK_WARN: 5,               // seconds without forward progress before the shadow appears
+  HAWK_STRIKE: 7,             // seconds without forward progress before the hawk strikes
+  TOKEN_CHANCE: 0.24,         // chance a lane carries an action item token
 };

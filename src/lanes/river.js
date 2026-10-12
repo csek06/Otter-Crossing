@@ -12,6 +12,7 @@ import { CONTENT } from '../content.js';
 import { PAL } from '../render/palette.js';
 import { roundRect, fitText, FONT_MONO } from '../render/primitives.js';
 import { drawToken } from '../render/token.js';
+import { drawPickup } from '../render/pickup.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -169,6 +170,8 @@ export const river = {
       if (l > GRID.COLS + 0.5 || l + plat.len < -0.5) continue;
       drawHighlight(ctx, v.ox + l * t, y, plat, v);
       if (plat.token && !plat.taken) drawToken(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.62, v, v.time);
+      const pu = lane.powerup;
+      if (pu && pu.plat === plat && !pu.taken) drawPickup(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.45, v, pu.id, v.time);
     }
   },
 };

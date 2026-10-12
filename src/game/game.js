@@ -352,7 +352,8 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
   function collectPowerup(lane) {
     const pu = lane.powerup;
     const p = game.player;
-    if (!pu || pu.taken || Math.abs(p.x - pu.col) >= 0.5) return;
+    if (!pu || pu.taken) return;
+    if (pu.plat ? p.riding !== pu.plat : Math.abs(p.x - pu.col) >= 0.5) return;
     const mod = POWERUP_BY_ID[pu.id];
     if (!mod) return;
     pu.taken = true;

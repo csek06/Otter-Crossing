@@ -104,7 +104,7 @@ export function createRenderer(stage, game, opts) {
         for (const tok of lane.tokens) {
           if (!tok.taken) drawToken(c, v.ox + (tok.col + 0.5) * v.tile, y - v.rowH * 0.3, v, v.time);
         }
-        if (lane.powerup && !lane.powerup.taken) {
+        if (lane.powerup && !lane.powerup.taken && !lane.powerup.plat) {
           drawPickup(c, v.ox + (lane.powerup.col + 0.5) * v.tile, y - v.rowH * 0.3, v, lane.powerup.id, v.time);
         }
         lane.mod.drawObjects(c, lane, v, y);

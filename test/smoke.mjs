@@ -367,12 +367,70 @@ for (const start of [0, 120, 400]) {
   const r = await page.evaluate(() => {
     const g = window.__otter.game;
     const e = g.active.find((a) => a.mod.id === 'notetaker');
-    return { t: e && e.t, chip: document.querySelectorAll('.hud-power').length };
+    return { t: e && e.t, slots: document.querySelectorAll('.hud-power').length, active: [...document.querySelectorAll('.hud-power.is-active')].map((c) => c.getAttribute('aria-label')) };
   });
   check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
-  check(r.chip === 1, 'HUD shows the active power-up with a timer ring');
+  check(r.slots === 4, `the tracker has a slot for each released power-up (${r.slots})`);
+  check(r.active.length === 1 && r.active[0] === 'Otter Notetaker, active', `the tracker shows the active power-up (${r.active})`);
   await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
   check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Power-up tracker at every size: fits on its own row under the score, shows held
+// and used states, and never covers the pause button.
+for (const size of SIZES) {
+  const { ctx, page, errors } = await open(size, '?debug=1&lane=focus&seed=6&powerup=aiChat');
+  await page.click('#btn-play');
+  await wait(page, 250);
+  const read = () => page.evaluate(() => {
+    const box = (el) => el.getBoundingClientRect();
+    const slots = [...document.querySelectorAll('.hud-power')];
+    const pause = box(document.getElementById('btn-pause'));
+    const score = box(document.querySelector('.hud-score'));
+    return {
+      labels: slots.map((c) => c.getAttribute('aria-label')),
+      below: slots.every((c) => box(c).top >= score.bottom),
+      clear: slots.every((c) => { const b = box(c); return b.right <= pause.left || b.top >= pause.bottom; }),
+      inside: slots.every((c) => { const b = box(c); return b.left >= 0 && b.right <= innerWidth; }),
+      group: document.getElementById('hud-powers').getAttribute('aria-label'),
+    };
+  });
+  const a = await read();
+  check(a.labels.length === 4 && a.below && a.clear && a.inside, `${size.name}: tracker sits under the score, inside the screen, clear of pause`);
+  check(a.group === 'Power-ups', `${size.name}: tracker is a labeled group`);
+  check(a.labels.includes('AI Chat, ready') && a.labels.filter((l) => l.endsWith('not found yet')).length === 3, `${size.name}: held and not found states (${a.labels})`);
+  await page.screenshot({ path: join(shots, `${size.name}-6-tracker.png`) });
+  await page.evaluate(() => window.__otter.game.kill('meeting', null));
+  await wait(page, 120);
+  const b = await read();
+  check(b.labels.includes('AI Chat, used'), `${size.name}: AI Chat shows as used after the revive (${b.labels})`);
+  check(errors.length === 0, `${size.name} tracker: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// A power-up on a river log is collected by riding that log.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=river&seed=8');
+  await page.click('#btn-play');
+  await wait(page, 200);
+  const r = await page.evaluate(async () => {
+    const g = window.__otter.game;
+    let lane = null;
+    for (let row = g.player.row + 1; row < g.player.row + 200 && !lane; row++) {
+      const l = g.getLane(row);
+      if (l && l.powerup && l.powerup.plat) lane = l;
+    }
+    if (!lane) return { found: false };
+    const plat = lane.powerup.plat;
+    g.player.row = lane.row; g.player.toRow = lane.row; g.maxRow = lane.row;
+    g.player.x = lane.mod.left(lane, plat) + plat.len / 2 - 0.5;
+    await new Promise((res) => setTimeout(res, 150));
+    return { found: true, taken: lane.powerup.taken, id: lane.powerup.id, active: g.active.length + g.held.length };
+  });
+  check(r.found, 'a river lane carries a power-up on a log');
+  check(r.taken && r.active === 1, `riding the log picks up the power-up (${r.id})`);
+  check(errors.length === 0, `river power-up: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }
 

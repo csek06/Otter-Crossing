@@ -99,6 +99,8 @@ Flags live in `src/config.js`. Change one, then run `npm run build`.
 
 Tuning numbers (hop time, camera speed, difficulty ramp) are in `TUNING`. Generator rules that the tests check (traffic density caps, river timing, breather spacing, all-hands warning, hawk timing, power-up spacing) are in `RULES`.
 
+Power-ups land on a random lane of any kind except the all-hands track (on a log when it's the river), in a random free column. The first one shows up by lane 15. After that the next is due a random 25 to 40 lanes later. The HUD tracker under the score has one slot for each power-up the run can spawn: faded until you find it, a draining ring while it's active, a full ring while AI Chat is held, and crossed out once it's spent.
+
 ## Edit the copy
 
 All on-screen text is in `src/content.js`: feature names, taglines, descriptions, help links, death messages, tips, hints, meeting titles, river phrases, links and button labels. Non-engineers can edit it without touching game code.
@@ -171,7 +173,7 @@ Then:
 3. Add an icon path for the feature id to `src/render/icons.js` (24 by 24 grid, stroked).
 4. Try it with `?debug=1&powerup=myPowerup`.
 
-Pickup, feature card, HUD timer ring and game over recap all pick it up automatically.
+Pickup, feature card, HUD power-up tracker and game over recap all pick it up automatically.
 
 ## Debug
 

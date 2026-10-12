@@ -149,7 +149,7 @@ export function buildCopyReview() {
   add('## 11. Screen labels', '', 'Low risk, listed for completeness.', '');
   add(box(`Title sign: ${q(C.game.title)}, tag: ${q(C.game.signTag)}`));
   const skip = new Set(['title', 'signTag']);
-  const labels = Object.entries(C.game).filter(([k]) => !skip.has(k)).map(([, v]) => q(v));
+  const labels = Object.entries(C.game).filter(([k]) => !skip.has(k)).flatMap(([, v]) => (typeof v === 'string' ? [q(v)] : Object.values(v).map(q)));
   add(box(labels.join(', ')));
   add(box(`Train label: ${q(C.labels.allHandsTrain)}`));
   add('');

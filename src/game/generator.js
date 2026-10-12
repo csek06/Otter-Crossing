@@ -7,7 +7,8 @@
 // - Stacked focus lanes never wall the otter in.
 // - A highlight passes every river column at least every RIVER_MAX_WAIT seconds.
 // - The all-hands signal fires at least ALLHANDS_MIN_WARNING seconds ahead.
-// - A power-up appears within the first POWERUP_FIRST_BY lanes, then every so often.
+// - A power-up appears within the first POWERUP_FIRST_BY lanes, then on a random lane
+//   every POWERUP_GAP_MIN to POWERUP_GAP_MAX lanes.
 
 import { GRID, RULES, TUNING } from '../config.js';
 import { createRng } from '../core/rng.js';
@@ -40,7 +41,8 @@ export function createGenerator({ seed, startRow = 0, only = null, powerups = sp
   const rng = createRng(seed);
   const ctx = { reach: ALL, hazardRun: 0, meetingDir: 1, zone: null, firstStart: false };
   const placedOnce = new Set();
-  let nextPowerup = startRow + rng.int(RULES.POWERUP_FIRST_MIN, RULES.POWERUP_FIRST_MIN + 4);
+  // Leave a few lanes of slack before POWERUP_FIRST_BY in case the chosen lane can't take it.
+  let nextPowerup = startRow + rng.int(RULES.POWERUP_FIRST_MIN, RULES.POWERUP_FIRST_BY - 3);
   const seen = new Set();
   let hazards = HAZARDS;
   if (only && only !== 'focus') hazards = HAZARDS.filter((h) => h.id === only);
@@ -83,17 +85,29 @@ export function createGenerator({ seed, startRow = 0, only = null, powerups = sp
     }
   }
 
-  // Power-ups sit on focus-time lanes, on a reachable free tile.
+  // Power-ups land on a random lane of any kind except the all-hands track: a
+  // reachable free tile on land, or a log in the river. The next one is due a
+  // random POWERUP_GAP_MIN to POWERUP_GAP_MAX lanes later. If the lane it is due
+  // on can't take it, it moves to the next lane that can.
   function placePowerup(lane, row) {
     lane.powerup = null;
-    if (lane.type !== 'focus' || row < startRow + GRID.START_ZONE || row < nextPowerup) return;
+    if (row < startRow + GRID.START_ZONE || row < nextPowerup) return;
+    if (lane.type === 'allhands') return;
     const pool = powerups.filter((p) => !(p.oncePerRun && placedOnce.has(p.id)));
     if (!pool.length) return;
-    let free = ctx.reach & ~lane.blocked;
-    for (const tok of lane.tokens) free &= ~(1 << tok.col);
-    if (!free) return;
-    const cols = [];
-    for (let c = 0; c < GRID.COLS; c++) if (free & (1 << c)) cols.push(c);
+    let spot = null;
+    if (lane.type === 'river') {
+      const logs = lane.platforms.filter((p) => !p.token);
+      if (!logs.length) return;
+      spot = { col: -1, plat: rng.pick(logs) };
+    } else {
+      let free = (lane.mod.safe ? ctx.reach : ALL) & ~lane.blocked;
+      for (const tok of lane.tokens) free &= ~(1 << tok.col);
+      if (!free) return;
+      const cols = [];
+      for (let c = 0; c < GRID.COLS; c++) if (free & (1 << c)) cols.push(c);
+      spot = { col: rng.pick(cols), plat: null };
+    }
     let total = 0;
     for (const p of pool) total += p.weight;
     let r = rng.next() * total;
@@ -102,7 +116,7 @@ export function createGenerator({ seed, startRow = 0, only = null, powerups = sp
       r -= p.weight;
       if (r <= 0) { pick = p; break; }
     }
-    lane.powerup = { id: pick.id, col: rng.pick(cols), taken: false };
+    lane.powerup = { id: pick.id, col: spot.col, plat: spot.plat, taken: false };
     if (pick.oncePerRun) placedOnce.add(pick.id);
     nextPowerup = row + rng.int(RULES.POWERUP_GAP_MIN, RULES.POWERUP_GAP_MAX);
   }

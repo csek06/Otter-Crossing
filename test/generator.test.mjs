@@ -300,18 +300,49 @@ test('power-ups: reachable tiles, AI Chat once a run, nothing unreleased', () =>
       else reach = ALL;
       if (!l.powerup) continue;
       n++;
-      assert.equal(l.type, 'focus', `row ${l.row}: power-up off a focus lane`);
-      assert.ok(!((l.blocked >> l.powerup.col) & 1), `row ${l.row}: power-up on an obstacle`);
-      assert.ok((reach >> l.powerup.col) & 1, `row ${l.row}: power-up on an unreachable tile`);
+      assert.notEqual(l.type, 'allhands', `row ${l.row}: power-up on the all-hands track`);
+      if (l.type === 'river') {
+        assert.ok(l.powerup.plat && l.platforms.includes(l.powerup.plat), `row ${l.row}: river power-up not on a log`);
+        assert.ok(!l.powerup.plat.token, `row ${l.row}: power-up shares a log with a token`);
+      } else {
+        assert.ok(!((l.blocked >> l.powerup.col) & 1), `row ${l.row}: power-up on an obstacle`);
+        assert.ok((reach >> l.powerup.col) & 1, `row ${l.row}: power-up on an unreachable tile`);
+        assert.ok(!l.tokens.some((t) => t.col === l.powerup.col), `row ${l.row}: power-up on a token`);
+      }
       assert.ok(!unreleased.has(l.powerup.id), `row ${l.row}: unreleased ${l.powerup.id} spawned`);
       assert.ok(POWERUP_BY_ID[l.powerup.id]);
       if (l.powerup.id === 'aiChat') aiChat++;
-      if (last != null) assert.ok(l.row - last >= RULES.POWERUP_GAP_MIN, `row ${l.row}: power-ups too close`);
+      if (last != null) {
+        assert.ok(l.row - last >= RULES.POWERUP_GAP_MIN, `row ${l.row}: power-ups too close`);
+        // An all-hands lane can push one back a lane or two, never far.
+        assert.ok(l.row - last <= RULES.POWERUP_GAP_MAX + 3, `row ${l.row}: power-ups too far apart`);
+      }
       last = l.row;
     }
     assert.ok(aiChat <= 1, `AI Chat spawned ${aiChat} times in one run`);
   }
   assert.ok(n > 300, `expected many power-ups, got ${n}`);
+});
+
+test('power-ups are spread across lane types, columns and gaps', () => {
+  const types = new Map();
+  const cols = new Set();
+  const gaps = new Set();
+  for (let seed = 1; seed <= 200; seed++) {
+    const gen = createGenerator({ seed });
+    let last = null;
+    for (let r = 0; r < 600; r++) {
+      const l = gen.fill(newLane(), r);
+      if (!l.powerup) continue;
+      types.set(l.type, (types.get(l.type) || 0) + 1);
+      if (!l.powerup.plat) cols.add(l.powerup.col);
+      if (last != null) gaps.add(r - last);
+      last = r;
+    }
+  }
+  for (const t of ['focus', 'meetings', 'river']) assert.ok(types.get(t) > 50, `few power-ups on ${t}: ${types.get(t) || 0}`);
+  assert.equal(cols.size, GRID.COLS, 'every column gets power-ups');
+  assert.ok(gaps.size >= RULES.POWERUP_GAP_MAX - RULES.POWERUP_GAP_MIN, `gaps vary: ${[...gaps].sort((a, b) => a - b)}`);
 });
 
 test('unreleased power-ups spawn only when the flag allows', () => {

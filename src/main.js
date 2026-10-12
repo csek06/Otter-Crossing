@@ -13,6 +13,7 @@ import { createScreens } from './ui/screens.js';
 import { createMusic } from './core/music.js';
 import { createWardrobe } from './game/wardrobe.js';
 import { recordDaily } from './game/daily.js';
+import { spawnable } from './powerups/registry.js';
 
 loadPalette();
 
@@ -164,13 +165,27 @@ screens.show('title');
 fitDemoCamera();
 game.startDemo();
 
-// HUD chips for active and held power-ups.
-const chipItems = [];
+// HUD power-up tracker: one slot for every power-up this run can spawn, showing
+// whether it is waiting to be found, active (with time left), held, or used up.
+const trackerMods = spawnable();
+const trackerItems = trackerMods.map((m) => ({ id: m.id, featureId: m.featureId, state: 'off', k: 0 }));
 function updatePowerChips() {
-  chipItems.length = 0;
-  for (const e of game.active) chipItems.push({ id: e.mod.id, featureId: e.mod.featureId, k: e.max ? e.t / e.max : 1 });
-  for (const m of game.held) chipItems.push({ id: m.id, featureId: m.featureId, k: 1, held: true });
-  screens.powers(chipItems);
+  for (let i = 0; i < trackerMods.length; i++) {
+    const m = trackerMods[i];
+    const it = trackerItems[i];
+    const e = game.active.find((a) => a.mod === m);
+    if (e) {
+      it.state = 'active';
+      it.k = e.max ? e.t / e.max : 1;
+    } else if (game.held.includes(m)) {
+      it.state = 'held';
+      it.k = 1;
+    } else {
+      it.state = m.oncePerRun && game.used.includes(m.featureId) ? 'used' : 'off';
+      it.k = 0;
+    }
+  }
+  screens.powers(trackerItems);
 }
 
 // Main loop. Large frame gaps are split into small steps so collisions stay fair.

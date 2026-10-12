@@ -205,6 +205,7 @@ canvas {
   position: absolute;
   top: 0; left: 0; right: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: calc(var(--u) * 2);
@@ -256,7 +257,7 @@ canvas {
 .toast {
   position: absolute;
   left: 50%;
-  top: calc(var(--u) * 20);
+  top: calc(var(--u) * 28);
   transform: translateX(-50%);
   width: max-content;
   max-width: calc(var(--u) * 92);
@@ -368,19 +369,21 @@ canvas {
   padding-top: calc(var(--u) * 7);
 }
 
-/* HUD power-up chips: icon inside a timer ring. */
+/* HUD power-up tracker: a second row under the score with one slot per power-up
+   this run can spawn. Faded and dashed until found, a draining ring while active,
+   a full ink ring while held, crossed out once a once-a-run power-up is spent. */
 .hud-powers {
+  order: 2;
+  flex: 1 0 100%;
   display: flex;
-  gap: calc(var(--u) * 1.5);
-  margin-left: calc(var(--u) * -1);
-  margin-right: auto;
+  gap: calc(var(--u) * 1.6);
 }
 .hud-power {
   position: relative;
-  width: calc(var(--u) * 11);
-  height: calc(var(--u) * 11);
-  min-width: 36px;
-  min-height: 36px;
+  width: calc(var(--u) * 9);
+  height: calc(var(--u) * 9);
+  min-width: 32px;
+  min-height: 32px;
   display: grid;
   place-items: center;
   background: var(--c-paper);
@@ -390,7 +393,20 @@ canvas {
 .hud-power .ring { position: absolute; inset: -2px; width: calc(100% + 4px); height: calc(100% + 4px); transform: rotate(-90deg); }
 .hud-power .ring-bg { fill: none; stroke: var(--c-paper-dark); stroke-width: 4; }
 .hud-power .ring-fg { fill: none; stroke: var(--c-brand); stroke-width: 4; stroke-linecap: round; }
-.hud-power.is-held .ring-fg { stroke: var(--c-ink-soft); }
+.hud-power.is-off, .hud-power.is-used { border-style: dashed; border-color: var(--c-ink-soft); }
+.hud-power.is-off .ring, .hud-power.is-used .ring { display: none; }
+.hud-power.is-off .hud-power-icon { color: var(--c-ink-soft); opacity: 0.6; }
+.hud-power.is-used .hud-power-icon { color: var(--c-ink-soft); opacity: 0.35; }
+.hud-power.is-used::after {
+  content: '';
+  position: absolute;
+  left: 12%; right: 12%; top: 50%;
+  height: 2px;
+  background: var(--c-ink-soft);
+  transform: rotate(-45deg);
+}
+.hud-power.is-active { background: var(--c-paper); }
+.hud-power.is-held .ring-fg { stroke: var(--c-ink); }
 .hud-power-icon, .recap-icon svg, .ft-icon svg {
   fill: none;
   stroke: currentColor;

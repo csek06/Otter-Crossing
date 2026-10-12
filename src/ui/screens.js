@@ -433,30 +433,29 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
       clearTimeout(featureTimer);
       featureTimer = setTimeout(() => feature.classList.remove('show'), seconds * 1000);
     },
-    // items: [{ id, featureId, k (0 to 1 remaining), held }]
+    // items: [{ id, featureId, state: off | active | held | used, k (0 to 1 remaining) }]
     powers(items) {
       const seen = new Set();
       for (const it of items) {
         seen.add(it.id);
         let chip = chips.get(it.id);
         if (!chip) {
-          const f = CONTENT.features[it.featureId];
           chip = el('div', 'hud-power');
           chip.setAttribute('role', 'img');
-          chip.setAttribute('aria-label', f ? f.name : it.id);
-          chip.innerHTML = `<svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle class="ring-bg" cx="20" cy="20" r="16"/><circle class="ring-fg" cx="20" cy="20" r="16" stroke-dasharray="${RING}" stroke-dashoffset="0"/></svg>${iconSvg(it.featureId, 'hud-power-icon')}`;
+          chip.innerHTML = `<svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle class="ring-bg" cx="20" cy="20" r="16"/><circle class="ring-fg" cx="20" cy="20" r="16" stroke-dasharray="${RING}" stroke-dashoffset="${RING}"/></svg>${iconSvg(it.featureId, 'hud-power-icon')}`;
           chip.fg = chip.querySelector('.ring-fg');
+          chip.lastOff = RING;
           powersEl.appendChild(chip);
           chips.set(it.id, chip);
         }
-        if (chip.classList.contains('is-held') !== !!it.held) {
+        if (chip.state !== it.state) {
+          chip.state = it.state;
+          chip.className = `hud-power is-${it.state}`;
           const f = CONTENT.features[it.featureId];
-          const name = f ? f.name : it.id;
-          chip.setAttribute('aria-label', it.held ? `${name}, ${C.held}` : name);
+          chip.setAttribute('aria-label', `${f ? f.name : it.id}, ${C.powerState[it.state]}`);
         }
-        chip.classList.toggle('is-held', !!it.held);
         const off = RING * (1 - Math.max(0, Math.min(1, it.k)));
-        if (Math.abs((chip.lastOff || 0) - off) > 0.2) {
+        if (Math.abs(chip.lastOff - off) > 0.2) {
           chip.fg.setAttribute('stroke-dashoffset', off.toFixed(1));
           chip.lastOff = off;
         }

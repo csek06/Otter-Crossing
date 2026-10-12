@@ -96,6 +96,7 @@ screens = createScreens(
   {
     play, pause, resume, quit,
     outfitChanged: (id) => { game.outfit = id; },
+    musicChanged: () => music.refresh(),
     cleared: () => { game.best = 0; game.outfit = wardrobe.wearing(); },
   },
   { wardrobe, booth },

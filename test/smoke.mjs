@@ -738,8 +738,26 @@ for (const size of SIZES) {
   check(await page.evaluate(() => !window.__otter.music.playing), 'music: stops on pause');
   await page.keyboard.press('Escape');
   check(await page.evaluate(() => window.__otter.music.playing), 'music: resumes');
+  // The music switch: off from the pause screen, effects stay on, saved for next time.
+  await page.keyboard.press('Escape');
+  await page.click('#screen-pause .btn-music');
+  check((await page.textContent('#screen-pause .btn-music')) === 'Music off', 'music: pause screen toggle reads Music off');
+  await page.keyboard.press('Escape');
+  await wait(page, 300);
+  const off0 = await page.evaluate(() => window.__otter.music.scheduled);
+  await wait(page, 1000);
+  const off1 = await page.evaluate(() => window.__otter.music.scheduled);
+  const fx = await page.evaluate(() => ({ muted: localStorage.getItem('otterCrossing.muted'), music: localStorage.getItem('otterCrossing.music') }));
+  check(off1 === off0 && fx.music === 'false' && fx.muted !== 'true', `music: off silences music only (${off1 - off0} notes, muted ${fx.muted})`);
   await page.evaluate(() => window.__otter.game.kill('meeting', null));
   check(await page.evaluate(() => !window.__otter.music.playing), 'music: stops when the otter is caught');
+  await page.reload();
+  await wait(page, 300);
+  check((await page.getAttribute('#screen-title .btn-music', 'aria-pressed')) === 'false', 'music: the setting is saved');
+  await page.click('#screen-title .btn-music');
+  await page.click('#btn-play');
+  await wait(page, 600);
+  check(await page.evaluate(() => window.__otter.music.scheduled > 0), 'music: title toggle turns it back on');
   check(errors.length === 0, `music: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }

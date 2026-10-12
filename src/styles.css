@@ -351,6 +351,11 @@ canvas {
 .icon-sound .cross { display: none; }
 .btn-mute.is-muted .icon-sound .wave { display: none; }
 .btn-mute.is-muted .icon-sound .cross { display: inline; }
+.icon-music { width: 26px; height: 26px; fill: none; stroke: var(--c-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-music .head { fill: var(--c-ink); }
+.icon-music .slash { display: none; }
+.btn-music.is-off .icon-music .slash { display: inline; }
+.btn-music.is-off .icon-music .stem, .btn-music.is-off .icon-music .head { opacity: 0.45; }
 
 /* Long screens scroll inside the drawer. */
 .drawer-full {

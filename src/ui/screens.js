@@ -4,7 +4,7 @@
 
 import { CONTENT } from '../content.js';
 import { FLAGS, BOOTH } from '../config.js';
-import { isMuted, setMuted } from '../core/audio.js';
+import { isMuted, setMuted, isMusicOn, setMusicOn } from '../core/audio.js';
 import { iconSvg } from '../render/icons.js';
 import { topScores, qualifies, addScore, lastInitials, clearScores } from '../game/leaderboard.js';
 import { OUTFITS } from '../game/wardrobe.js';
@@ -53,7 +53,7 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
   // A booth device is shared, so the daily challenge stays off the title there.
   if (booth) {
     $('btn-daily').hidden = true;
-    $('title-modes').style.gridTemplateColumns = '1fr';
+    $('title-modes').style.gridTemplateColumns = '1fr auto';
   }
   const privacy = $('optin-privacy');
   privacy.textContent = CONTENT.booth.privacyLabel;
@@ -85,6 +85,24 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
       document.activeElement.blur();
     }
   }
+
+  // Music toggles, same pattern as sound. Muting sound silences music too.
+  function syncMusic() {
+    const on = isMusicOn();
+    document.querySelectorAll('.btn-music').forEach((b) => {
+      if (!b.classList.contains('btn-icon')) b.textContent = on ? C.musicOn : C.musicOff;
+      b.setAttribute('aria-pressed', String(on));
+      b.classList.toggle('is-off', !on);
+    });
+  }
+  syncMusic();
+  document.querySelectorAll('.btn-music').forEach((b) =>
+    b.addEventListener('click', () => {
+      setMusicOn(!isMusicOn());
+      syncMusic();
+      if (handlers.musicChanged) handlers.musicChanged();
+    }),
+  );
 
   // Sound toggles: the title has an icon button, pause has a text button.
   function syncMute() {

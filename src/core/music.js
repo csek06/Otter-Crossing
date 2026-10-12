@@ -2,7 +2,7 @@
 // and speeds up as the run gets longer. stepEvents is pure so the tests can check
 // that intensity only ever adds layers.
 
-import { audioContext, getMusicBus, isMuted } from './audio.js';
+import { audioContext, getMusicBus, isMuted, isMusicOn } from './audio.js';
 
 // Lanes crossed for full intensity.
 export const MUSIC_FULL_AT = 100;
@@ -114,7 +114,7 @@ export function createMusic() {
     const stepDur = 60 / bpmFor(m.k) / 4;
     if (next < ac.currentTime) next = ac.currentTime + 0.05;
     while (next < ac.currentTime + 0.12) {
-      if (!isMuted()) {
+      if (!isMuted() && isMusicOn()) {
         for (const e of stepEvents(m.step, m.k)) {
           play(ac, bus, e, next, stepDur);
           m.scheduled++;
@@ -140,7 +140,7 @@ export function createMusic() {
     m.playing = true;
     if (fromTop) m.step = 0;
     next = 0;
-    fade(VOLUME, 0.3);
+    fade(isMusicOn() ? VOLUME : 0, 0.3);
     tick();
     timer = setInterval(tick, 25);
   };
@@ -149,6 +149,10 @@ export function createMusic() {
     m.playing = false;
     clearInterval(timer);
     fade(0, 0.25);
+  };
+  // Call after the music switch changes.
+  m.refresh = () => {
+    if (m.playing) fade(isMusicOn() ? VOLUME : 0, 0.2);
   };
   m.setLanes = (lanes) => {
     m.k = intensityFor(lanes);

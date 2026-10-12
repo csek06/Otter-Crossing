@@ -6,6 +6,8 @@ let ac = null;
 let master = null;
 let musicBus = null;
 let muted = load('muted', false);
+// Music has its own switch so a booth can keep effects and drop the music.
+let musicOn = load('music', true);
 
 function ensure() {
   if (ac) return ac;
@@ -38,6 +40,15 @@ export function unlockAudio() {
 
 export function isMuted() {
   return muted;
+}
+
+export function isMusicOn() {
+  return musicOn;
+}
+
+export function setMusicOn(v) {
+  musicOn = v;
+  save('music', v);
 }
 
 export function setMuted(v) {

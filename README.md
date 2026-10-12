@@ -18,7 +18,7 @@ Scores, the local top 10, today's daily best, the outfit wallet and the sound se
 - **Play:** a fresh random course every run. Good runs go on the local top 10.
 - **Daily challenge:** one course per calendar date, the same for everyone. The seed comes from the local date, so a given date always builds the same course. Game over shows today's best and a **Copy result** button with a one-line result to paste in Slack. Daily runs do not go on the top 10.
 - **Outfits:** every run's action items go into a wallet. Spend them on role outfits: Sales (a tie, 15), Customer success (a scarf, 25), Recruiting (a lanyard badge, 40) and Education (a cap and glasses, 60). Costs are in `src/game/wardrobe.js`, names and lines in `CONTENT.outfits`.
-- **Music:** a synthesized four-bar loop that adds layers (pad and bass, hats, arpeggio, drums, lead) and speeds up from 104 to 128 BPM as you cross lanes, reaching full intensity at 100 lanes. It plays only during a run and stops on pause and game over. The sound button mutes music and effects together.
+- **Music:** a synthesized four-bar loop that adds layers (pad and bass, hats, arpeggio, drums, lead) and speeds up from 104 to 128 BPM as you cross lanes, reaching full intensity at 100 lanes. It plays only during a run and stops on pause and game over. The music button (the note on the title, or Music on and off on the pause screen) turns off just the music and keeps the effects. The sound button mutes everything. Both settings are saved on the device.
 
 ## Booth mode
 

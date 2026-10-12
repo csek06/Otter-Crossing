@@ -46,7 +46,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     moved: false,
     shake: 0,
     stall: 0,          // seconds since the last forward progress
-    hawk: { warn: 0, swoopT: -1 },
+    hawk: { warn: 0, swoopT: -1, alarm: 0, beepT: 0, pulse: 1 },
     gen: null,
     seed: 0,
     hintsShown: new Set(),
@@ -95,6 +95,12 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     }
   }
 
+  function resetAlarm() {
+    game.hawk.alarm = 0;
+    game.hawk.beepT = 0;
+    game.hawk.pulse = 1;
+  }
+
   game.reset = function reset(mode = 'free') {
     for (const l of game.lanes) lanePool.release(l);
     game.lanes.length = 0;
@@ -123,6 +129,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     game.stall = 0;
     game.hawk.warn = 0;
     game.hawk.swoopT = -1;
+    resetAlarm();
     game.stats.highlights = 0;
     game.active.length = 0;
     game.held.length = 0;
@@ -259,6 +266,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     game.stall = 0;
     game.hawk.warn = 0;
     game.hawk.swoopT = -1;
+    resetAlarm();
     input.clear();
   };
 
@@ -311,6 +319,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     p.deathLane = hit && hit.lane ? hit.lane : null;
     p.hopT = -1;
     game.state = 'dying';
+    resetAlarm();
     input.setEnabled(false);
     if (cause === 'hawk') {
       game.hawk.swoopT = 0;
@@ -536,6 +545,21 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
       hint('hawk');
     } else {
       game.hawk.warned = false;
+    }
+    // The alarm: from HAWK_ALARM seconds, a beep and a red pulse over the whole
+    // screen, faster as the strike nears (1 a second up to HAWK_ALARM_HZ).
+    if (game.stall >= RULES.HAWK_ALARM && !game.auto) {
+      const k = Math.min(1, (game.stall - RULES.HAWK_ALARM) / (RULES.HAWK_STRIKE - RULES.HAWK_ALARM));
+      game.hawk.alarm = k;
+      game.hawk.pulse += dt;
+      game.hawk.beepT -= dt;
+      if (game.hawk.beepT <= 0) {
+        sfx.alarm(k);
+        game.hawk.pulse = 0;
+        game.hawk.beepT = 1 / lerp(1, Math.min(3, RULES.HAWK_ALARM_HZ), k);
+      }
+    } else {
+      resetAlarm();
     }
     if (game.stall >= RULES.HAWK_STRIKE) {
       kill('hawk', null);

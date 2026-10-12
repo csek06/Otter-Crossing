@@ -319,8 +319,15 @@ for (const size of SIZES) {
   await page.keyboard.press('ArrowUp');
   // Freeze the camera so only the stall timer matters.
   await page.evaluate(() => { window.__otter.game.moved = false; });
-  await wait(page, 4600);
+  await wait(page, 1200);
+  const calm = await page.evaluate(() => ({ alarm: window.__otter.game.hawk.alarm, num: document.getElementById('hud-hawk-num').textContent, red: document.getElementById('hud-hawk').classList.contains('is-alarm') }));
+  check(await page.isVisible('#hud-hawk') && Number(calm.num) >= 5 && Number(calm.num) <= 6 && calm.alarm === 0 && !calm.red, `the HUD counts down to the hawk (${calm.num}), no alarm yet`);
+  await wait(page, 3400);
+  const loud = await page.evaluate(() => ({ alarm: window.__otter.game.hawk.alarm, num: document.getElementById('hud-hawk-num').textContent, red: document.getElementById('hud-hawk').classList.contains('is-alarm'), sr: document.getElementById('hud-hawk-sr').textContent }));
+  check(loud.alarm > 0 && loud.red && Number(loud.num) <= 3, `after 3 seconds the alarm sounds and the screen glows (${loud.num}s left)`);
+  check(/^Seconds until the hawk strikes: \d\./.test(loud.sr), `screen readers get the countdown (${loud.sr})`);
   check((await page.evaluate(() => window.__otter.game.hawk.warn)) === 0, 'no hawk shadow before 5 seconds');
+  await page.screenshot({ path: join(shots, 'hawk-alarm.png') });
   await wait(page, 1300);
   const warn = await page.evaluate(() => window.__otter.game.hawk.warn);
   check(warn > 0 && (await state(page)).state === 'playing', `hawk shadow grows after 5 seconds (${warn.toFixed(2)})`);
@@ -330,6 +337,7 @@ for (const size of SIZES) {
   await wait(page, 1500);
   const s = await state(page);
   check(s.state === 'over' && s.cause === 'hawk', `stalling 7 seconds brings the Deadline Hawk (cause ${s.cause})`);
+  check((await page.evaluate(() => window.__otter.game.hawk.alarm)) === 0, 'the alarm stops once the hawk strikes');
   check(errors.length === 0, `hawk stall: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }

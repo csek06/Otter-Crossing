@@ -20,6 +20,7 @@ The title screen plays a silent demo behind the menu: an autopilot otter plays a
 
 - **Play:** a fresh random course every run. Each player keeps one top score, so game over only offers to save a run that beats your best. In booth mode, where one device is shared, any run that makes the local top 10 can be saved.
 - **Daily challenge:** one course per calendar date, the same for everyone. The seed comes from the local date, so a given date always builds the same course. Game over shows today's best and a **Copy result** button with a one-line result to paste in Slack. Daily runs do not go on the top 10. The daily course runs outdoors, through the otter's own habitat: turtles, ducks, beavers, foxes, moose and bears cross on the trails, geese fly in low where the all-hands train would be, and the river has plain logs. It's the same course and hitboxes, only the art and the game over copy change.
+- **Deadline Hawk timer:** the HUD shows a countdown and bar for the seconds left before the hawk strikes. It refills on every new lane. After 3 seconds without progress (`RULES.HAWK_ALARM`), an alarm beeps and the whole screen glows red, beeping and pulsing faster and higher as the strike nears, from once a second up to 3 times a second. The shadow still appears at 5 seconds and the hawk strikes at 7.
 - **Outfits:** every run's action items go into a wallet. Spend them on role outfits: Sales (a tie, 15), Customer success (a scarf, 25), Recruiting (a lanyard badge, 40) and Education (a cap and glasses, 60). Costs are in `src/game/wardrobe.js`, names and lines in `CONTENT.outfits`.
 - **Music:** a synthesized four-bar loop that adds layers (pad and bass, hats, arpeggio, drums, lead) and speeds up from 104 to 128 BPM as you cross lanes, reaching full intensity at 100 lanes. It plays only during a run and stops on pause and game over. The music button (the note on the title, or Music on and off on the pause screen) turns off just the music and keeps the effects. The sound button mutes everything. Both settings are saved on the device.
 
@@ -223,7 +224,7 @@ test/
 ## Accessibility and comfort
 
 - Hazards read by shape and motion, not color alone: meetings are calendar cards with tick marks and a direction arrow, the all-hands is a long chain of envelopes behind signal lamps, the logs you ride are round wood with a cut end and a highlighter stripe.
-- Nothing flashes faster than 3 times a second. The all-hands lamps flash 2 times a second, and the test suite checks it.
+- Nothing flashes faster than 3 times a second. The all-hands lamps flash 2 times a second, the hawk alarm pulses at most 3 times a second, and the test suite checks both. With reduced motion on, the hawk alarm is a steady red glow with no pulse.
 - Menu buttons are at least 48px, with a visible focus ring. Menus work with the keyboard, and the initials picker takes typed letters.
 - `prefers-reduced-motion` turns off the hit shake and splash droplets.
 

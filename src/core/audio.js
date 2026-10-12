@@ -115,6 +115,12 @@ export const sfx = {
     noise({ time: 0.12, gain: 0.18, freq: 300, type: 'lowpass' });
     noise({ time: 0.12, gain: 0.18, freq: 300, type: 'lowpass', delay: 0.18 });
   },
+  // The hawk alarm: one beep per pulse, higher and louder as the strike nears (k 0 to 1).
+  alarm: (k) => {
+    const f = 620 + 520 * k;
+    tone({ type: 'square', from: f, to: f, time: 0.08, gain: 0.06 + 0.06 * k });
+    tone({ type: 'sine', from: 140, to: 90, time: 0.12, gain: 0.12 + 0.08 * k });
+  },
   screech: () => {
     tone({ type: 'sawtooth', from: 1800, to: 900, time: 0.45, gain: 0.1 });
     tone({ type: 'square', from: 2400, to: 1300, time: 0.35, gain: 0.05, delay: 0.03 });

@@ -476,3 +476,8 @@ test('AUDIENCE internal uses internal meeting titles', () => {
     FLAGS.AUDIENCE = was;
   }
 });
+
+test('the hawk alarm starts before the shadow and pulses at most 3 times a second', () => {
+  assert.ok(RULES.HAWK_ALARM > 0 && RULES.HAWK_ALARM < RULES.HAWK_WARN && RULES.HAWK_WARN < RULES.HAWK_STRIKE);
+  assert.ok(RULES.HAWK_ALARM_HZ <= 3);
+});

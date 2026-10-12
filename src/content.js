@@ -47,6 +47,8 @@ export const CONTENT = {
     recapEmpty: 'Grab a glowing pickup next run to try an Otter feature.',
     learnMore: 'Learn more',
     powerTracker: 'Power-ups',
+    // The HUD countdown to the Deadline Hawk. {n} is whole seconds left.
+    hawkTimer: 'Seconds until the hawk strikes: {n}. Hop forward to reset it.',
     powerState: { off: 'not found yet', active: 'active', held: 'ready', used: 'used' },
     itemsShort: 'items',
     daily: 'Daily',

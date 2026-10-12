@@ -379,6 +379,44 @@ canvas {
   padding-top: calc(var(--u) * 7);
 }
 
+/* HUD hawk timer: seconds until the Deadline Hawk strikes if you stop moving
+   forward. It refills on every new lane, and turns red once the alarm sounds. */
+.hud-hawk {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 2.4);
+  background: var(--c-paper);
+  border: 2px solid var(--c-ink);
+  border-radius: 6px;
+}
+.hud-hawk-icon {
+  width: calc(var(--u) * 6);
+  height: calc(var(--u) * 6);
+  fill: var(--c-ink);
+}
+.hud-hawk-bar {
+  position: relative;
+  width: calc(var(--u) * 12);
+  height: calc(var(--u) * 2.4);
+  min-height: 8px;
+  border: 2px solid var(--c-ink);
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--c-paper-dark);
+}
+.hud-hawk-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: var(--c-ink);
+}
+.hud-hawk-num { min-width: 1ch; text-align: right; }
+.hud-hawk.is-alarm { background: var(--c-red); color: var(--c-paper); }
+.hud-hawk.is-alarm .hud-hawk-icon { fill: var(--c-paper); }
+.hud-hawk.is-alarm .hud-hawk-fill { background: var(--c-paper); }
+.hud-hawk.is-alarm .hud-hawk-bar { background: color-mix(in srgb, var(--c-red) 60%, var(--c-ink)); border-color: var(--c-paper); }
+
 /* HUD power-up tracker: a second row under the score with one slot per power-up
    this run can spawn. Faded and dashed until found, a draining ring while active,
    a full ink ring while held, crossed out once a once-a-run power-up is spent. */

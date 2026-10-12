@@ -149,6 +149,7 @@ export function createRenderer(stage, game, opts) {
     }
     if (game.hawk.swoopT >= 0 && game.state !== 'title') drawSwoop(c);
     if (showMarkers) drawMarkerLabels(c, first, last);
+    drawAlarm(c);
 
     // Facade edges, or the edges of the playfield.
     c.fillStyle = v.habitat ? PAL.forestDeep : PAL.wallDark;
@@ -165,6 +166,23 @@ export function createRenderer(stage, game, opts) {
       c.textBaseline = 'middle';
       c.fillText(`${fps.toFixed(0)} fps`, 10, v.h - 13);
     }
+  }
+
+  // The hawk alarm lights the whole screen red: a steady glow that grows as the
+  // strike nears, plus a short pulse on each beep (at most 3 a second). With
+  // reduced motion only the steady glow shows.
+  function drawAlarm(c) {
+    const k = game.hawk.alarm;
+    if (!(k > 0) || game.state !== 'playing') return;
+    const flash = v.still ? 0 : Math.exp(-game.hawk.pulse * 7) * (0.12 + 0.16 * k);
+    const a = 0.1 + 0.22 * k + flash;
+    const cx = v.w / 2;
+    const cy = v.h / 2;
+    const g = c.createRadialGradient(cx, cy, Math.min(v.w, v.h) * 0.2, cx, cy, Math.hypot(cx, cy));
+    g.addColorStop(0, rgba(PAL.red, a * 0.25));
+    g.addColorStop(1, rgba(PAL.red, Math.min(0.7, a * 1.6)));
+    c.fillStyle = g;
+    c.fillRect(-v.tile, -v.tile, v.w + v.tile * 2, v.h + v.tile * 2); // covers screen shake too
   }
 
   // Wide screens: shade the world outside the 9 playable columns.

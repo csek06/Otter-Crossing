@@ -234,7 +234,10 @@ function frame(now) {
   }
   renderer.draw(PARAMS.debug ? fps : null);
   checkIdle(now);
-  if (game.state === 'playing' || game.state === 'dying' || game.state === 'learn') updatePowerChips();
+  if (game.state === 'playing' || game.state === 'dying' || game.state === 'learn') {
+    updatePowerChips();
+    screens.hawk(game);
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

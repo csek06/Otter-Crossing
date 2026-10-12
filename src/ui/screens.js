@@ -3,7 +3,7 @@
 // screen, plus the HUD and toasts. All text comes from content.js.
 
 import { CONTENT } from '../content.js';
-import { FLAGS, BOOTH } from '../config.js';
+import { FLAGS, BOOTH, RULES } from '../config.js';
 import { isMuted, setMuted, isMusicOn, setMusicOn } from '../core/audio.js';
 import { iconSvg } from '../render/icons.js';
 import { topScores, qualifies, addScore, lastInitials, clearScores } from '../game/leaderboard.js';
@@ -598,6 +598,12 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
   let featureTimer = 0;
   const feature = $('feature-toast');
 
+  const hawkEl = $('hud-hawk');
+  const hawkNum = $('hud-hawk-num');
+  const hawkFill = $('hud-hawk-fill');
+  const hawkSr = $('hud-hawk-sr');
+  let hawkShown = -1;
+
   // HUD power-up chips with a timer ring.
   const powersEl = $('hud-powers');
   const chips = new Map();
@@ -610,6 +616,18 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
     hud(visible) {
       hud.hidden = !visible;
       if (!visible) this.powers([]);
+    },
+    // The hawk timer, every frame while playing.
+    hawk(game) {
+      const left = Math.max(0, RULES.HAWK_STRIKE - game.stall);
+      const n = Math.ceil(left);
+      if (n !== hawkShown) {
+        hawkShown = n;
+        hawkNum.textContent = String(n);
+        hawkSr.textContent = fmt(C.hawkTimer, { n });
+      }
+      hawkFill.style.transform = `scaleX(${(left / RULES.HAWK_STRIKE).toFixed(3)})`;
+      hawkEl.classList.toggle('is-alarm', game.hawk.alarm > 0);
     },
     score(game) {
       $('hud-lanes').textContent = String(game.score);

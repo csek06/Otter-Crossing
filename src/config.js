@@ -56,6 +56,8 @@ export const RULES = {
   ALLHANDS_BLINK_HZ: 2,       // signal lamp flashes per second, never above 3
   HAWK_WARN: 5,               // seconds without forward progress before the shadow appears
   HAWK_STRIKE: 7,             // seconds without forward progress before the hawk strikes
+  HAWK_ALARM: 3,              // seconds without progress before the alarm beeps and the screen glows red
+  HAWK_ALARM_HZ: 3,           // fastest alarm pulse, at the strike; never above 3 a second
   TOKEN_CHANCE: 0.24,         // chance a lane carries an action item token
   POWERUP_FIRST_MIN: 5,       // the first power-up is placed from this many lanes in
   POWERUP_FIRST_BY: 15,       // and is guaranteed within this many lanes

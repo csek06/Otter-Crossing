@@ -4,7 +4,7 @@
   /* Six named colors. The game art reads these too. */
   --c-paper: #F3EEE4;
   --c-ink: #2A211C;
-  --c-brand: #3B5BDB; /* PLACEHOLDER: swap in the official Otter blue. */
+  --c-brand: #1D25E2; /* REVIEW: the blue used for links on otter.ai. Confirm with brand. */
   --c-teal: #0F2F37;
   --c-highlighter: #FFE14D;
   --c-red: #E5484D;
@@ -148,8 +148,17 @@ canvas {
   border-radius: 4px;
   opacity: 0.6;
 }
-.logo-slot:not(:empty) { border: 0; opacity: 1; }
-.logo-slot svg { width: 100%; height: 100%; }
+/* With a logo in it, the slot becomes a small paper plaque so it reads over the scene. */
+.logo-slot:not(:empty) {
+  width: auto;
+  height: auto;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 4.5);
+  background: var(--c-paper);
+  border: 3px solid var(--c-ink);
+  border-radius: 6px;
+  opacity: 1;
+}
+.logo-slot svg { display: block; width: calc(var(--u) * 20); height: auto; color: var(--c-ink); }
 
 .sign {
   display: flex;

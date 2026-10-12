@@ -9,6 +9,7 @@ import { createRng } from '../core/rng.js';
 import { CONTENT } from '../content.js';
 import { PAL } from '../render/palette.js';
 import { roundRect, shadow, FONT_DISPLAY } from '../render/primitives.js';
+import { drawShore, drawGoose } from '../render/habitat.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -31,6 +32,7 @@ export const allhands = {
     lane.t = 0;
     lane.idle = rng.range(0.6, lane.idleMax);
     lane.front = 0;
+    lane.exitFront = null;
     lane.signalT = 0;
   },
 
@@ -42,6 +44,7 @@ export const allhands = {
     if (lane.state === 'idle') {
       if (lane.t >= lane.idle) {
         lane.state = 'warn';
+        lane.exitFront = null;
         lane.t = 0;
         lane.signalT = 0;
       }
@@ -58,6 +61,7 @@ export const allhands = {
       const tail = lane.front - lane.dir * lane.trainLen;
       const gone = lane.dir > 0 ? tail > GRID.COLS + 0.5 : tail < -0.5;
       if (gone) {
+        lane.exitFront = lane.front; // only for drawing the train leaving on wide screens
         lane.state = 'idle';
         lane.t = 0;
         lane.idle = lane.runtime.range(lane.idleMin, lane.idleMax);
@@ -103,38 +107,63 @@ export const allhands = {
     return s ? [[s[0] + TUNING.HAZARD_INSET, s[1] - TUNING.HAZARD_INSET]] : [];
   },
 
+  // Where the train is drawn. Same as span while it passes. On wide screens it is
+  // also drawn on its way in during the warning, and on its way out after, both
+  // outside the playfield, so it never pops in or out of view.
+  drawFront(lane, v) {
+    if (lane.state === 'pass') return lane.front;
+    if (!v.wide) return null;
+    if (lane.state === 'warn') {
+      const entry = lane.dir > 0 ? -allhands.entryGap : GRID.COLS + allhands.entryGap;
+      return entry - lane.dir * lane.speed * (lane.warnTime - lane.t);
+    }
+    if (lane.exitFront == null) return null;
+    const f = lane.exitFront + lane.dir * lane.speed * lane.t;
+    const tail = f - lane.dir * lane.trainLen;
+    return (lane.dir > 0 ? tail > v.c1 + 1 : tail < v.c0 - 1) ? null : f;
+  },
+
   drawGround(ctx, lane, v, y) {
     const t = v.tile;
     const top = y - v.rowH;
-    const w = t * GRID.COLS;
-    ctx.fillStyle = PAL.rail;
-    ctx.fillRect(v.ox - 1, top, w + 2, v.rowH + 0.5);
-    // Ties and rails.
-    ctx.fillStyle = PAL.railTie;
-    for (let c = 0; c < GRID.COLS * 2; c++) {
-      ctx.fillRect(v.ox + c * t * 0.5 + t * 0.12, top + v.rowH * 0.18, t * 0.18, v.rowH * 0.64);
+    const x0 = v.gx0;
+    const w = v.gx1 - v.gx0;
+    if (v.habitat) {
+      // A gravel bar on the flyway.
+      drawShore(ctx, lane, v, top);
+    } else {
+      ctx.fillStyle = PAL.rail;
+      ctx.fillRect(x0, top, w, v.rowH + 0.5);
+      // Ties and rails.
+      ctx.fillStyle = PAL.railTie;
+      const c0 = v.wide ? v.c0 * 2 : 0;
+      const c1 = v.wide ? v.c1 * 2 : GRID.COLS * 2;
+      for (let c = c0; c < c1; c++) {
+        ctx.fillRect(v.ox + c * t * 0.5 + t * 0.12, top + v.rowH * 0.18, t * 0.18, v.rowH * 0.64);
+      }
+      ctx.fillStyle = PAL.railSteel;
+      ctx.fillRect(x0, top + v.rowH * 0.3, w, Math.max(1.5, v.line * 1.2));
+      ctx.fillRect(x0, top + v.rowH * 0.68, w, Math.max(1.5, v.line * 1.2));
     }
-    ctx.fillStyle = PAL.railSteel;
-    ctx.fillRect(v.ox, top + v.rowH * 0.3, w, Math.max(1.5, v.line * 1.2));
-    ctx.fillRect(v.ox, top + v.rowH * 0.68, w, Math.max(1.5, v.line * 1.2));
     // Steady red edge while the signal is on. Steady, not blinking.
     if (allhands.signalOn(lane)) {
       ctx.fillStyle = PAL.redSoft;
-      ctx.fillRect(v.ox, top, w, v.rowH * 0.12);
-      ctx.fillRect(v.ox, y - v.rowH * 0.12, w, v.rowH * 0.12);
+      ctx.fillRect(x0, top, w, v.rowH * 0.12);
+      ctx.fillRect(x0, y - v.rowH * 0.12, w, v.rowH * 0.12);
     }
   },
 
-  // Signal posts sit in the facade margins on both sides of the lane.
+  // Signal posts sit just outside the playfield on both sides of the lane. In
+  // the habitat they're wooden posts, with the same red lamps.
   drawSignals(ctx, lane, v, y) {
     const t = v.tile;
     const on = allhands.signalOn(lane);
     const phase = allhands.lampPhase(lane);
-    const mw = v.ox;
+    const mw = v.margin;
     for (const side of [0, 1]) {
-      const cx = side === 0 ? mw / 2 : v.ox + t * GRID.COLS + mw / 2;
+      const cx = side === 0 ? v.ox - mw / 2 : v.ox + t * GRID.COLS + mw / 2;
       const top = y - v.rowH;
-      ctx.fillStyle = PAL.ink;
+      ctx.fillStyle = v.habitat ? PAL.brownDark : PAL.ink;
       roundRect(ctx, cx - mw * 0.36, top + v.rowH * 0.06, mw * 0.72, v.rowH * 0.88, mw * 0.2);
       ctx.fill();
       for (let i = 0; i < 2; i++) {
@@ -148,21 +177,28 @@ export const allhands = {
   },
 
   drawObjects(ctx, lane, v, y) {
-    const s = allhands.span(lane);
-    if (!s) return;
+    const front = allhands.drawFront(lane, v);
+    if (front == null) return;
     const t = v.tile;
     const gy = y - v.rowH * 0.14;
     const depth = v.rowH * 0.66;
     const height = t * 0.5;
-    shadow(ctx, v.ox + ((s[0] + s[1]) / 2) * t, gy + v.rowH * 0.04, ((s[1] - s[0]) / 2) * t, v.rowH * 0.15);
+    const lo = v.wide ? v.c0 - 1 : -1.5;
+    const hi = v.wide ? v.c1 + 1 : GRID.COLS + 0.5;
+    const tail = front - lane.dir * lane.trainLen;
+    if (!v.habitat) shadow(ctx, v.ox + ((front + tail) / 2) * t, gy + v.rowH * 0.04, (lane.trainLen / 2) * t, v.rowH * 0.15);
     // Cars: one engine and a chain of envelopes, each one tile long.
-    // The engine is two tiles long and always leads.
+    // The engine is two tiles long and always leads. In the habitat: a lead
+    // goose and its flock.
     for (let i = 1; i < lane.trainLen; i++) {
-      const pos = lane.dir > 0 ? lane.front - (i + 1) : lane.front + i;
-      if (pos > GRID.COLS + 0.5 || pos < -1.5) continue;
+      const pos = lane.dir > 0 ? front - (i + 1) : front + i;
+      if (pos > hi || pos < lo) continue;
       if (i === 1) {
-        const ex = lane.dir > 0 ? lane.front - 2 : lane.front;
-        drawEngine(ctx, v.ox + ex * t, gy, t, depth, height, v, lane.dir);
+        const ex = lane.dir > 0 ? front - 2 : front;
+        if (v.habitat) drawGoose(ctx, v.ox + ex * t, gy, v, lane.dir, true, i);
+        else drawEngine(ctx, v.ox + ex * t, gy, t, depth, height, v, lane.dir);
+      } else if (v.habitat) {
+        drawGoose(ctx, v.ox + pos * t, gy, v, lane.dir, false, i);
       } else {
         drawEnvelope(ctx, v.ox + pos * t, gy, t, depth, height, v);
       }

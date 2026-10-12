@@ -4,6 +4,7 @@
 import { GRID } from '../config.js';
 import { PAL } from '../render/palette.js';
 import { block, shadow, roundRect } from '../render/primitives.js';
+import { drawMeadow, drawNature, hash2 } from '../render/habitat.js';
 
 const ALL = (1 << GRID.COLS) - 1;
 const KINDS = ['desk', 'plant', 'mug', 'cabinet'];
@@ -79,17 +80,35 @@ export const focus = {
   },
 
   drawGround(ctx, lane, v, y) {
+    if (v.habitat) return drawMeadow(ctx, lane, v, y - v.rowH);
     // Carpet tiles: a quiet checker so movement reads on the grid.
     ctx.fillStyle = PAL.paper;
-    ctx.fillRect(v.ox, y - v.rowH, v.tile * GRID.COLS, v.rowH + 0.5);
+    ctx.fillRect(v.gx0, y - v.rowH, v.gx1 - v.gx0, v.rowH + 0.5);
     ctx.fillStyle = PAL.paperDark;
-    for (let c = (lane.row & 1); c < GRID.COLS; c += 2) {
+    const c0 = v.wide ? v.c0 : 0;
+    const c1 = v.wide ? v.c1 : GRID.COLS - 1;
+    for (let c = c0; c <= c1; c++) {
+      if (((c - lane.row) & 1) !== 0) continue;
       ctx.fillRect(v.ox + c * v.tile, y - v.rowH, v.tile, v.rowH + 0.5);
     }
   },
 
   drawObjects(ctx, lane, v, y) {
-    for (const o of lane.obstacles) drawObstacle(ctx, o, v.ox + o.col * v.tile, y, v);
+    // Wide screens: scenery off the playfield, fixed to the world.
+    if (v.wide) {
+      for (let c = v.c0; c <= v.c1; c++) {
+        if (c >= 0 && c < GRID.COLS) continue;
+        const h = hash2(lane.row, c);
+        if (h % 100 >= (v.habitat ? 34 : 22)) continue;
+        const kind = KINDS[(h >> 8) % KINDS.length];
+        if (v.habitat) drawNature(ctx, kind, v.ox + c * v.tile, y, v);
+        else drawObstacle(ctx, { kind }, v.ox + c * v.tile, y, v);
+      }
+    }
+    for (const o of lane.obstacles) {
+      if (v.habitat) drawNature(ctx, o.kind, v.ox + o.col * v.tile, y, v);
+      else drawObstacle(ctx, o, v.ox + o.col * v.tile, y, v);
+    }
   },
 };
 

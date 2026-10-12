@@ -2,7 +2,7 @@
 
 An endless lane-hopper for Otter.ai. Hop an otter across a workday full of meetings, a river of feature blurbs with highlighted logs to ride, the all-hands express and a deadline that will not wait. Power-ups teach Otter features, and the game over screen says which feature would have saved you.
 
-Runs are about 30 to 120 seconds. It works on phones, tablets and desktops, offline, from one HTML file.
+Runs are about 30 to 120 seconds. It works on phones, tablets and desktops, offline, from one HTML file. The game fills the screen: on a laptop or monitor the lanes run on past the 9 playable columns to the screen edges, shaded so the playfield stays clear.
 
 ## Play it
 
@@ -19,7 +19,7 @@ The title screen plays a silent demo behind the menu: an autopilot otter plays a
 
 
 - **Play:** a fresh random course every run. Good runs go on the local top 10.
-- **Daily challenge:** one course per calendar date, the same for everyone. The seed comes from the local date, so a given date always builds the same course. Game over shows today's best and a **Copy result** button with a one-line result to paste in Slack. Daily runs do not go on the top 10.
+- **Daily challenge:** one course per calendar date, the same for everyone. The seed comes from the local date, so a given date always builds the same course. Game over shows today's best and a **Copy result** button with a one-line result to paste in Slack. Daily runs do not go on the top 10. The daily course runs outdoors, through the otter's own habitat: turtles, ducks, beavers, foxes, moose and bears cross on the trails, geese fly in low where the all-hands train would be, and the river has plain logs. It's the same course and hitboxes, only the art and the game over copy change.
 - **Outfits:** every run's action items go into a wallet. Spend them on role outfits: Sales (a tie, 15), Customer success (a scarf, 25), Recruiting (a lanyard badge, 40) and Education (a cap and glasses, 60). Costs are in `src/game/wardrobe.js`, names and lines in `CONTENT.outfits`.
 - **Music:** a synthesized four-bar loop that adds layers (pad and bass, hats, arpeggio, drums, lead) and speeds up from 104 to 128 BPM as you cross lanes, reaching full intensity at 100 lanes. It plays only during a run and stops on pause and game over. The music button (the note on the title, or Music on and off on the pause screen) turns off just the music and keeps the effects. The sound button mutes everything. Both settings are saved on the device.
 
@@ -121,7 +121,7 @@ All on-screen text is in `src/content.js`: feature names, taglines, descriptions
 
 ## Brand
 
-- **Colors:** seven CSS variables at the top of `src/styles.css`, including `--c-water` for the river. `--c-brand` is `#144FFF`, the logo blue from the otter.ai media kit, and it is the only brand blue in the game: logo, buttons, signs, glows and pickups. The game art reads these variables too, so one change updates menus and canvas.
+- **Colors:** eight CSS variables at the top of `src/styles.css`, including `--c-water` for the river and `--c-grass` for the daily habitat. `--c-brand` is `#144FFF`, the logo blue from the otter.ai media kit, and it is the only brand blue in the game: logo, buttons, signs, glows and pickups. The game art reads these variables too, so one change updates menus and canvas.
 - **Logo:** the Otter logo mark from the otter.ai site header is inlined in `<div class="logo-slot">` in `src/index.html`. It uses `currentColor` and is drawn in `--c-brand`. The power-up explainer's "Inside Otter" label reuses the same mark. Confirm usage with brand before launch. To swap it, replace the SVG in that slot.
 - **Fonts:** Overpass ExtraBold (display) and Overpass Mono (numbers, the river), both SIL Open Font License 1.1, inlined as base64 at build time from `@fontsource`. Body text uses the system font.
 
@@ -204,12 +204,12 @@ src/
   config.js        flags, tuning and generator rules
   content.js       all copy
   main.js          wires everything together
-  core/            loop helpers: input, stage (9:16 letterbox), audio, music, rng, pool, storage
+  core/            loop helpers: input, stage (fills the window), audio, music, rng, pool, storage
   game/            game state, generator, player, effects, leaderboard,
                    daily challenge, wardrobe (outfits), booth sign-ups, autopilot
   lanes/           focus, meetings, river, allhands
   powerups/        notetaker, aichat, summary, actionitems, liveassist, workmode
-  render/          renderer, palette, otter, hawk, pickups, icons
+  render/          renderer, palette, otter, hawk, pickups, icons, habitat (daily art)
   ui/screens.js    title, how to play, pause, game over, leaderboard, HUD
 tools/
   build.mjs        bundles everything into dist/otter-crossing.html

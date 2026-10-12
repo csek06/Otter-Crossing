@@ -9,6 +9,7 @@ import { CONTENT } from '../content.js';
 import { PAL } from '../render/palette.js';
 import { roundRect, fitText, shadow, FONT_UI } from '../render/primitives.js';
 import { sprite } from '../render/sprites.js';
+import { drawTrail, drawAnimal } from '../render/habitat.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -142,27 +143,38 @@ export const meetings = {
   },
 
   drawGround(ctx, lane, v, y) {
-    const w = v.tile * GRID.COLS;
     const top = y - v.rowH;
+    if (v.habitat) return drawTrail(ctx, lane, v, top);
     ctx.fillStyle = PAL.track;
-    ctx.fillRect(v.ox, top, w, v.rowH + 0.5);
+    ctx.fillRect(v.gx0, top, v.gx1 - v.gx0, v.rowH + 0.5);
     // Calendar slot lines: solid on the hour, faint on the half hour.
     ctx.fillStyle = PAL.trackLine;
-    for (let c = 0; c <= GRID.COLS; c++) {
+    const last = v.wide ? v.c1 : GRID.COLS;
+    for (let c = v.wide ? v.c0 : 0; c <= last; c++) {
       ctx.fillRect(v.ox + c * v.tile - 0.5, top, 1, v.rowH);
     }
-    ctx.fillRect(v.ox, top, w, 1);
+    ctx.fillRect(v.gx0, top, v.gx1 - v.gx0, 1);
   },
 
   drawObjects(ctx, lane, v, y) {
     const t = v.tile;
+    const gy = y - v.rowH * 0.14;
     for (const car of lane.cars) {
-      const l = meetings.carLeft(lane, car);
-      if (l > GRID.COLS + 0.5 || l + car.len < -0.5) continue;
-      const x = v.ox + l * t;
-      const gy = y - v.rowH * 0.14;
-      shadow(ctx, x + (car.len * t) / 2, gy + v.rowH * 0.04, (car.len * t) / 2, v.rowH * 0.14);
-      drawMeeting(ctx, x, gy, car, v, lane.dir);
+      const base = meetings.carLeft(lane, car);
+      // The lane is a ring, so on wide screens the same car shows up again one
+      // ring length away, exactly where it will be after it wraps.
+      for (let k = -1; k <= 1; k++) {
+        const l = base + k * lane.ring;
+        if (l > v.c1 + 0.5 || l + car.len < v.c0 - 0.5) continue;
+        if (!v.wide && (l > GRID.COLS + 0.5 || l + car.len < -0.5)) continue;
+        const x = v.ox + l * t;
+        if (v.habitat) {
+          drawAnimal(ctx, x, gy, car, lane.dir, v);
+          continue;
+        }
+        shadow(ctx, x + (car.len * t) / 2, gy + v.rowH * 0.04, (car.len * t) / 2, v.rowH * 0.14);
+        drawMeeting(ctx, x, gy, car, v, lane.dir);
+      }
     }
   },
 };

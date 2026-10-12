@@ -1017,6 +1017,24 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
+// Full screen: the canvas fills the window at every size. Wide screens see the
+// world past the playfield, and the title drawer stays over the playfield.
+for (const size of [SIZES[1], SIZES[3], { name: 'desktop-1920x1080', width: 1920, height: 1080, dpr: 1, touch: false }]) {
+  const { ctx, page, errors } = await open(size, '?debug=1&seed=7');
+  const box = await page.locator('#game').boundingBox();
+  check(Math.abs(box.width - size.width) <= 1 && Math.abs(box.height - size.height) <= 1, `full screen ${size.name}: canvas fills the window (${box.width}x${box.height})`);
+  const drawer = await page.locator('#screen-title .drawer').boundingBox();
+  const wide = size.width > size.height * 0.75;
+  check(wide ? drawer.width < size.width * 0.7 : Math.abs(drawer.width - size.width) <= 1, `full screen ${size.name}: title drawer ${wide ? 'sits over the playfield' : 'spans the screen'} (${Math.round(drawer.width)})`);
+  if (wide) {
+    await page.click('#btn-play');
+    await wait(page, 500);
+    await page.screenshot({ path: join(shots, `wide-${size.name}.png`) });
+  }
+  check(errors.length === 0, `full screen ${size.name}: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 // Daily challenge: the same course every time today, its own best, a result to share.
 {
   const { ctx, page, errors } = await open(SIZES[3], '?debug=1&seed=7&lane=river');
@@ -1026,8 +1044,12 @@ for (const size of SIZES) {
   });
   await page.click('#btn-daily');
   const a = await course();
+  check((await page.evaluate(() => window.__otter.game.theme)) === 'habitat', 'daily: runs in the outdoor habitat');
+  await wait(page, 600);
+  await page.screenshot({ path: join(shots, 'daily-habitat.png') });
   await page.evaluate(() => { window.__otter.game.actionItems = 3; window.__otter.game.score = 9; window.__otter.game.kill('meeting', null); });
   await wait(page, 1100);
+  check((await page.textContent('#over-cause')) === 'Bowled over on the trail', 'daily: habitat game over copy');
   check(await page.isVisible('#over-mode'), 'daily: game over shows the daily tag');
   check(await page.isHidden('#initials'), 'daily: no initials entry for daily runs');
   check((await page.textContent('#over-best-label')) === "Today's best" && (await page.textContent('#over-best')) === '9', 'daily: today\'s best is tracked');
@@ -1045,6 +1067,7 @@ for (const size of SIZES) {
   await page.click('#btn-play');
   const c = await course();
   check(c.mode === 'free' && c.seed !== a.seed, 'daily: free play uses its own seed');
+  check((await page.evaluate(() => window.__otter.game.theme)) === 'office', 'daily: free play is back in the office');
   check(errors.length === 0, `daily: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }

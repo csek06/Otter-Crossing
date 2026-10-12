@@ -20,6 +20,7 @@ export const GRID = {
   COLS: 9,            // playable columns
   VIEW_COLS: 10,      // playable columns plus half a tile of office facade on each side
   ROW_SCALE: 0.9,     // on-screen row height relative to tile width (camera tilt)
+  MIN_ROWS: 15,       // on wide screens, tiles shrink so at least this many rows fit
   START_COL: 4,
   START_ZONE: 3,      // safe focus rows at the start of a run
   BEHIND: 6,          // rows kept on screen behind the otter

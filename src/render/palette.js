@@ -9,6 +9,7 @@ const FALLBACK = {
   highlighter: '#FFE14D',
   red: '#E5484D',
   water: '#1F5FA8',
+  grass: '#5E9E4A',
 };
 
 export const PAL = { ...FALLBACK };
@@ -20,7 +21,7 @@ export function loadPalette() {
     const v = css.getPropertyValue('--c-' + key).trim();
     PAL[key] = v || FALLBACK[key];
   }
-  // Derived tones. Everything in the game is a mix of the seven named colors.
+  // Derived tones. Everything in the game is a mix of the eight named colors.
   PAL.paperDark = mix(PAL.paper, PAL.ink, 0.07);
   PAL.paperDeep = mix(PAL.paper, PAL.ink, 0.14);
   PAL.track = mix(PAL.paper, PAL.brand, 0.13);
@@ -62,6 +63,27 @@ export function loadPalette() {
   PAL.railSteel = mix(PAL.ink, PAL.paper, 0.6);
   PAL.redSoft = rgba(PAL.red, 0.35);
   PAL.redDim = mix(PAL.red, PAL.ink, 0.6);
+  // The daily challenge's habitat: meadow, trail, forest and riverbank.
+  PAL.grassLight = mix(PAL.grass, PAL.highlighter, 0.18);
+  PAL.grassDark = mix(PAL.grass, PAL.teal, 0.3);
+  PAL.forest = mix(PAL.grass, PAL.teal, 0.72);
+  PAL.forestDeep = mix(PAL.forest, PAL.ink, 0.35);
+  PAL.pine = mix(PAL.grass, PAL.teal, 0.5);
+  PAL.dirt = mix(PAL.wood, PAL.paper, 0.45);
+  PAL.dirtDark = mix(PAL.dirt, PAL.ink, 0.18);
+  PAL.sand = mix(mix(PAL.paper, PAL.highlighter, 0.2), PAL.teal, 0.12);
+  PAL.sandDark = mix(PAL.sand, PAL.ink, 0.2);
+  PAL.gravel = mix(PAL.paper, PAL.teal, 0.24);
+  PAL.stone = mix(PAL.paper, PAL.teal, 0.42);
+  PAL.stoneDark = mix(PAL.stone, PAL.ink, 0.3);
+  PAL.fox = mix(PAL.red, PAL.highlighter, 0.35);
+  PAL.foxDark = mix(PAL.fox, PAL.ink, 0.3);
+  PAL.brown = mix(PAL.wood, PAL.ink, 0.25);
+  PAL.brownDark = mix(PAL.wood, PAL.ink, 0.55);
+  PAL.shell = mix(PAL.grass, PAL.ink, 0.3);
+  PAL.goose = mix(PAL.ink, PAL.paper, 0.55);
+  PAL.beak = mix(PAL.highlighter, PAL.red, 0.35);
+  PAL.berry = PAL.red;
   return PAL;
 }
 

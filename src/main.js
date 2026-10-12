@@ -3,7 +3,7 @@
 import { CONTENT } from './content.js';
 import { FLAGS, BOOTH, GRID } from './config.js';
 import { PARAMS } from './core/params.js';
-import { createStage } from './core/stage.js';
+import { createStage, tileSize } from './core/stage.js';
 import { createInput } from './core/input.js';
 import { sfx, unlockAudio } from './core/audio.js';
 import { loadPalette } from './render/palette.js';
@@ -70,7 +70,10 @@ game = createGame({
       markers.score(g);
       if (screens) screens.score(g);
     },
-    hint: (id) => screens && CONTENT.hints[id] && screens.hint(CONTENT.hints[id]),
+    hint: (id) => {
+      const hints = game.theme === 'habitat' ? CONTENT.habitat.hints : CONTENT.hints;
+      if (screens && hints[id]) screens.hint(hints[id]);
+    },
     message: (key, vars = {}) => {
       const s = CONTENT.powerupMessages[key];
       if (screens && s) screens.hint(s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)), key === 'workModeDone' ? 2.6 : 1.8);
@@ -139,7 +142,7 @@ function fitDemoCamera() {
   const posts = title.querySelector('.sign-posts').getBoundingClientRect();
   const drawer = title.querySelector('.drawer').getBoundingClientRect();
   if (!st.height || drawer.top <= posts.bottom) return;
-  const rowH = (stage.w / GRID.VIEW_COLS) * GRID.ROW_SCALE;
+  const rowH = tileSize(stage.w, stage.h) * GRID.ROW_SCALE;
   const y = drawer.top - st.top - (drawer.top - posts.bottom) * 0.25;
   game.demoBehind = Math.max(2, (stage.h - y) / rowH);
   if (game.demo) game.behind = game.demoBehind;

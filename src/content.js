@@ -298,6 +298,36 @@ export const CONTENT = {
     hawk: 'Keep moving. The Deadline Hawk is circling.',
   },
 
+  // The daily challenge runs through the otter's habitat: animals on the trail,
+  // geese on the flyway, logs on the river. Same lanes, outdoor copy.
+  habitat: {
+    draft: true,
+    deaths: {
+      meeting: {
+        title: 'Bowled over on the trail',
+        tip: 'Grab Otter Notetaker and it takes the next hit for you.',
+      },
+      river: {
+        title: 'Carried off downstream',
+        tip: 'Even otters tire. Reach a log within a second.',
+      },
+      allhands: {
+        title: 'Caught on the goose flyway',
+        tip: 'Red lights mean the flock is coming in low.',
+      },
+      hawk: {
+        title: 'Snatched by the hawk',
+        tip: 'Keep moving. Hawks watch for anything sitting still.',
+      },
+    },
+    hints: {
+      meetings: 'Animals on the trail. Hop through the gaps.',
+      river: 'Hop across on the floating logs.',
+      allhands: 'Red lights mean geese are coming in low.',
+      hawk: 'Keep moving. A hawk is circling.',
+    },
+  },
+
   // Meeting block titles, keyed by length in tiles (1 = 30 min, 2 = 60 min, 3 = 90 min).
   // Clearly fictional. Keep them short so they fit on the block.
   meetingTitles: {

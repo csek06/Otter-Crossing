@@ -1,7 +1,7 @@
 /* Otter Crossing. Colors and type are variables so brand values can be swapped in one place. */
 
 :root {
-  /* Seven named colors. The game art reads these too. */
+  /* Eight named colors. The game art reads these too. */
   --c-paper: #F3EEE4;
   --c-ink: #2A211C;
   --c-brand: #144FFF; /* the Otter logo blue, from the otter.ai media kit (blue-horizontal.svg). One blue everywhere. */
@@ -9,6 +9,7 @@
   --c-highlighter: #FFE14D;
   --c-red: #E5484D;
   --c-water: #1F5FA8; /* the river */
+  --c-grass: #5E9E4A; /* the daily challenge's outdoor habitat */
 
   --c-paper-dark: color-mix(in srgb, var(--c-paper) 90%, var(--c-ink));
   --c-ink-soft: color-mix(in srgb, var(--c-ink) 70%, var(--c-paper));
@@ -129,6 +130,15 @@ canvas {
   padding: calc(var(--u) * 6) calc(var(--u) * 6) calc(var(--u) * 8);
   background: var(--c-paper);
   border-top: 3px solid var(--c-ink);
+}
+
+/* Wide screens: the drawer sits over the playfield instead of spanning the window. */
+.stage.wide .drawer {
+  align-self: center;
+  width: min(100%, calc(var(--stage-w) * 1.18));
+  border: 3px solid var(--c-ink);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
 }
 
 .drawer-heading {

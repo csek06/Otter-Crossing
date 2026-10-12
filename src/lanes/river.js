@@ -139,39 +139,49 @@ export const river = {
   },
 
   // Blue water with wave crests, and a stream of feature blurbs flowing on it.
+  // In the habitat it's just the river.
   drawGround(ctx, lane, v, y) {
     const t = v.tile;
     const top = y - v.rowH;
+    const x0 = v.gx0;
+    const w = v.gx1 - v.gx0;
     ctx.fillStyle = PAL.water;
-    ctx.fillRect(v.ox - 1, top, t * GRID.COLS + 2, v.rowH + 0.5);
+    ctx.fillRect(x0, top, w, v.rowH + 0.5);
     // A darker band along the far bank gives the water some depth.
     ctx.fillStyle = PAL.waterDeep;
-    ctx.fillRect(v.ox - 1, top, t * GRID.COLS + 2, v.rowH * 0.22);
+    ctx.fillRect(x0, top, w, v.rowH * 0.22);
     drawWaves(ctx, lane, v, top);
-    const img = textSprite(lane, v);
-    const ringPx = lane.ring * t;
-    let x0 = v.ox + (lane.phase - lane.pad) * t;
-    while (x0 > v.ox) x0 -= ringPx;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(v.ox, top, t * GRID.COLS, v.rowH);
-    ctx.clip();
-    for (let x = x0; x < v.ox + t * GRID.COLS; x += ringPx) ctx.drawImage(img, x, top, ringPx, v.rowH);
-    ctx.restore();
+    if (!v.habitat) {
+      const img = textSprite(lane, v);
+      const ringPx = lane.ring * t;
+      let tx = v.ox + (lane.phase - lane.pad) * t;
+      while (tx > x0) tx -= ringPx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x0, top, w, v.rowH);
+      ctx.clip();
+      for (let x = tx; x < x0 + w; x += ringPx) ctx.drawImage(img, x, top, ringPx, v.rowH);
+      ctx.restore();
+    }
     // Line break between transcript lines.
     ctx.fillStyle = PAL.riverLine;
-    ctx.fillRect(v.ox, top, t * GRID.COLS, 1);
+    ctx.fillRect(x0, top, w, 1);
   },
 
   drawObjects(ctx, lane, v, y) {
     const t = v.tile;
     for (const plat of lane.platforms) {
-      const l = river.left(lane, plat);
-      if (l > GRID.COLS + 0.5 || l + plat.len < -0.5) continue;
-      drawHighlight(ctx, v.ox + l * t, y, plat, v);
-      if (plat.token && !plat.taken) drawToken(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.62, v, v.time);
-      const pu = lane.powerup;
-      if (pu && pu.plat === plat && !pu.taken) drawPickup(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.45, v, pu.id, v.time);
+      const base = river.left(lane, plat);
+      // Copies one ring length away fill wide screens (see meetings.js).
+      for (let k = -1; k <= 1; k++) {
+        const l = base + k * lane.ring;
+        if (l > v.c1 + 0.5 || l + plat.len < v.c0 - 0.5) continue;
+        if (!v.wide && (l > GRID.COLS + 0.5 || l + plat.len < -0.5)) continue;
+        drawHighlight(ctx, v.ox + l * t, y, plat, v);
+        if (plat.token && !plat.taken) drawToken(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.62, v, v.time);
+        const pu = lane.powerup;
+        if (pu && pu.plat === plat && !pu.taken) drawPickup(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.45, v, pu.id, v.time);
+      }
     }
   },
 };
@@ -181,10 +191,9 @@ export const river = {
 const WAVE_LEN = 0.6; // tiles
 function drawWaves(ctx, lane, v, top) {
   const t = v.tile;
-  const w = t * GRID.COLS;
   ctx.save();
   ctx.beginPath();
-  ctx.rect(v.ox, top, w, v.rowH);
+  ctx.rect(v.gx0, top, v.gx1 - v.gx0, v.rowH);
   ctx.clip();
   ctx.strokeStyle = PAL.waveCrest;
   ctx.lineWidth = Math.max(1, v.line);
@@ -198,7 +207,8 @@ function drawWaves(ctx, lane, v, top) {
   ctx.beginPath();
   for (const r of rows) {
     let x = v.ox + (((((lane.wave || 0) * r.k + r.off) % WAVE_LEN) + WAVE_LEN) % WAVE_LEN) * t - len;
-    for (; x < v.ox + w; x += len) {
+    while (x > v.gx0) x -= len;
+    for (; x < v.gx1; x += len) {
       // One crest: a short arch, then a flat trough before the next.
       ctx.moveTo(x, r.y);
       ctx.quadraticCurveTo(x + len * 0.25, r.y - amp * 2, x + len * 0.5, r.y);
@@ -309,7 +319,8 @@ function drawHighlight(ctx, x, y, plat, v) {
   ctx.ellipse(ex, top + h / 2, cap * 0.55, h * 0.28, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Highlighter stripe with the phrase.
+  // Highlighter stripe with the phrase. In the habitat a log is just a log.
+  if (v.habitat) return;
   const left = x0 + cap * 0.6;
   const right = ex - cap * 1.05;
   const bh = h * 0.6;

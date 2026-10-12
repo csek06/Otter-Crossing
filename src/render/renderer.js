@@ -10,6 +10,8 @@ import { drawHawk, drawHawkShadow } from './hawk.js';
 import { drawPickup, drawIcon } from './pickup.js';
 import { rgba } from './palette.js';
 import { visualRow, logicalRow } from '../game/player.js';
+import { tileSize } from '../core/stage.js';
+import { drawTreeline } from './habitat.js';
 
 export function createRenderer(stage, game, opts) {
   const v = { tile: 0, rowH: 0, ox: 0, line: 1, scale: 1, w: 0, h: 0, time: 0 };
@@ -18,10 +20,19 @@ export function createRenderer(stage, game, opts) {
     v.w = stage.w;
     v.h = stage.h;
     v.scale = stage.dpr;
-    v.tile = stage.w / GRID.VIEW_COLS;
+    v.tile = tileSize(stage.w, stage.h);
     v.rowH = v.tile * GRID.ROW_SCALE;
     v.ox = (stage.w - v.tile * GRID.COLS) / 2;
     v.line = Math.max(1, v.tile * 0.035);
+    // Wide screens: the lanes run on past the playfield to the screen edges,
+    // shaded so the 9 playable columns stay clear. Phones in portrait keep the
+    // half-tile margins (office facades, or forest in the habitat).
+    v.wide = v.ox > v.tile * 0.75;
+    v.margin = Math.min(v.ox, v.tile / 2);
+    v.c0 = Math.floor(-v.ox / v.tile) - 1; // first and last visible columns
+    v.c1 = Math.ceil((v.w - v.ox) / v.tile);
+    v.gx0 = v.wide ? 0 : v.ox - 1; // where lane ground is drawn
+    v.gx1 = v.wide ? v.w : v.ox + v.tile * GRID.COLS + 1;
     game.viewRows = Math.ceil(stage.h / v.rowH) + 1;
   }
   layout();
@@ -30,6 +41,10 @@ export function createRenderer(stage, game, opts) {
 
   function drawFacade(row, y) {
     const t = v.tile;
+    if (v.habitat) {
+      for (const side of [0, 1]) drawTreeline(ctx(), row, side, side === 0 ? 0 : v.ox + t * GRID.COLS, y - v.rowH, v.ox, v);
+      return;
+    }
     const top = y - v.rowH;
     const mw = v.ox;
     for (const side of [0, 1]) {
@@ -69,8 +84,11 @@ export function createRenderer(stage, game, opts) {
     _ctx = stage.ctx;
     const c = _ctx;
     v.time = performance.now() / 1000;
+    v.theme = game.theme || 'office';
+    v.habitat = v.theme === 'habitat';
+    v.still = opts.reducedMotion();
     c.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0);
-    c.fillStyle = PAL.ink;
+    c.fillStyle = v.habitat ? PAL.forest : PAL.ink;
     c.fillRect(0, 0, v.w, v.h);
 
     if (game.shake > 0 && !opts.reducedMotion()) {
@@ -86,8 +104,8 @@ export function createRenderer(stage, game, opts) {
       const lane = game.getLane(r);
       const y = rowY(r);
       if (lane) lane.mod.drawGround(c, lane, v, y);
-      drawFacade(r, y);
-      if (lane && lane.mod.drawSignals) lane.mod.drawSignals(c, lane, v, y);
+      if (!v.wide) drawFacade(r, y);
+      if (lane && lane.mod.drawSignals && !v.wide) lane.mod.drawSignals(c, lane, v, y);
     }
     const showMarkers = game.markers && game.markers.length && game.state !== 'title' && game.state !== 'demo';
     if (showMarkers) drawMarkerLines(c, first, last);
@@ -96,9 +114,11 @@ export function createRenderer(stage, game, opts) {
     const p = game.player;
     const pRow = p.dead ? p.row : Math.round(visualRow(p));
     c.save();
-    c.beginPath();
-    c.rect(v.ox, -v.h, v.tile * GRID.COLS, v.h * 3);
-    c.clip();
+    if (!v.wide) {
+      c.beginPath();
+      c.rect(v.ox, -v.h, v.tile * GRID.COLS, v.h * 3);
+      c.clip();
+    }
     for (let r = last; r >= first; r--) {
       const lane = game.getLane(r);
       const y = rowY(r);
@@ -119,11 +139,19 @@ export function createRenderer(stage, game, opts) {
       drawHawkShadow(c, v.ox + (p.x + 0.5) * v.tile, rowY(visualRow(p)) - v.rowH * 0.32, v, game.hawk.warn, v.time);
     }
     c.restore();
+    if (v.wide) {
+      drawOffField(c);
+      // Warning lamps go on top of the shade so they stay bright.
+      for (let r = first; r <= last; r++) {
+        const lane = game.getLane(r);
+        if (lane && lane.mod.drawSignals) lane.mod.drawSignals(c, lane, v, rowY(r));
+      }
+    }
     if (game.hawk.swoopT >= 0 && game.state !== 'title') drawSwoop(c);
     if (showMarkers) drawMarkerLabels(c, first, last);
 
-    // Facade edges.
-    c.fillStyle = PAL.wallDark;
+    // Facade edges, or the edges of the playfield.
+    c.fillStyle = v.habitat ? PAL.forestDeep : PAL.wallDark;
     c.fillRect(v.ox - v.line, 0, v.line, v.h);
     c.fillRect(v.ox + v.tile * GRID.COLS, 0, v.line, v.h);
 
@@ -137,6 +165,14 @@ export function createRenderer(stage, game, opts) {
       c.textBaseline = 'middle';
       c.fillText(`${fps.toFixed(0)} fps`, 10, v.h - 13);
     }
+  }
+
+  // Wide screens: shade the world outside the 9 playable columns.
+  function drawOffField(c) {
+    const right = v.ox + v.tile * GRID.COLS;
+    c.fillStyle = rgba(v.habitat ? PAL.forestDeep : PAL.ink, v.habitat ? 0.42 : 0.38);
+    c.fillRect(0, 0, v.ox, v.h);
+    c.fillRect(right, 0, v.w - right, v.h);
   }
 
   // Where the hawk carries the otter during its swoop: [hawk y, otter lift].

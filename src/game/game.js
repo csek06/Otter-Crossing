@@ -28,6 +28,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
   const game = {
     state: 'title', // title, demo, playing, paused, learn, dying, over
     mode: 'free',      // free or daily
+    theme: 'office',   // office, or habitat for the daily challenge
     demo: false,       // true while the title screen attract loop plays
     demoRuns: 0,       // attract loop runs finished, for tests
     dailyKey: null,
@@ -101,6 +102,9 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     // The daily course ignores the debug parameters so every run of it is the same.
     const daily = mode === 'daily';
     game.dailyKey = daily ? dateKey() : null;
+    // The daily course runs through the otter's habitat instead of the office.
+    // Only the art and copy change; the course is the same.
+    game.theme = daily ? 'habitat' : 'office';
     game.seed = daily ? dailySeed(game.dailyKey) : params.seed != null ? params.seed : randomSeed();
     game.startRow = daily ? 0 : params.start;
     game.gen = createGenerator({ seed: game.seed, startRow: game.startRow, only: daily ? null : params.lane });

@@ -692,7 +692,8 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
       }
     },
     gameOver(game, { cause, isBest, daily, wallet }) {
-      const d = CONTENT.deaths[cause] || CONTENT.deaths.meeting;
+      const deaths = game.theme === 'habitat' ? CONTENT.habitat.deaths : CONTENT.deaths;
+      const d = deaths[cause] || deaths.meeting;
       lastMode = game.mode;
       $('over-cause').textContent = d.title;
       // A Work run still going when the otter went down: say how close it was.

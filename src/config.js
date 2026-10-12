@@ -49,4 +49,8 @@ export const RULES = {
   HAWK_WARN: 5,               // seconds without forward progress before the shadow appears
   HAWK_STRIKE: 7,             // seconds without forward progress before the hawk strikes
   TOKEN_CHANCE: 0.24,         // chance a lane carries an action item token
+  POWERUP_FIRST_MIN: 5,       // the first power-up is placed from this many lanes in
+  POWERUP_FIRST_BY: 15,       // and is guaranteed within this many lanes
+  POWERUP_GAP_MIN: 25,        // lanes between later power-ups
+  POWERUP_GAP_MAX: 40,
 };

@@ -29,6 +29,22 @@ export const CONTENT = {
     best: 'Best',
     newBest: 'New best',
     logoAlt: 'Otter logo',
+    sound: 'Sound',
+    leaderboard: 'Top 10',
+    leaderboardHeading: 'Top 10 on this device',
+    noScores: 'No scores yet. Play a run to set one.',
+    madeTop10: 'You made the top 10',
+    initialsLabel: 'Your initials',
+    nextLetter: 'Next letter',
+    prevLetter: 'Previous letter',
+    letter: 'Letter',
+    saveScore: 'Save score',
+    saved: 'Saved',
+    recapHeading: 'Features you used',
+    recapEmpty: 'Grab a glowing pickup next run to try an Otter feature.',
+    learnMore: 'Learn more',
+    held: 'Ready',
+    itemsShort: 'items',
   },
 
   howTo: {
@@ -51,35 +67,35 @@ export const CONTENT = {
       name: 'Otter Notetaker',
       tagline: 'Joins your meetings and takes notes',
       description: 'Otter Notetaker can join your meetings and take notes for you.',
-      helpUrl: 'https://example.com/PLACEHOLDER-help-otter-notetaker',
+      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
     },
     aiChat: {
       draft: true,
       name: 'AI Chat',
       tagline: 'Ask what you missed, mid-meeting',
       description: 'Ask AI Chat what you missed while the meeting is still going.',
-      helpUrl: 'https://example.com/PLACEHOLDER-help-ai-chat',
+      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
     },
     summary: {
       draft: true,
       name: 'Summary',
       tagline: 'Get the gist without rewatching',
       description: 'Read the summary to get the gist of a meeting without rewatching it.',
-      helpUrl: 'https://example.com/PLACEHOLDER-help-summary',
+      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
     },
     actionItems: {
       draft: true,
       name: 'Action items',
       tagline: 'Captures to-dos and who owns them',
       description: 'Action items capture the to-dos from a meeting and who owns each one.',
-      helpUrl: 'https://example.com/PLACEHOLDER-help-action-items',
+      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
     },
     highlights: {
       draft: true,
       name: 'Highlights',
       tagline: 'Mark key moments as they happen',
       description: 'Highlight key moments in a conversation as they happen.',
-      helpUrl: 'https://example.com/PLACEHOLDER-help-highlights',
+      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
     },
     // Unreleased. Only used when FLAGS.SHOW_UNRELEASED is true. Placeholder pending PMM review.
     liveAssist: {
@@ -88,7 +104,7 @@ export const CONTENT = {
       name: 'Live Assist',
       tagline: 'Placeholder tagline pending PMM review',
       description: 'Placeholder description pending PMM review.',
-      helpUrl: 'https://example.com/PLACEHOLDER-help-live-assist',
+      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
     },
   },
 
@@ -149,28 +165,32 @@ export const CONTENT = {
     durations: { 1: '30m', 2: '60m', 3: '90m' },
   },
 
-  // Fictional transcript lines for the river. Speakers and companies are made up.
-  transcript: {
-    lines: [
-      "Priya: let's circle back on the Q3 timeline",
-      'Dev: I can own the follow-up email',
-      'Mara: quick question about the rollout',
-      'Theo: can everyone see my screen?',
-      'Priya: so the next steps are pretty clear',
-      'Jun: Fernhill Labs wants a demo next week',
-      'Mara: sorry, you cut out for a second',
-      'Dev: we agreed to ship on Thursday',
-      "Theo: let's park that for now",
-      "Jun: I'll send the notes after this",
+  // The river. Its water is a stream of feature blurbs: each feature's name and
+  // tagline, built from the features above so it always matches reviewed copy.
+  // Extra blurbs below are added to the stream. The highlight platforms show the
+  // short phrases. Keep phrases to about 15 characters so they fit on a highlight.
+  river: {
+    draft: true,
+    extraBlurbs: [],
+    phrases: [
+      'Otter Notetaker',
+      'Takes notes',
+      'AI Chat',
+      'Ask what you missed',
+      'Summary',
+      'Get the gist',
+      'Action items',
+      'Who owns them',
+      'Highlights',
+      'Key moments',
     ],
-    highlights: ['next steps', 'owner: Dev', 'ship Thursday', 'decision made', 'follow up', 'key point', 'action: Mara', 'demo next week'],
   },
 
   links: {
     tryOtter: {
       draft: true,
       label: 'Try Otter',
-      url: 'https://example.com/PLACEHOLDER-try-otter',
+      url: 'https://otter.ai', // REVIEW: add campaign tracking if marketing wants it
     },
   },
 

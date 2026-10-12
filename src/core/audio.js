@@ -95,6 +95,23 @@ export const sfx = {
     tone({ type: 'sawtooth', from: 1800, to: 900, time: 0.45, gain: 0.1 });
     tone({ type: 'square', from: 2400, to: 1300, time: 0.35, gain: 0.05, delay: 0.03 });
   },
+  powerup: () => {
+    tone({ type: 'triangle', from: 660, to: 660, time: 0.08, gain: 0.14 });
+    tone({ type: 'triangle', from: 880, to: 880, time: 0.08, gain: 0.14, delay: 0.07 });
+    tone({ type: 'triangle', from: 1320, to: 1320, time: 0.16, gain: 0.14, delay: 0.14 });
+  },
+  shield: () => {
+    tone({ type: 'square', from: 220, to: 160, time: 0.12, gain: 0.14 });
+    tone({ type: 'sine', from: 1200, to: 1800, time: 0.25, gain: 0.08, delay: 0.05 });
+  },
+  revive: () => {
+    tone({ type: 'sine', from: 300, to: 1200, time: 0.45, gain: 0.14 });
+    tone({ type: 'triangle', from: 600, to: 1500, time: 0.4, gain: 0.06, delay: 0.1 });
+  },
+  whoosh: () => {
+    noise({ time: 0.4, gain: 0.2, freq: 1800 });
+    tone({ type: 'sine', from: 400, to: 1000, time: 0.35, gain: 0.08 });
+  },
   start: () => {
     tone({ type: 'square', from: 440, to: 440, time: 0.08, gain: 0.08 });
     tone({ type: 'square', from: 660, to: 660, time: 0.12, gain: 0.08, delay: 0.09 });

@@ -5,7 +5,8 @@ import { GRID, TUNING, RULES } from '../config.js';
 import { Pool } from '../core/pool.js';
 import { randomSeed } from '../core/rng.js';
 import { createGenerator, difficultyAt, newLane } from './generator.js';
-import { createPlayer, resetPlayer, tryHop, updatePlayer, logicalRow, visualRow, isHopping } from './player.js';
+import { createPlayer, resetPlayer, tryHop, forceHop, updatePlayer, logicalRow, visualRow, isHopping } from './player.js';
+import { POWERUP_BY_ID } from '../powerups/registry.js';
 import { createFx } from './fx.js';
 import { load, save } from '../core/storage.js';
 
@@ -36,6 +37,12 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     seed: 0,
     hintsShown: new Set(),
     stats: { highlights: 0 },
+    active: [],        // timed power-ups: { mod, t, max }
+    held: [],          // held power-ups, like AI Chat
+    used: [],          // feature ids used this run, in order, for the game over recap
+    auto: null,        // Summary auto-hop in progress
+    lastSafeRow: 0,
+    sfx,
     fx: createFx(),
     debug: { invincible: false, hitboxes: false },
     viewRows: 20,
@@ -46,6 +53,15 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     return i >= 0 && i < game.lanes.length ? game.lanes[i] : null;
   }
   game.getLane = getLane;
+
+  // Like getLane, but generates lanes further ahead if needed.
+  function getLaneAhead(row) {
+    while (game.laneBase + game.lanes.length <= row) {
+      const r = game.laneBase + game.lanes.length;
+      game.lanes.push(game.gen.fill(lanePool.get(), r));
+    }
+    return getLane(row);
+  }
 
   function ensureLanes() {
     const want = Math.ceil(game.camRow + game.viewRows + TUNING.LOOKAHEAD_ROWS);
@@ -79,6 +95,11 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     game.hawk.warn = 0;
     game.hawk.swoopT = -1;
     game.stats.highlights = 0;
+    game.active.length = 0;
+    game.held.length = 0;
+    game.used.length = 0;
+    game.auto = null;
+    game.lastSafeRow = game.startRow;
     game.hintsShown.clear();
     game.fx.clear();
     // Prime lanes and let traffic settle so the first frame looks lived in.
@@ -92,6 +113,87 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     game.state = 'playing';
     input.setEnabled(true);
     events.state(game);
+    // Debug: ?powerup=<id> grants one at the start.
+    if (params.powerup && POWERUP_BY_ID[params.powerup]) grantPowerup(POWERUP_BY_ID[params.powerup]);
+  };
+
+  // Power-up plumbing used by the modules in src/powerups/.
+  game.addActive = (mod) => {
+    game.removeActive(mod.id);
+    game.active.push({ mod, t: mod.duration, max: mod.duration });
+  };
+  game.removeActive = (id) => {
+    const i = game.active.findIndex((e) => e.mod.id === id);
+    if (i >= 0) game.active.splice(i, 1);
+  };
+  game.hold = (mod) => {
+    if (!game.held.includes(mod)) game.held.push(mod);
+  };
+  game.release = (id) => {
+    const i = game.held.findIndex((m) => m.id === id);
+    if (i >= 0) game.held.splice(i, 1);
+  };
+  game.isActive = (id) => game.active.some((e) => e.mod.id === id);
+  game.message = (key) => events.message(key);
+  game.markUsed = (featureId) => {
+    if (!game.used.includes(featureId)) game.used.push(featureId);
+  };
+
+  function grantPowerup(mod) {
+    game.markUsed(mod.featureId);
+    sfx.powerup();
+    events.powerup(mod);
+    mod.apply(game);
+  }
+
+  // Summary: hop forward n lanes, then on to the next safe lane.
+  game.autoHop = (n) => {
+    const p = game.player;
+    let target = null;
+    for (let r = p.row + n; r <= p.row + n + 12; r++) {
+      const l = getLaneAhead(r);
+      if (l && l.mod.safe) { target = l; break; }
+    }
+    if (!target) return;
+    // Land on the free column closest to where the otter is.
+    let col = Math.round(p.x);
+    for (let d = 0; d < GRID.COLS; d++) {
+      const a = col - d, b = col + d;
+      if (a >= 0 && !target.mod.blocks(target, a)) { col = a; break; }
+      if (b < GRID.COLS && !target.mod.blocks(target, b)) { col = b; break; }
+    }
+    game.auto = { row: target.row, col };
+    input.clear();
+  };
+
+  // AI Chat: back to the nearest safe lane on screen, with a moment of invulnerability.
+  game.respawnSafe = (invuln) => {
+    const p = game.player;
+    let lane = null;
+    for (let r = p.row; r >= Math.ceil(game.camRow) + 1; r--) {
+      const l = getLane(r);
+      if (l && l.mod.safe) { lane = l; break; }
+    }
+    if (!lane) {
+      lane = getLane(game.lastSafeRow) || getLane(Math.ceil(game.camRow) + 1);
+      // Pull the camera back so the otter is in view.
+      game.camRow = Math.min(game.camRow, lane.row - 2);
+    }
+    let col = Math.round(Math.min(GRID.COLS - 1, Math.max(0, p.x)));
+    for (let d = 0; d < GRID.COLS; d++) {
+      if (col - d >= 0 && !lane.mod.blocks(lane, col - d)) { col -= d; break; }
+      if (col + d < GRID.COLS && !lane.mod.blocks(lane, col + d)) { col += d; break; }
+    }
+    p.row = p.fromRow = p.toRow = lane.row;
+    p.x = p.fromX = p.toX = col;
+    p.hopT = -1;
+    p.swim = -1;
+    p.riding = null;
+    p.invuln = invuln;
+    game.stall = 0;
+    game.hawk.warn = 0;
+    game.hawk.swoopT = -1;
+    input.clear();
   };
 
   game.setPaused = function setPaused(v) {
@@ -109,7 +211,25 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
   function kill(cause, hit) {
     const p = game.player;
     if (p.dead) return;
-    if (game.debug.invincible || p.invuln > 0) {
+    // Invulnerable after a shield hit or a revive: traffic passes through.
+    if (p.invuln > 0 && (cause === 'meeting' || cause === 'allhands')) return;
+    if (game.auto) return;
+    for (const e of game.active) {
+      if (e.mod.absorb && e.mod.absorb(game, cause)) {
+        game.shake = 0.15;
+        return;
+      }
+    }
+    if (!game.debug.invincible) {
+      for (const mod of game.held) {
+        if (mod.revive && mod.revive(game, cause)) {
+          game.shake = 0.2;
+          sfx.hit();
+          return;
+        }
+      }
+    }
+    if (game.debug.invincible) {
       // Keep debug runs playable: pull the otter out of trouble.
       if (cause === 'river') {
         p.swim = 0;
@@ -183,11 +303,48 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     }
   }
 
-  function takeToken(x, row) {
+  function takeToken(x, row, pulled = false) {
     game.actionItems++;
-    game.fx.check(x, row);
+    if (pulled) game.fx.pull(x, row, game.player);
+    else game.fx.check(x, row);
     sfx.pickup();
     events.score(game);
+  }
+  game.takeToken = takeToken;
+
+  function collectPowerup(lane) {
+    const pu = lane.powerup;
+    const p = game.player;
+    if (!pu || pu.taken || Math.abs(p.x - pu.col) >= 0.5) return;
+    const mod = POWERUP_BY_ID[pu.id];
+    if (!mod) return;
+    pu.taken = true;
+    grantPowerup(mod);
+  }
+
+  function updatePowerups(dt) {
+    for (let i = game.active.length - 1; i >= 0; i--) {
+      const e = game.active[i];
+      if (e.mod.update) e.mod.update(game, dt, e);
+      e.t -= dt;
+      if (e.t <= 0 && game.active[i] === e) game.active.splice(i, 1);
+    }
+  }
+
+  // Summary's auto-hop: quick hops forward, drifting toward the landing column.
+  function stepAuto() {
+    const p = game.player;
+    const a = game.auto;
+    if (isHopping(p)) return;
+    if (p.row >= a.row) {
+      game.auto = null;
+      p.invuln = Math.max(p.invuln, 0.5);
+      return;
+    }
+    const x = Math.round(p.x);
+    const toX = x + Math.sign(a.col - x);
+    forceHop(p, toX, p.row + 1, 0.075);
+    p.invuln = Math.max(p.invuln, 0.3);
   }
 
   // One bell per lamp flash, from the nearest active all-hands lane on screen.
@@ -232,8 +389,11 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
       return;
     }
 
+    updatePowerups(dt);
+    if (game.auto) stepAuto();
+
     // Start the next buffered move as soon as the otter is free.
-    if (!isHopping(p)) {
+    if (!isHopping(p) && !game.auto) {
       const dir = input.next();
       if (dir) {
         const res = tryHop(p, dir, getLane);
@@ -253,6 +413,7 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
         p.swim = -1;
         p.riding = null;
       }
+      if (l && l.mod.safe && !game.auto) game.lastSafeRow = p.row;
       if (p.row > game.maxRow) {
         game.maxRow = p.row;
         game.score = game.maxRow - game.startRow;
@@ -262,7 +423,7 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     }
 
     // Lanes that move the otter (the river current).
-    if (!isHopping(p)) {
+    if (!isHopping(p) && !game.auto) {
       const l = getLane(p.row);
       if (l && l.mod.carry) {
         const res = l.mod.carry(l, p, dt);
@@ -271,6 +432,7 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
           sfx.splash();
         } else if (res === 'ride') {
           game.stats.highlights++;
+          game.markUsed('highlights');
         }
       }
     }
@@ -279,16 +441,19 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     const lane = getLane(logicalRow(p));
     if (lane) {
       collectTokens(lane);
-      const hit = lane.mod.collide(lane, p);
+      collectPowerup(lane);
+      const hit = game.auto ? null : lane.mod.collide(lane, p);
       if (hit) {
         hit.lane = lane;
         kill(hit.cause, hit);
         if (p.dead) return;
+        // A shield or revive can move the otter; stop processing this frame.
+        if (lane !== getLane(logicalRow(p))) return;
       }
     }
 
     // The Deadline Hawk: stall too long and it strikes. The shadow warns first.
-    game.stall += dt;
+    if (!game.auto) game.stall += dt;
     game.hawk.warn = Math.max(0, Math.min(1, (game.stall - RULES.HAWK_WARN) / (RULES.HAWK_STRIKE - RULES.HAWK_WARN)));
     if (game.stall >= RULES.HAWK_WARN) {
       if (!game.hawk.warned) {

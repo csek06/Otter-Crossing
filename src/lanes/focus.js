@@ -74,6 +74,10 @@ export const focus = {
     return null;
   },
 
+  safeAt(lane, col) {
+    return !((lane.blocked >> col) & 1);
+  },
+
   drawGround(ctx, lane, v, y) {
     // Carpet tiles: a quiet checker so movement reads on the grid.
     ctx.fillStyle = PAL.paper;

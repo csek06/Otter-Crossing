@@ -21,12 +21,17 @@
       <span id="hud-items" class="hud-num">0</span>
       <span class="sr-only" data-copy="game.actionItems"></span>
     </div>
+    <div id="hud-powers" class="hud-powers"></div>
     <button id="btn-pause" class="hud-pause" type="button" data-copy-label="game.pause">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="4" width="3.5" height="12" rx="1"/><rect x="11.5" y="4" width="3.5" height="12" rx="1"/></svg>
     </button>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="feature-toast" class="feature-toast" role="status" aria-live="polite">
+    <span id="ft-icon" class="ft-icon"></span>
+    <span class="ft-text"><strong id="ft-name"></strong><span id="ft-tagline"></span></span>
+  </div>
 
   <section id="screen-title" class="screen screen-title" hidden>
     <div class="logo-slot" aria-label="Otter logo" data-copy-label="game.logoAlt"><!-- Drop the Otter logo SVG here. --></div>
@@ -37,10 +42,22 @@
     </div>
     <div class="drawer">
       <button id="btn-play" class="btn btn-primary" type="button" data-copy="game.play"></button>
-      <div class="btn-row">
+      <div class="btn-row btn-row-3">
         <button id="btn-howto" class="btn" type="button" data-copy="game.howTo"></button>
-        <button class="btn btn-mute" type="button" aria-pressed="false"></button>
+        <button id="btn-board" class="btn" type="button" data-copy="game.leaderboard"></button>
+        <button class="btn btn-icon btn-mute" type="button" aria-pressed="false" data-copy-label="game.sound">
+          <svg class="icon-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="cross" d="M16 9l5 6M21 9l-5 6"/></svg>
+        </button>
       </div>
+    </div>
+  </section>
+
+  <section id="screen-board" class="screen" hidden>
+    <div class="drawer drawer-tall">
+      <h2 class="drawer-heading" data-copy="game.leaderboardHeading"></h2>
+      <ol id="board-list" class="board-list"></ol>
+      <p id="board-empty" class="board-empty" data-copy="game.noScores" hidden></p>
+      <button id="btn-board-back" class="btn btn-primary" type="button" data-copy="game.back"></button>
     </div>
   </section>
 
@@ -65,19 +82,37 @@
   </section>
 
   <section id="screen-over" class="screen" hidden>
-    <div class="drawer drawer-tall">
+    <div class="drawer drawer-full">
       <h2 id="over-cause" class="over-cause"></h2>
       <p id="over-tip" class="over-tip"></p>
       <dl class="over-stats">
         <div><dt data-copy="game.score"></dt><dd id="over-score">0</dd></div>
         <div><dt data-copy="game.best"></dt><dd id="over-best">0</dd></div>
+        <div><dt data-copy="game.actionItems"></dt><dd id="over-items">0</dd></div>
       </dl>
       <p id="over-newbest" class="over-newbest" data-copy="game.newBest" hidden></p>
+
+      <form id="initials" class="initials" hidden>
+        <p class="initials-heading" data-copy="game.madeTop10"></p>
+        <fieldset class="initials-slots">
+          <legend class="sr-only" data-copy="game.initialsLabel"></legend>
+        </fieldset>
+        <button id="btn-save" class="btn" type="submit" data-copy="game.saveScore"></button>
+      </form>
+
       <button id="btn-again" class="btn btn-primary" type="button" data-copy="game.playAgain"></button>
+
+      <section class="recap" aria-labelledby="recap-heading">
+        <h3 id="recap-heading" class="recap-heading" data-copy="game.recapHeading"></h3>
+        <ul id="recap-list" class="recap-list"></ul>
+        <p id="recap-empty" class="recap-empty" data-copy="game.recapEmpty" hidden></p>
+      </section>
+
       <div class="btn-row">
         <a id="btn-try" class="btn" target="_blank" rel="noopener"></a>
-        <button id="btn-over-quit" class="btn" type="button" data-copy="game.quit"></button>
+        <button id="btn-over-board" class="btn" type="button" data-copy="game.leaderboard"></button>
       </div>
+      <button id="btn-over-quit" class="btn btn-quiet" type="button" data-copy="game.quit"></button>
     </div>
   </section>
 

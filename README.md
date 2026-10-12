@@ -2,7 +2,7 @@
 
 An endless lane-hopper for Otter.ai. Hop through a workday full of meetings and learn Otter features along the way.
 
-Status: milestone 2. Focus time, meeting traffic, the transcript river, the all-hands express, the Deadline Hawk and action item tokens are in. Power-ups, the teaching recap, the leaderboard and polish come in milestone 3. The full README arrives with milestone 4.
+Status: milestone 3. All lane types, the Deadline Hawk, action item tokens, power-ups, the game over teaching screen and the local top 10 are in. The full README (adding lanes and power-ups, flags, deploying) and COPY_REVIEW.md arrive with milestone 4.
 
 ## Play it
 
@@ -27,6 +27,7 @@ The smoke test looks for Chromium at `/opt/pw-browsers/chromium-1194/chrome-linu
 - `src/config.js`: mode flags (`AUDIENCE`, `SHOW_UNRELEASED`, `BOOTH_MODE`) and tuning numbers.
 - `src/styles.css`: colors and fonts as CSS variables. `--c-brand` is a placeholder for the official Otter blue.
 - `src/lanes/`: one module per lane type, registered in `src/lanes/registry.js`.
+- `src/powerups/`: one module per power-up, registered in `src/powerups/registry.js`.
 
 ## Debug
 
@@ -36,6 +37,7 @@ Add to the URL:
 - `?lane=meetings`, `?lane=river`, `?lane=allhands` or `?lane=focus` spawns only that lane type (plus focus-time breathers).
 - `?start=300` starts at a later difficulty.
 - `?seed=42` replays the same course.
+- `?powerup=notetaker`, `aiChat`, `summary`, `actionItems` or `liveAssist` grants that power-up at the start. Live Assist only spawns naturally when `SHOW_UNRELEASED` is true, but the debug grant works either way.
 
 ## Fonts
 

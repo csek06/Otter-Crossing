@@ -7,10 +7,12 @@
 // - Stacked focus lanes never wall the otter in.
 // - A highlight passes every river column at least every RIVER_MAX_WAIT seconds.
 // - The all-hands signal fires at least ALLHANDS_MIN_WARNING seconds ahead.
+// - A power-up appears within the first POWERUP_FIRST_BY lanes, then every so often.
 
 import { GRID, RULES, TUNING } from '../config.js';
 import { createRng } from '../core/rng.js';
 import { LANES, HAZARDS } from '../lanes/registry.js';
+import { spawnable } from '../powerups/registry.js';
 
 const ALL = (1 << GRID.COLS) - 1;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -28,14 +30,17 @@ export function breatherChance(d) {
 }
 
 export function newLane() {
-  return { row: 0, type: 'focus', mod: null, obstacles: [], blocked: 0, cars: [], platforms: [], tokens: [], first: false };
+  return { row: 0, type: 'focus', mod: null, obstacles: [], blocked: 0, cars: [], platforms: [], tokens: [], powerup: null, first: false };
 }
 
 // only: restrict hazard lanes to one type id (debug ?lane=). Breathers still appear,
 // unless only is 'focus', in which case every lane is focus time.
-export function createGenerator({ seed, startRow = 0, only = null }) {
+// powerups: which power-ups may spawn, as [{ id, weight, oncePerRun }].
+export function createGenerator({ seed, startRow = 0, only = null, powerups = spawnable() }) {
   const rng = createRng(seed);
   const ctx = { reach: ALL, hazardRun: 0, meetingDir: 1, zone: null, firstStart: false };
+  const placedOnce = new Set();
+  let nextPowerup = startRow + rng.int(RULES.POWERUP_FIRST_MIN, RULES.POWERUP_FIRST_MIN + 4);
   const seen = new Set();
   let hazards = HAZARDS;
   if (only && only !== 'focus') hazards = HAZARDS.filter((h) => h.id === only);
@@ -78,6 +83,30 @@ export function createGenerator({ seed, startRow = 0, only = null }) {
     }
   }
 
+  // Power-ups sit on focus-time lanes, on a reachable free tile.
+  function placePowerup(lane, row) {
+    lane.powerup = null;
+    if (lane.type !== 'focus' || row < startRow + GRID.START_ZONE || row < nextPowerup) return;
+    const pool = powerups.filter((p) => !(p.oncePerRun && placedOnce.has(p.id)));
+    if (!pool.length) return;
+    let free = ctx.reach & ~lane.blocked;
+    for (const tok of lane.tokens) free &= ~(1 << tok.col);
+    if (!free) return;
+    const cols = [];
+    for (let c = 0; c < GRID.COLS; c++) if (free & (1 << c)) cols.push(c);
+    let total = 0;
+    for (const p of pool) total += p.weight;
+    let r = rng.next() * total;
+    let pick = pool[pool.length - 1];
+    for (const p of pool) {
+      r -= p.weight;
+      if (r <= 0) { pick = p; break; }
+    }
+    lane.powerup = { id: pick.id, col: rng.pick(cols), taken: false };
+    if (pick.oncePerRun) placedOnce.add(pick.id);
+    nextPowerup = row + rng.int(RULES.POWERUP_GAP_MIN, RULES.POWERUP_GAP_MAX);
+  }
+
   // Fill a lane object for the next row. Rows must be requested in order.
   function fill(lane, row) {
     const d = difficultyAt(row);
@@ -106,6 +135,7 @@ export function createGenerator({ seed, startRow = 0, only = null }) {
     lane.difficulty = d;
     mod.generate(lane, row, d, rng, ctx);
     placeTokens(lane, row);
+    placePowerup(lane, row);
     ctx.lastType = mod.id;
     lane.first = !seen.has(mod.id) && row >= startRow;
     if (row >= startRow) seen.add(mod.id);

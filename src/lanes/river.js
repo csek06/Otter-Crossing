@@ -1,4 +1,4 @@
-// Transcript river: the water is a line of meeting transcript flowing past.
+// Transcript river: the water is a stream of Otter feature blurbs flowing past.
 // Highlights glow on top of key phrases and act as platforms.
 //
 // Otters swim, so falling in is not instant: the current carries the otter
@@ -7,13 +7,23 @@
 // Rule (checked by the generator test): every gap between highlights is at most
 // RIVER_MAX_WAIT seconds of current, so a highlight passes any column at least that often.
 
-import { GRID, RULES } from '../config.js';
+import { GRID, RULES, FLAGS } from '../config.js';
 import { CONTENT } from '../content.js';
 import { PAL } from '../render/palette.js';
 import { roundRect, fitText, FONT_MONO } from '../render/primitives.js';
 import { drawToken } from '../render/token.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
+
+// "Feature name: tagline" for every feature that is live, plus any extra blurbs.
+export function riverLines() {
+  const lines = [];
+  for (const f of Object.values(CONTENT.features)) {
+    if (f.placeholder && !FLAGS.SHOW_UNRELEASED) continue;
+    lines.push(`${f.name}: ${f.tagline}`);
+  }
+  return lines.concat(CONTENT.river.extraBlurbs || []);
+}
 
 export function riverSpeed(d, rng) {
   return lerp(1.3, 1.7, d) + rng.range(0, lerp(0.5, 1.0, d));
@@ -34,7 +44,7 @@ export const river = {
     const minGap = maxGap * lerp(0.55, 0.75, d);
     const maxLen = d < 0.4 ? 3 : 2;
     const minLen = 2;
-    const phrases = CONTENT.transcript.highlights;
+    const phrases = CONTENT.river.phrases;
 
     lane.platforms.length = 0;
     let x = 0;
@@ -51,7 +61,7 @@ export const river = {
     lane.dir = ctx.riverDir;
     lane.pad = (lane.ring - GRID.COLS) / 2;
     lane.phase = rng.range(0, lane.ring);
-    lane.lineIndex = rng.int(0, CONTENT.transcript.lines.length - 1);
+    lane.lineIndex = rng.int(0, 31);
     lane.sprite = null;
   },
 
@@ -114,6 +124,10 @@ export const river = {
     return null;
   },
 
+  safeAt(lane, col) {
+    return !!river.platformAt(lane, col);
+  },
+
   hitboxes(lane) {
     return lane.platforms.map((p) => {
       const l = river.left(lane, p);
@@ -166,7 +180,7 @@ function textSprite(lane, v) {
   const g = c.getContext('2d');
   g.setTransform(v.scale, 0, 0, v.scale, 0, 0);
   g.clearRect(0, 0, w, h);
-  const lines = CONTENT.transcript.lines;
+  const lines = riverLines();
   const size = t * 0.3;
   g.font = `600 ${size}px ${FONT_MONO}`;
   g.textBaseline = 'middle';
@@ -230,7 +244,7 @@ function drawHighlight(ctx, x, y, plat, v) {
   ctx.rect(x0, top, x1 - x0, h);
   ctx.clip();
   ctx.fillStyle = PAL.ink;
-  fitText(ctx, plat.phrase, x1 - x0 - t * 0.14, t * 0.3, t * 0.2, 600, FONT_MONO);
+  fitText(ctx, plat.phrase, x1 - x0 - t * 0.12, t * 0.3, t * 0.16, 600, FONT_MONO);
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
   ctx.fillText(plat.phrase, (x0 + x1) / 2, top + h * 0.54);

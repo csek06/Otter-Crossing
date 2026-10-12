@@ -40,6 +40,8 @@ game = createGame({
   events: {
     score: (g) => screens && screens.score(g),
     hint: (id) => screens && CONTENT.hints[id] && screens.hint(CONTENT.hints[id]),
+    message: (key) => screens && CONTENT.powerupMessages[key] && screens.hint(CONTENT.powerupMessages[key], 1.8),
+    powerup: (mod) => screens && screens.feature(mod.featureId),
     gameOver: (g, info) => screens.gameOver(g, info),
     state: (g) => {
       if (!screens) return;
@@ -92,6 +94,15 @@ document.addEventListener('visibilitychange', () => {
 game.reset();
 screens.show('title');
 
+// HUD chips for active and held power-ups.
+const chipItems = [];
+function updatePowerChips() {
+  chipItems.length = 0;
+  for (const e of game.active) chipItems.push({ id: e.mod.id, featureId: e.mod.featureId, k: e.max ? e.t / e.max : 1 });
+  for (const m of game.held) chipItems.push({ id: m.id, featureId: m.featureId, k: 1, held: true });
+  screens.powers(chipItems);
+}
+
 // Main loop. Large frame gaps are split into small steps so collisions stay fair.
 let last = performance.now();
 let fps = 60;
@@ -105,6 +116,7 @@ function frame(now) {
     dt -= step;
   }
   renderer.draw(PARAMS.debug ? fps : null);
+  if (game.state === 'playing' || game.state === 'dying') updatePowerChips();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

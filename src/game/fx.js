@@ -4,7 +4,7 @@
 import { Pool } from '../core/pool.js';
 
 export function createFx() {
-  const pool = new Pool(() => ({ kind: '', x: 0, row: 0, vx: 0, vy: 0, h: 0, life: 0, max: 0 }));
+  const pool = new Pool(() => ({ kind: '', x: 0, row: 0, vx: 0, vy: 0, h: 0, life: 0, max: 0, fromX: 0, fromRow: 0, target: null }));
   const live = [];
 
   function spawn(kind, x, row, vx, vy, life) {
@@ -33,6 +33,14 @@ export function createFx() {
     check(x, row) {
       spawn('check', x, row, 0, 1.4, 0.6);
     },
+    // A token flying in to the otter (Action items magnet).
+    pull(x, row, target) {
+      spawn('pull', x, row, 0, 0, 0.28);
+      const p = live[live.length - 1];
+      p.fromX = x;
+      p.fromRow = row;
+      p.target = target;
+    },
     update(dt) {
       for (let i = live.length - 1; i >= 0; i--) {
         const p = live[i];
@@ -48,6 +56,12 @@ export function createFx() {
           p.vy -= 9 * dt;
         } else if (p.kind === 'check') {
           p.h += p.vy * dt;
+        } else if (p.kind === 'pull' && p.target) {
+          const k = 1 - p.life / p.max;
+          const e = k * k;
+          p.x = p.fromX + (p.target.x + 0.5 - p.fromX) * e;
+          p.row = p.fromRow + (p.target.row - p.fromRow) * e;
+          p.h = Math.sin(k * Math.PI) * 0.8;
         }
       }
     },

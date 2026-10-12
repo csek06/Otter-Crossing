@@ -14,6 +14,7 @@ import { meetingCap, bigGapFor } from '../src/lanes/meetings.js';
 import { spread, bitCount } from '../src/lanes/focus.js';
 import { river } from '../src/lanes/river.js';
 import { allhands } from '../src/lanes/allhands.js';
+import { POWERUPS, POWERUP_BY_ID, spawnable } from '../src/powerups/registry.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ALL = (1 << GRID.COLS) - 1;
@@ -274,6 +275,66 @@ test('action item tokens sit on reachable tiles', () => {
     }
   }
   assert.ok(n > 1000, `expected tokens, got ${n}`);
+});
+
+test('every run meets a power-up within the first 15 lanes', () => {
+  for (let seed = 1; seed <= 3000; seed++) {
+    const gen = createGenerator({ seed });
+    let first = null;
+    for (let row = 0; row <= RULES.POWERUP_FIRST_BY && first == null; row++) {
+      if (gen.fill(newLane(), row).powerup) first = row;
+    }
+    assert.ok(first != null && first <= RULES.POWERUP_FIRST_BY, `seed ${seed}: no power-up by lane ${RULES.POWERUP_FIRST_BY}`);
+  }
+});
+
+test('power-ups: reachable tiles, AI Chat once a run, nothing unreleased', () => {
+  const unreleased = new Set(POWERUPS.filter((p) => p.unreleased).map((p) => p.id));
+  let n = 0;
+  for (const run of RUNS) {
+    let reach = 1 << GRID.START_COL;
+    let aiChat = 0;
+    let last = null;
+    for (const l of playable(run)) {
+      if (l.type === 'focus') reach = spread(reach, l.blocked);
+      else reach = ALL;
+      if (!l.powerup) continue;
+      n++;
+      assert.equal(l.type, 'focus', `row ${l.row}: power-up off a focus lane`);
+      assert.ok(!((l.blocked >> l.powerup.col) & 1), `row ${l.row}: power-up on an obstacle`);
+      assert.ok((reach >> l.powerup.col) & 1, `row ${l.row}: power-up on an unreachable tile`);
+      assert.ok(!unreleased.has(l.powerup.id), `row ${l.row}: unreleased ${l.powerup.id} spawned`);
+      assert.ok(POWERUP_BY_ID[l.powerup.id]);
+      if (l.powerup.id === 'aiChat') aiChat++;
+      if (last != null) assert.ok(l.row - last >= RULES.POWERUP_GAP_MIN, `row ${l.row}: power-ups too close`);
+      last = l.row;
+    }
+    assert.ok(aiChat <= 1, `AI Chat spawned ${aiChat} times in one run`);
+  }
+  assert.ok(n > 300, `expected many power-ups, got ${n}`);
+});
+
+test('unreleased power-ups spawn only when the flag allows', () => {
+  assert.ok(spawnable(false).every((p) => !p.unreleased));
+  assert.ok(spawnable(true).some((p) => p.id === 'liveAssist'));
+  const gen = createGenerator({ seed: 77, powerups: spawnable(true) });
+  const seen = new Set();
+  for (let r = 0; r < 4000; r++) {
+    const l = gen.fill(newLane(), r);
+    if (l.powerup) seen.add(l.powerup.id);
+  }
+  assert.ok(seen.has('liveAssist'), 'liveAssist never spawned with the flag on');
+});
+
+test('every power-up module has the shared interface and content', () => {
+  for (const p of POWERUPS) {
+    assert.equal(typeof p.id, 'string');
+    assert.ok(CONTENT.features[p.featureId], `${p.id}: no content for ${p.featureId}`);
+    assert.equal(typeof p.unreleased, 'boolean');
+    assert.equal(typeof p.duration, 'number');
+    assert.equal(typeof p.apply, 'function');
+  }
+  for (const key of ['notetakerSaved', 'aiChatRevive']) assert.ok(CONTENT.powerupMessages[key]);
 });
 
 // Copy rules.

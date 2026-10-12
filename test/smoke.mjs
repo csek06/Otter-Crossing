@@ -64,7 +64,12 @@ for (const size of SIZES) {
   await page.click('#btn-play');
   await wait(page, 200);
   // Invincible so the run survives long enough to show traffic.
-  await page.evaluate(() => { window.__otter.game.debug.invincible = true; });
+  await page.evaluate(() => {
+    const g = window.__otter.game;
+    g.debug.invincible = true;
+    // Clear the otter's column so six forward hops always land.
+    for (let r = 1; r <= 7; r++) { const l = g.getLane(r); l.blocked &= ~(1 << 4); l.obstacles = l.obstacles.filter((o) => o.col !== 4); }
+  });
   for (let i = 0; i < 6; i++) { await page.keyboard.press('ArrowUp'); await wait(page, 160); }
   await wait(page, 300);
   await page.screenshot({ path: join(shots, `${size.name}-3-play.png`) });
@@ -310,6 +315,222 @@ for (const start of [0, 120, 400]) {
   if (start === 120) await page.screenshot({ path: join(shots, 'mixed-lanes.png') });
   check(s.score > 4, `random play from ${start}: progressed ${s.score} lanes through ${types}`);
   check(errors.length === 0, `random play from ${start}: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// ---------- M3: power-ups, teaching screen, leaderboard ----------
+
+// Otter Notetaker absorbs one meeting hit, then the next one counts.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=meetings&seed=3&powerup=notetaker');
+  await page.click('#btn-play');
+  await wait(page, 300);
+  check(await page.isVisible('#feature-toast.show'), 'pickup shows the feature card without pausing');
+  check((await page.textContent('#ft-name')) === 'Otter Notetaker', 'feature card names Otter Notetaker');
+  check((await page.textContent('#ft-tagline')) === 'Joins your meetings and takes notes', 'feature card shows the tagline');
+  check((await state(page)).state === 'playing', 'play continues during the feature card');
+  await page.screenshot({ path: join(shots, 'm3-notetaker-pickup.png') });
+  const hit = await page.evaluate(async () => {
+    const g = window.__otter.game;
+    g.kill('meeting', null);
+    const absorbed = g.state === 'playing' && !g.isActive('notetaker');
+    await new Promise((r) => setTimeout(r, 1200));
+    g.kill('meeting', null);
+    return { absorbed, toast: document.getElementById('toast').textContent, after: g.state };
+  });
+  check(hit.absorbed, 'Otter Notetaker absorbs one hit');
+  check(hit.toast === 'Otter Notetaker took that one for you.', `shield message (${hit.toast})`);
+  check(hit.after === 'dying', 'the next hit counts');
+  check(errors.length === 0, `notetaker: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// The shield also lasts only 12 seconds.
+{
+  const { ctx, page, errors } = await open(SIZES[0], '?debug=1&lane=focus&seed=3&powerup=notetaker');
+  await page.click('#btn-play');
+  await wait(page, 200);
+  const r = await page.evaluate(() => {
+    const g = window.__otter.game;
+    const e = g.active.find((a) => a.mod.id === 'notetaker');
+    return { t: e && e.t, chip: document.querySelectorAll('.hud-power').length };
+  });
+  check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
+  check(r.chip === 1, 'HUD shows the active power-up with a timer ring');
+  await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
+  check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// AI Chat: held, revives once on the last safe lane with 2 seconds of invulnerability.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=4&powerup=aiChat');
+  await page.click('#btn-play');
+  for (let i = 0; i < 4; i++) { await page.keyboard.press('ArrowUp'); await wait(page, 160); }
+  const r = await page.evaluate(async () => {
+    const g = window.__otter.game;
+    const held = g.held.length;
+    g.kill('river', null);
+    const lane = g.getLane(g.player.row);
+    const res = { held, state: g.state, safe: lane.mod.safe, invuln: g.player.invuln, after: g.held.length, toast: document.getElementById('toast').textContent };
+    await new Promise((r) => setTimeout(r, 100));
+    g.kill('meeting', null);
+    res.blocked = g.state;
+    await new Promise((r) => setTimeout(r, 2200));
+    g.kill('meeting', null);
+    res.final = g.state;
+    return res;
+  });
+  check(r.held === 1, 'AI Chat is held until needed');
+  check(r.state === 'playing' && r.safe && r.after === 0, 'AI Chat revives on a safe lane, once');
+  check(Math.abs(r.invuln - 2) < 0.1, `revive gives 2 seconds of invulnerability (${r.invuln})`);
+  check(r.toast === 'AI Chat caught you up.', `revive message (${r.toast})`);
+  check(r.blocked === 'playing', 'hits are ignored while invulnerable');
+  check(r.final === 'dying', 'after the revive, the next death counts');
+  check(errors.length === 0, `aiChat: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Summary: auto-hops at least 5 lanes forward to a safe lane.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=6&start=60&powerup=summary');
+  await page.click('#btn-play');
+  await wait(page, 120);
+  await page.screenshot({ path: join(shots, 'm3-summary-hop.png') });
+  await wait(page, 1500);
+  const r = await page.evaluate(() => {
+    const g = window.__otter.game;
+    return { score: g.score, state: g.state, safe: g.getLane(g.player.row).mod.safe, auto: !!g.auto };
+  });
+  check(r.state === 'playing' && r.score >= 5 && r.safe && !r.auto, `Summary skips ahead ${r.score} lanes to a safe lane`);
+  check(errors.length === 0, `summary: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Action items: pulls nearby tokens in for 6 seconds.
+{
+  const { ctx, page, errors } = await open(SIZES[0], '?debug=1&lane=focus&seed=9&powerup=actionItems');
+  await page.click('#btn-play');
+  const n = await page.evaluate(async () => {
+    const g = window.__otter.game;
+    const p = g.player;
+    for (const dr of [1, 2, 3]) {
+      const lane = g.getLane(p.row + dr);
+      lane.tokens.push({ col: Math.max(0, Math.round(p.x) - 2), taken: false, t: 0 });
+      lane.tokens.push({ col: Math.min(8, Math.round(p.x) + 2), taken: false, t: 0 });
+    }
+    await new Promise((r) => setTimeout(r, 300));
+    return g.actionItems;
+  });
+  check(n === 6, `the magnet pulls in nearby tokens (${n})`);
+  const left = await page.evaluate(async () => {
+    await new Promise((r) => setTimeout(r, 6000));
+    return window.__otter.game.isActive('actionItems');
+  });
+  check(!left, 'the magnet ends after 6 seconds');
+  check(errors.length === 0, `magnet: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Live Assist (unreleased): only by debug grant; lights safe tiles for 4 seconds.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=12&start=40&powerup=liveAssist');
+  await page.click('#btn-play');
+  await page.evaluate(() => { window.__otter.game.debug.invincible = true; });
+  await wait(page, 300);
+  const tiles = await page.evaluate(() => {
+    const e = window.__otter.game.active.find((a) => a.mod.id === 'liveAssist');
+    return e && e.tiles ? e.tiles.length / 2 : 0;
+  });
+  check(tiles > 0, `Live Assist lights ${tiles} safe tiles`);
+  await page.screenshot({ path: join(shots, 'm3-live-assist.png') });
+  check(errors.length === 0, `live assist: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// A natural run: a power-up within 15 lanes, walk into it, then the teaching screen.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=31');
+  await page.evaluate(() => localStorage.clear());
+  await page.click('#btn-play');
+  const r = await page.evaluate(async () => {
+    const g = window.__otter.game;
+    const lane = g.lanes.find((l) => l.powerup && l.row >= g.startRow);
+    if (!lane) return { row: null };
+    // Stand just behind it, then hop on.
+    const p = g.player;
+    const behind = g.getLane(lane.row - 1);
+    behind.blocked = 0; behind.obstacles.length = 0;
+    if (behind.cars) behind.cars.length = 0;
+    behind.mod = g.getLane(g.startRow).mod;
+    behind.type = 'focus';
+    p.row = p.fromRow = p.toRow = lane.row - 1;
+    p.x = p.fromX = p.toX = lane.powerup.col;
+    g.maxRow = p.row;
+    g.camRow = p.row - 6;
+    return { row: lane.row - g.startRow, id: lane.powerup.id };
+  });
+  check(r.row != null && r.row <= 15, `first power-up appears at lane ${r.row} (${r.id})`);
+  await page.keyboard.press('ArrowUp');
+  await wait(page, 250);
+  const used = await page.evaluate(() => window.__otter.game.used.slice());
+  check(used.length >= 1, `picking it up records the feature (${used.join(',')})`);
+  await page.screenshot({ path: join(shots, 'm3-pickup.png') });
+  await page.evaluate(() => {
+    const g = window.__otter.game;
+    g.debug.invincible = false;
+    g.held.length = 0; g.active.length = 0; g.auto = null; g.player.invuln = 0;
+    g.markUsed('highlights');
+    g.kill('allhands', null);
+  });
+  await wait(page, 1100);
+  check((await state(page)).state === 'over', 'game over after the run');
+  const names = await page.$$eval('#recap-list .recap-name', (els) => els.map((e) => e.textContent));
+  check(names.length >= 2 && names.includes('Highlights'), `Features you used: ${names.join(', ')}`);
+  const links = await page.$$eval('#recap-list .recap-link', (els) => els.map((e) => e.href));
+  check(links.length === names.length && links.every((h) => h.startsWith('https://help.otter.ai')), 'each feature has a Learn more link');
+  check((await page.textContent('#over-tip')) === 'Missed it? AI Chat can catch you up.', 'all-hands tip names AI Chat');
+  check((await page.getAttribute('#btn-try', 'href')) === 'https://otter.ai', 'Try Otter goes to otter.ai');
+  const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 5000 }).catch(() => null), page.click('#btn-try')]);
+  check(!!popup && popup.url().startsWith('https://otter.ai'), `Try Otter opens otter.ai in a new tab (${popup && popup.url()})`);
+  if (popup) await popup.close();
+  await page.screenshot({ path: join(shots, 'm3-over-recap.png') });
+
+  // Initials entry and the leaderboard.
+  check(await page.isVisible('#initials'), 'initials entry shows for a top 10 score');
+  await page.focus('.slot-letter');
+  await page.keyboard.type('zoe');
+  await page.click('#btn-save');
+  check(await page.isHidden('#initials'), 'initials saved');
+  await page.click('#btn-over-board');
+  const rows = await page.$$eval('.board-row', (els) => els.map((e) => e.textContent));
+  check(rows.length === 1 && rows[0].includes('ZOE'), `leaderboard shows the new entry (${rows.join(' | ')})`);
+  await page.screenshot({ path: join(shots, 'm3-leaderboard.png') });
+  check(errors.length === 0, `teaching screen: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// No initials for a zero score, and an empty recap shows its prompt.
+{
+  const { ctx, page, errors } = await open(SIZES[0], '?debug=1&seed=2&lane=focus');
+  await page.evaluate(() => localStorage.clear());
+  await page.click('#btn-play');
+  await page.evaluate(() => window.__otter.game.kill('meeting', null));
+  await wait(page, 1000);
+  check(await page.isHidden('#initials'), 'no initials entry for a zero score');
+  check(await page.isVisible('#recap-empty'), 'empty recap invites a pickup next run');
+  await page.screenshot({ path: join(shots, 'm3-over-empty.png') });
+  check(errors.length === 0, `empty recap: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Title screen at every size, with the leaderboard button and sound icon.
+for (const size of SIZES) {
+  const { ctx, page, errors } = await open(size, '?seed=7');
+  const targets = await page.$$eval('#screen-title button', (els) => els.map((e) => { const r = e.getBoundingClientRect(); return Math.min(r.width, r.height); }));
+  check(targets.every((t) => t >= 48), `${size.name}: title tap targets are at least 48px (${targets.map((t) => t.toFixed(0)).join(',')})`);
+  await page.screenshot({ path: join(shots, `${size.name}-1-title.png`) });
+  check(errors.length === 0, `${size.name} title: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }
 

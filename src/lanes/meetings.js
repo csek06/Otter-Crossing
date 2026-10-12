@@ -122,6 +122,18 @@ export const meetings = {
     return null;
   },
 
+  // Clear now and for the next moment, used by Live Assist.
+  safeAt(lane, col) {
+    const half = TUNING.PLAYER_HALF_W;
+    for (const ahead of [0, 0.35]) {
+      for (const car of lane.cars) {
+        const l = meetings.carLeft(lane, car) + lane.speed * lane.dir * ahead;
+        if (col + 0.5 + half > l && col + 0.5 - half < l + car.len) return false;
+      }
+    }
+    return true;
+  },
+
   hitboxes(lane) {
     return lane.cars.map((car) => {
       const l = meetings.carLeft(lane, car);

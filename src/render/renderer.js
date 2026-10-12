@@ -7,6 +7,8 @@ import { roundRect } from './primitives.js';
 import { drawOtter } from './otter.js';
 import { drawToken } from './token.js';
 import { drawHawk, drawHawkShadow } from './hawk.js';
+import { drawPickup, drawIcon } from './pickup.js';
+import { rgba } from './palette.js';
 import { visualRow, logicalRow } from '../game/player.js';
 
 export function createRenderer(stage, game, opts) {
@@ -102,10 +104,14 @@ export function createRenderer(stage, game, opts) {
         for (const tok of lane.tokens) {
           if (!tok.taken) drawToken(c, v.ox + (tok.col + 0.5) * v.tile, y - v.rowH * 0.3, v, v.time);
         }
+        if (lane.powerup && !lane.powerup.taken) {
+          drawPickup(c, v.ox + (lane.powerup.col + 0.5) * v.tile, y - v.rowH * 0.3, v, lane.powerup.id, v.time);
+        }
         lane.mod.drawObjects(c, lane, v, y);
       }
       if (r === pRow && game.state !== 'title') drawPlayer(c);
     }
+    drawLiveAssist(c);
     drawFx(c);
     if (game.state === 'playing' && game.hawk.warn > 0) {
       drawHawkShadow(c, v.ox + (p.x + 0.5) * v.tile, rowY(visualRow(p)) - v.rowH * 0.32, v, game.hawk.warn, v.time);
@@ -209,6 +215,57 @@ export function createRenderer(stage, game, opts) {
     } else {
       drawOtter(c, cx, gy, v, { facing: p.facing, lift, sx, sy, alpha });
     }
+    if (!p.dead) drawShield(c, cx, gy - lift);
+  }
+
+  // Live Assist: glowing outlines on the safe tiles ahead.
+  function drawLiveAssist(c) {
+    const e = game.active.find((a) => a.mod.id === 'liveAssist');
+    if (!e || !e.tiles || game.state !== 'playing') return;
+    const t = v.tile;
+    const fade = Math.min(1, e.t / 0.5);
+    c.lineWidth = v.line * 2;
+    for (let i = 0; i < e.tiles.length; i += 2) {
+      const r = e.tiles[i];
+      const col = e.tiles[i + 1];
+      const x = v.ox + col * t;
+      const y = rowY(r) - v.rowH;
+      c.fillStyle = rgba(PAL.brand, 0.18 * fade);
+      roundRect(c, x + t * 0.1, y + v.rowH * 0.12, t * 0.8, v.rowH * 0.76, t * 0.12);
+      c.fill();
+      c.strokeStyle = rgba(PAL.brand, 0.9 * fade);
+      c.setLineDash([t * 0.12, t * 0.08]);
+      c.stroke();
+      c.setLineDash([]);
+    }
+  }
+
+  // Otter Notetaker's shield: a ring around the otter with a notepad riding on it.
+  function drawShield(c, cx, gy) {
+    const e = game.active.find((a) => a.mod.id === 'notetaker');
+    if (!e) return;
+    // Flicker gently (2 times a second) in the last 2 seconds.
+    if (e.t < 2 && Math.floor(e.t * 4) % 2 === 0) return;
+    const t = v.tile;
+    const cy = gy - t * 0.38;
+    c.lineWidth = v.line * 1.6;
+    c.strokeStyle = PAL.brand;
+    c.fillStyle = rgba(PAL.brand, 0.12);
+    c.beginPath();
+    c.ellipse(cx, cy, t * 0.52, t * 0.56, 0, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+    const a = v.time * 2.4;
+    const ix = cx + Math.cos(a) * t * 0.52;
+    const iy = cy + Math.sin(a) * t * 0.56;
+    c.fillStyle = PAL.brand;
+    c.beginPath();
+    c.arc(ix, iy, t * 0.15, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = PAL.ink;
+    c.lineWidth = v.line;
+    c.stroke();
+    drawIcon(c, 'notetaker', ix, iy, t * 0.2, PAL.paper, v.line);
   }
 
   // How long the otter can keep swimming, as a shrinking ring.
@@ -244,6 +301,8 @@ export function createRenderer(stage, game, opts) {
         c.stroke();
       } else if (f.kind === 'check') {
         drawToken(c, x, gy - f.h * t * 0.4, v, 0, true, Math.min(1, k * 2));
+      } else if (f.kind === 'pull') {
+        drawToken(c, x, gy - f.h * t, v, 0, k < 0.5, 1);
       }
     }
   }

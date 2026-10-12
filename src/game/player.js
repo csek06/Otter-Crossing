@@ -9,6 +9,7 @@ export function createPlayer() {
     fromX: 0, fromRow: 0,
     toX: 0, toRow: 0,
     hopT: -1,              // 0 to 1 while hopping, -1 when idle
+    hopDur: TUNING.HOP_TIME,
     facing: 'up',
     land: 0,               // landing squash timer
     bump: 0,               // blocked-move wobble timer
@@ -72,7 +73,21 @@ export function tryHop(p, dir, getLane) {
   p.toX = tx;
   p.toRow = tr;
   p.hopT = 0;
+  p.hopDur = TUNING.HOP_TIME;
   return 'hop';
+}
+
+// A hop that ignores obstacles, used by Summary's auto-hop.
+export function forceHop(p, toX, toRow, dur) {
+  p.fromX = p.x;
+  p.fromRow = p.row;
+  p.toX = toX;
+  p.toRow = toRow;
+  p.hopT = 0;
+  p.hopDur = dur;
+  p.facing = 'up';
+  p.swim = -1;
+  p.riding = null;
 }
 
 export function updatePlayer(p, dt) {
@@ -80,7 +95,7 @@ export function updatePlayer(p, dt) {
   if (p.bump > 0) p.bump = Math.max(0, p.bump - dt);
   if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
   if (p.hopT < 0) return false;
-  p.hopT += dt / TUNING.HOP_TIME;
+  p.hopT += dt / p.hopDur;
   if (p.hopT >= 1) {
     p.hopT = -1;
     p.x = p.toX;

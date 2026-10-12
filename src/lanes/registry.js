@@ -9,6 +9,7 @@
 // Optional:
 //   carry(lane, player, dt)                   move the otter while it stands in the lane
 //   hitboxes(lane)                            [[left, right], ...] for ?debug=1
+//   safeAt(lane, col)                         true if the tile is safe right now (Live Assist)
 //   drawSignals(ctx, lane, view, y)           art in the facade margins
 // Hazard lanes also have weight(difficulty, row) for how often they are picked.
 // To add a lane type: write one module, register it here, add its hint to content.js.

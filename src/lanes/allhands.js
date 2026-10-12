@@ -94,6 +94,10 @@ export const allhands = {
     return null;
   },
 
+  safeAt(lane) {
+    return lane.state === 'idle' && lane.idle - lane.t > 1.2;
+  },
+
   hitboxes(lane) {
     const s = allhands.span(lane);
     return s ? [[s[0] + TUNING.HAZARD_INSET, s[1] - TUNING.HAZARD_INSET]] : [];

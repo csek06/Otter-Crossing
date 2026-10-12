@@ -725,9 +725,13 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
         optinRun = { score: game.score, items: game.actionItems };
       }
 
-      // Initials, if a free run made the local top 10, or to post online.
-      const local = !daily && qualifies(game.score);
-      const onlineRun = live && online.hasRun() && game.score > 0;
+      // Initials, only for a new personal best (today's best on the daily). Each
+      // player keeps one top score, so a lower run has nothing to save. A booth
+      // is a shared device, so there any run that makes the local top 10 counts.
+      const newBest = daily ? daily.isBest : isBest;
+      const counts = booth || newBest;
+      const local = !daily && counts && qualifies(game.score);
+      const onlineRun = counts && live && online.hasRun() && game.score > 0;
       $('post-msg').textContent = '';
       $('post-online-row').hidden = !onlineRun;
       $('post-company-row').hidden = !(onlineRun && !booth && online.domain());

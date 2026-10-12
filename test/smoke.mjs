@@ -737,7 +737,7 @@ for (const size of SIZES) {
   await page.click('#btn-board-back');
   await page.click('#btn-again');
   await wait(page, 300);
-  await page.evaluate(() => { const g = window.__otter.game; g.maxRow = g.startRow + 4; g.score = 4; g.kill('meeting', null); });
+  await page.evaluate(() => { const g = window.__otter.game; g.maxRow = g.startRow + 9; g.score = 9; g.kill('meeting', null); });
   await wait(page, 1600);
   check(await page.isVisible('#post-company-row') && (await page.textContent('#post-company-text')) === 'Also post to the acme-robotics.com board', 'signed in: offers the company board');
   await page.click('#btn-save');
@@ -745,6 +745,14 @@ for (const size of SIZES) {
   check(/#1 at acme-robotics\.com\.$/.test(await page.textContent('#post-msg')), `posts to the company board (${await page.textContent('#post-msg')})`);
   const sub2 = mock.calls.filter((c) => c.path === '/rest/v1/rpc/submit_score')[1];
   check(sub2 && sub2.auth === 'Bearer user-token' && sub2.body.p_company === true, 'company posts carry the sign-in');
+
+  // A run below your best has nothing to save: each player keeps one top score.
+  await page.click('#btn-again');
+  await wait(page, 300);
+  await page.evaluate(() => { const g = window.__otter.game; g.maxRow = g.startRow + 5; g.score = 5; g.kill('meeting', null); });
+  await wait(page, 1600);
+  check(await page.isHidden('#initials'), 'no save offered for a run below your best');
+  check(mock.calls.filter((c) => c.path === '/rest/v1/rpc/submit_score').length === 2, 'and nothing posts');
 
   // Offline: the board says so, and a post waits in the queue.
   mock.down = true;

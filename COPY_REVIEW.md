@@ -10,17 +10,21 @@ Everything below is marked draft in the code until you sign off.
 
 These lines say a little more than the taglines, or depend on product details I could not confirm. Each one is a judgment call for you or PMM.
 
-- [ ] **Otter Notetaker tip** says it "could have taken that meeting for you." The tagline says it joins your meetings and takes notes. If the tip reads as attending in your place, a safer version is "Otter Notetaker could have taken notes for you."
-- [ ] **Deadline Hawk tip** says summaries and action items "make follow-up fast." Speed is not in either tagline.
-- [ ] **AI Chat tagline** says "mid-meeting." Confirm AI Chat works during a live meeting, and on which plans.
-- [ ] **Action items tagline** says it captures "who owns them." Confirm owners or assignees are captured.
-- [ ] **Summary tagline** says "without rewatching." If most meetings are audio only, "without relistening" or "without replaying" may fit better.
-- [ ] **Feature name casing.** The copy uses sentence case ("Action items"). If the official product name is "Action Items," switch it in `features.actionItems.name`.
-- [ ] **Help links** all point to the help center home page. Swap in the article for each feature.
+- [ ] **Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. Confirm the tagline with PMM before turning on `SHOW_UNRELEASED`. There is no help center article yet, so the link is the launch how-to blog post.
+- [ ] **Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.
 - [ ] **Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.
-- [ ] **Live Assist** copy is a placeholder. It only shows when `SHOW_UNRELEASED` is true.
 - [ ] **Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.
 - [ ] **Logo and brand blue** come from the otter.ai site header and link color. Confirm with brand before launch.
+
+## Validation, October 12, 2026
+
+Each feature claim was checked against the help center article linked under it and against internal Notion docs. Changes made in this pass:
+
+- Help links now point to the specific article for each feature instead of the help center home page.
+- Summary tagline: "without rewatching" is now "without listening back." Otter is audio first, and the onboarding script in Notion says "without listening back to the whole thing."
+- Otter Notetaker tip: "could have taken that meeting for you" is now "could have joined that meeting for you." The help center says you can send Notetaker to a meeting you cannot attend.
+- Deadline Hawk tip: "make follow-up fast" is now "save time on follow-up." The Meeting Summary article says the summary saves time after a meeting.
+- Live Assist placeholder copy is replaced. It shipped to Enterprise on July 21, 2026 (Notion roadmap card and GTM hub).
 
 ## 1. Feature claims
 
@@ -28,70 +32,82 @@ These lines say a little more than the taglines, or depend on product details I 
 
 Appears on: pickup card (name, tagline), river (name, tagline), recap (name, description, link).
 
+Checked against: Otter Notetaker Overview (help center): joins Zoom, Google Meet and Microsoft Teams meetings and takes notes, including meetings you cannot attend.
+
 - [ ] Name: "Otter Notetaker"
 - [ ] Tagline (6 words, max 6): "Joins your meetings and takes notes"
-- [ ] Description: "Otter Notetaker can join your meetings and take notes for you."
-- [ ] Help link: https://help.otter.ai
+- [ ] Description: "Otter Notetaker can join your Zoom, Google Meet and Microsoft Teams meetings and take notes for you."
+- [ ] Help link: https://help.otter.ai/hc/en-us/articles/4425393298327-Otter-Notetaker-Overview
 - Key in content.js: `features.notetaker`
 
 ### AI Chat
 
 Appears on: pickup card (name, tagline), river (name, tagline), recap (name, description, link).
 
+Checked against: Otter AI Chat Overview and AI Chat FAQs (help center): ask questions "anytime during the live meeting or post-meeting." On by default for all accounts. Notion onboarding script uses "I missed the last half, catch me up?"
+
 - [ ] Name: "AI Chat"
 - [ ] Tagline (5 words, max 6): "Ask what you missed, mid-meeting"
 - [ ] Description: "Ask AI Chat what you missed while the meeting is still going."
-- [ ] Help link: https://help.otter.ai
+- [ ] Help link: https://help.otter.ai/hc/en-us/articles/19682180167575-Otter-AI-Chat-Overview
 - Key in content.js: `features.aiChat`
 
 ### Summary
 
 Appears on: pickup card (name, tagline), river (name, tagline), recap (name, description, link).
 
+Checked against: Meeting Summary Overview (help center): a quick overview of topics, action items and highlights that saves time after a meeting. Notion onboarding script: next steps "without listening back to the whole thing."
+
 - [ ] Name: "Summary"
-- [ ] Tagline (5 words, max 6): "Get the gist without rewatching"
-- [ ] Description: "Read the summary to get the gist of a meeting without rewatching it."
-- [ ] Help link: https://help.otter.ai
+- [ ] Tagline (6 words, max 6): "Get the gist without listening back"
+- [ ] Description: "Read the summary to get the gist of a meeting without listening back to it."
+- [ ] Help link: https://help.otter.ai/hc/en-us/articles/9156381229079-Meeting-Summary-Overview
 - Key in content.js: `features.summary`
 
-### Action items
+### Action Items
 
 Appears on: pickup card (name, tagline), river (name, tagline), recap (name, description, link).
 
-- [ ] Name: "Action items"
+Checked against: Action Items Overview (help center): action items are assigned to people and can be reassigned. Notion onboarding script: Otter automatically generates Action Items.
+
+- [ ] Name: "Action Items"
 - [ ] Tagline (6 words, max 6): "Captures to-dos and who owns them"
-- [ ] Description: "Action items capture the to-dos from a meeting and who owns each one."
-- [ ] Help link: https://help.otter.ai
+- [ ] Description: "Action Items capture the to-dos from a meeting and who each one is assigned to."
+- [ ] Help link: https://help.otter.ai/hc/en-us/articles/25983095114519-Action-Items-Overview
 - Key in content.js: `features.actionItems`
 
 ### Highlights
 
 Appears on: river (name, tagline), recap after riding a highlighted log (name, description, link).
 
+Checked against: Add highlights to your conversation (help center): highlight during the live recording or after.
+
 - [ ] Name: "Highlights"
 - [ ] Tagline (6 words, max 6): "Mark key moments as they happen"
-- [ ] Description: "Highlight key moments in a conversation as they happen."
-- [ ] Help link: https://help.otter.ai
+- [ ] Description: "Highlight key moments in a conversation as they happen, during the live recording or after."
+- [ ] Help link: https://help.otter.ai/hc/en-us/articles/21557292299287-Add-highlights-to-your-conversation
 - Key in content.js: `features.highlights`
 
-### Live Assist (unreleased, placeholder)
+### Live Assist (behind SHOW_UNRELEASED)
 
 Appears on: only with SHOW_UNRELEASED: pickup card, river and recap.
 
+Checked against: Notion: Live Assist roadmap card (GA July 21, 2026) and the Live Assist + Agent Builder GTM Enablement Hub (draft): private tip cards such as the next question to ask, visible only to the person being coached, Enterprise only.
+
 - [ ] Name: "Live Assist"
-- [ ] Tagline (5 words, max 6): "Placeholder tagline pending PMM review"
-- [ ] Description: "Placeholder description pending PMM review."
-- [ ] Help link: https://help.otter.ai
+- [ ] Tagline (6 words, max 6): "Private tips during your live calls"
+- [ ] Description: "Live Assist follows your call and shows tips only you can see, like the next question to ask."
+- [ ] Help link: https://otter.ai/blog/your-calls-have-a-coach-now-how-to-use-live-assist
 - Key in content.js: `features.liveAssist`
 
 ## 2. Game over causes and tips
 
 The cause is the big heading on the game over screen. The tip below it names the feature that would have helped.
 
-- [ ] "Pulled into a meeting": "Otter Notetaker could have taken that meeting for you." (`deaths.meeting`)
+- [ ] "Pulled into a meeting": "Otter Notetaker could have joined that meeting for you." (`deaths.meeting`)
 - [ ] "Swept away by notes": "Highlights and summaries keep you out of the flood." (`deaths.river`)
 - [ ] "Steamrolled by the all-hands": "Missed it? AI Chat can catch you up." (`deaths.allhands`)
-- [ ] "The Deadline Hawk": "Summaries and action items make follow-up fast." (`deaths.hawk`)
+- [ ] "The Deadline Hawk": "Summaries and action items save time on follow-up." (`deaths.hawk`)
 
 ## 3. Power-up messages
 
@@ -106,8 +122,8 @@ The water is a stream of these lines, built from the feature names and taglines 
 
 - [ ] "Otter Notetaker: Joins your meetings and takes notes"
 - [ ] "AI Chat: Ask what you missed, mid-meeting"
-- [ ] "Summary: Get the gist without rewatching"
-- [ ] "Action items: Captures to-dos and who owns them"
+- [ ] "Summary: Get the gist without listening back"
+- [ ] "Action Items: Captures to-dos and who owns them"
 - [ ] "Highlights: Mark key moments as they happen"
 
 The floating logs you ride carry these short phrases on a highlighter stripe (`river.phrases`):
@@ -118,7 +134,7 @@ The floating logs you ride carry these short phrases on a highlighter stripe (`r
 - [ ] "Ask what you missed" (long, shrinks to fit)
 - [ ] "Summary"
 - [ ] "Get the gist"
-- [ ] "Action items"
+- [ ] "Action Items"
 - [ ] "Who owns them"
 - [ ] "Highlights"
 - [ ] "Key moments"

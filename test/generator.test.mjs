@@ -340,7 +340,7 @@ test('every power-up module has the shared interface and content', () => {
 // Copy rules.
 test('feature taglines are 6 words or fewer', () => {
   for (const [id, f] of Object.entries(CONTENT.features)) {
-    if (f.placeholder) continue;
+    if (f.placeholder) continue; // none today, kept for future placeholder copy
     const words = f.tagline.trim().split(/\s+/).length;
     assert.ok(words <= 6, `${id}: "${f.tagline}" is ${words} words`);
     for (const k of ['name', 'tagline', 'description', 'helpUrl']) assert.ok(f[k], `${id} missing ${k}`);

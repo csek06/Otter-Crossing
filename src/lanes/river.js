@@ -19,7 +19,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 export function riverLines() {
   const lines = [];
   for (const f of Object.values(CONTENT.features)) {
-    if (f.placeholder && !FLAGS.SHOW_UNRELEASED) continue;
+    if (f.unreleased && !FLAGS.SHOW_UNRELEASED) continue;
     lines.push(`${f.name}: ${f.tagline}`);
   }
   return lines.concat(CONTENT.river.extraBlurbs || []);

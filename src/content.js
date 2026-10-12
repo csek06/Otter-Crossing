@@ -131,45 +131,47 @@ export const CONTENT = {
       draft: true,
       name: 'Otter Notetaker',
       tagline: 'Joins your meetings and takes notes',
-      description: 'Otter Notetaker can join your meetings and take notes for you.',
-      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
+      description: 'Otter Notetaker can join your Zoom, Google Meet and Microsoft Teams meetings and take notes for you.',
+      helpUrl: 'https://help.otter.ai/hc/en-us/articles/4425393298327-Otter-Notetaker-Overview',
     },
     aiChat: {
       draft: true,
       name: 'AI Chat',
       tagline: 'Ask what you missed, mid-meeting',
       description: 'Ask AI Chat what you missed while the meeting is still going.',
-      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
+      helpUrl: 'https://help.otter.ai/hc/en-us/articles/19682180167575-Otter-AI-Chat-Overview',
     },
     summary: {
       draft: true,
       name: 'Summary',
-      tagline: 'Get the gist without rewatching',
-      description: 'Read the summary to get the gist of a meeting without rewatching it.',
-      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
+      tagline: 'Get the gist without listening back',
+      description: 'Read the summary to get the gist of a meeting without listening back to it.',
+      helpUrl: 'https://help.otter.ai/hc/en-us/articles/9156381229079-Meeting-Summary-Overview',
     },
     actionItems: {
       draft: true,
-      name: 'Action items',
+      name: 'Action Items',
       tagline: 'Captures to-dos and who owns them',
-      description: 'Action items capture the to-dos from a meeting and who owns each one.',
-      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
+      description: 'Action Items capture the to-dos from a meeting and who each one is assigned to.',
+      helpUrl: 'https://help.otter.ai/hc/en-us/articles/25983095114519-Action-Items-Overview',
     },
     highlights: {
       draft: true,
       name: 'Highlights',
       tagline: 'Mark key moments as they happen',
-      description: 'Highlight key moments in a conversation as they happen.',
-      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
+      description: 'Highlight key moments in a conversation as they happen, during the live recording or after.',
+      helpUrl: 'https://help.otter.ai/hc/en-us/articles/21557292299287-Add-highlights-to-your-conversation',
     },
-    // Unreleased. Only used when FLAGS.SHOW_UNRELEASED is true. Placeholder pending PMM review.
+    // Live for Enterprise since July 21, 2026, with positioning still being finalized.
+    // Only used when FLAGS.SHOW_UNRELEASED is true. No help center article yet, so the
+    // link is the launch how-to blog post.
     liveAssist: {
       draft: true,
-      placeholder: true,
+      unreleased: true,
       name: 'Live Assist',
-      tagline: 'Placeholder tagline pending PMM review',
-      description: 'Placeholder description pending PMM review.',
-      helpUrl: 'https://help.otter.ai', // REVIEW: general help center, swap in the article URL
+      tagline: 'Private tips during your live calls',
+      description: 'Live Assist follows your call and shows tips only you can see, like the next question to ask.',
+      helpUrl: 'https://otter.ai/blog/your-calls-have-a-coach-now-how-to-use-live-assist',
     },
   },
 
@@ -185,7 +187,7 @@ export const CONTENT = {
     meeting: {
       draft: true,
       title: 'Pulled into a meeting',
-      tip: 'Otter Notetaker could have taken that meeting for you.',
+      tip: 'Otter Notetaker could have joined that meeting for you.',
     },
     river: {
       draft: true,
@@ -200,7 +202,7 @@ export const CONTENT = {
     hawk: {
       draft: true,
       title: 'The Deadline Hawk',
-      tip: 'Summaries and action items make follow-up fast.',
+      tip: 'Summaries and action items save time on follow-up.',
     },
   },
 
@@ -243,7 +245,7 @@ export const CONTENT = {
       'Ask what you missed',
       'Summary',
       'Get the gist',
-      'Action items',
+      'Action Items',
       'Who owns them',
       'Highlights',
       'Key moments',

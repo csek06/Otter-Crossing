@@ -35,15 +35,9 @@ export function buildCopyReview() {
     '',
     'These lines say a little more than the taglines, or depend on product details I could not confirm. Each one is a judgment call for you or PMM.',
     '',
-    box('**Otter Notetaker tip** says it "could have taken that meeting for you." The tagline says it joins your meetings and takes notes. If the tip reads as attending in your place, a safer version is "Otter Notetaker could have taken notes for you."'),
-    box('**Deadline Hawk tip** says summaries and action items "make follow-up fast." Speed is not in either tagline.'),
-    box('**AI Chat tagline** says "mid-meeting." Confirm AI Chat works during a live meeting, and on which plans.'),
-    box('**Action items tagline** says it captures "who owns them." Confirm owners or assignees are captured.'),
-    box('**Summary tagline** says "without rewatching." If most meetings are audio only, "without relistening" or "without replaying" may fit better.'),
-    box('**Feature name casing.** The copy uses sentence case ("Action items"). If the official product name is "Action Items," switch it in `features.actionItems.name`.'),
-    box('**Help links** all point to the help center home page. Swap in the article for each feature.'),
+    box('**Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. Confirm the tagline with PMM before turning on `SHOW_UNRELEASED`. There is no help center article yet, so the link is the launch how-to blog post.'),
+    box('**Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.'),
     box('**Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.'),
-    box('**Live Assist** copy is a placeholder. It only shows when `SHOW_UNRELEASED` is true.'),
     box('**Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.'),
     box('**Logo and brand blue** come from the otter.ai site header and link color. Confirm with brand before launch.'),
     '',
@@ -57,10 +51,31 @@ export function buildCopyReview() {
     highlights: 'river (name, tagline), recap after riding a highlighted log (name, description, link)',
     liveAssist: 'only with SHOW_UNRELEASED: pickup card, river and recap',
   };
+  add(
+    '## Validation, October 12, 2026',
+    '',
+    'Each feature claim was checked against the help center article linked under it and against internal Notion docs. Changes made in this pass:',
+    '',
+    '- Help links now point to the specific article for each feature instead of the help center home page.',
+    '- Summary tagline: "without rewatching" is now "without listening back." Otter is audio first, and the onboarding script in Notion says "without listening back to the whole thing."',
+    '- Otter Notetaker tip: "could have taken that meeting for you" is now "could have joined that meeting for you." The help center says you can send Notetaker to a meeting you cannot attend.',
+    '- Deadline Hawk tip: "make follow-up fast" is now "save time on follow-up." The Meeting Summary article says the summary saves time after a meeting.',
+    '- Live Assist placeholder copy is replaced. It shipped to Enterprise on July 21, 2026 (Notion roadmap card and GTM hub).',
+    '',
+  );
+  const SOURCES = {
+    notetaker: 'Otter Notetaker Overview (help center): joins Zoom, Google Meet and Microsoft Teams meetings and takes notes, including meetings you cannot attend.',
+    aiChat: 'Otter AI Chat Overview and AI Chat FAQs (help center): ask questions "anytime during the live meeting or post-meeting." On by default for all accounts. Notion onboarding script uses "I missed the last half, catch me up?"',
+    summary: 'Meeting Summary Overview (help center): a quick overview of topics, action items and highlights that saves time after a meeting. Notion onboarding script: next steps "without listening back to the whole thing."',
+    actionItems: 'Action Items Overview (help center): action items are assigned to people and can be reassigned. Notion onboarding script: Otter automatically generates Action Items.',
+    highlights: 'Add highlights to your conversation (help center): highlight during the live recording or after.',
+    liveAssist: 'Notion: Live Assist roadmap card (GA July 21, 2026) and the Live Assist + Agent Builder GTM Enablement Hub (draft): private tip cards such as the next question to ask, visible only to the person being coached, Enterprise only.',
+  };
   add('## 1. Feature claims', '');
   for (const [id, f] of Object.entries(C.features)) {
-    add(`### ${f.name}${f.placeholder ? ' (unreleased, placeholder)' : ''}`, '');
+    add(`### ${f.name}${f.placeholder ? ' (placeholder)' : f.unreleased ? ' (behind SHOW_UNRELEASED)' : ''}`, '');
     if (WHERE[id]) add(`Appears on: ${WHERE[id]}.`, '');
+    if (SOURCES[id]) add(`Checked against: ${SOURCES[id]}`, '');
     add(box(`Name: ${q(f.name)}`));
     add(box(`Tagline (${words(f.tagline)} words, max 6): ${q(f.tagline)}`));
     add(box(`Description: ${q(f.description)}`));

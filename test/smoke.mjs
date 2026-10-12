@@ -679,7 +679,7 @@ for (const size of SIZES) {
 
 // Online boards against the mock: post on game over, read the tabs, sign in for the company board.
 {
-  const q = `?debug=1&lane=focus&seed=6&event=summit-2026&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`;
+  const q = `?debug=1&company=1&lane=focus&seed=6&event=summit-2026&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`;
   const { ctx, page, errors } = await open(SIZES[1], q, { allow: MOCK });
   await page.click('#btn-play');
   await wait(page, 400);
@@ -760,9 +760,20 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
+// Online without the company flag: the company tab stays hidden.
+{
+  const { ctx, page, errors } = await open(SIZES[0], `?debug=1&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`, { allow: MOCK });
+  await page.click('#btn-board');
+  await wait(page, 200);
+  const tabs = await page.$$eval('.board-tab', (b) => b.map((x) => x.textContent));
+  check(tabs.join('|') === 'This device|Global|Today', `company boards off by default (${tabs.join(', ')})`);
+  check(errors.length === 0, `company off: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 // Booth mode with online boards: no company sign-in on a shared device.
 {
-  const { ctx, page, errors } = await open(SIZES[2], `?debug=1&booth=1&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`, { allow: MOCK });
+  const { ctx, page, errors } = await open(SIZES[2], `?debug=1&booth=1&company=1&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`, { allow: MOCK });
   await page.click('#btn-board');
   await wait(page, 200);
   const tabs = await page.$$eval('.board-tab', (b) => b.map((x) => x.textContent));

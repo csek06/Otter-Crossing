@@ -16,6 +16,7 @@ export const PARAMS = {
   // Debug only: point the online boards at another Supabase project (or a test mock).
   sbUrl: q.get('debug') === '1' ? q.get('sbUrl') : null,
   sbKey: q.get('debug') === '1' ? q.get('sbKey') : null,
+  company: q.get('debug') === '1' && q.get('company') === '1', // debug: show company boards
   // Booth idle timeout override, debug builds only, so tests do not wait 20 seconds.
   idle: q.get('debug') === '1' && q.has('idle') ? Math.max(1, parseFloat(q.get('idle')) || 20) : null,
 };

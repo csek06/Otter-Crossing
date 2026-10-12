@@ -68,6 +68,9 @@ jobs:
           fi
       - name: Build the single-file game
         run: npm run build
+        env:
+          # Set the COMPANY_BOARDS variable to 1 once sign-in email reaches players (custom SMTP).
+          COMPANY_BOARDS: ${{ vars.COMPANY_BOARDS }}
       - name: Stage the site
         run: |
           mkdir -p _site

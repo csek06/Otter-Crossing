@@ -40,6 +40,7 @@ async function run() {
     define: {
       __SUPABASE_URL__: JSON.stringify(process.env.SUPABASE_URL || ''),
       __SUPABASE_ANON_KEY__: JSON.stringify(process.env.SUPABASE_ANON_KEY || ''),
+      __COMPANY_BOARDS__: JSON.stringify(process.env.COMPANY_BOARDS === '1'),
     },
   });
   const js = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
@@ -50,7 +51,7 @@ async function run() {
     .replace('/*SCRIPT*/', () => js);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html);
-  const online = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY ? `online boards: ${process.env.SUPABASE_URL}` : 'offline only';
+  const online = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY ? `online boards: ${process.env.SUPABASE_URL}${process.env.COMPANY_BOARDS === '1' ? ', company boards on' : ''}` : 'offline only';
   console.log(`Built ${out} (${(html.length / 1024).toFixed(0)} KB, ${online}) in ${Date.now() - t0}ms`);
 }
 

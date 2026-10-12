@@ -157,7 +157,7 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
     if (!live) return list;
     list.push(['global', ON.tabGlobal], ['daily', ON.tabDaily]);
     if (eventCode()) list.push(['event', eventName || ON.tabEvent]);
-    if (!booth) list.push(['company', ON.tabCompany]);
+    if (!booth && online.company) list.push(['company', ON.tabCompany]);
     return list;
   }
   function renderTabs() {

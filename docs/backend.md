@@ -63,14 +63,25 @@ All of these go in GitHub, under Settings > Secrets and variables > Actions. Use
 
 | Name | Kind | What it is |
 | --- | --- | --- |
-| `SUPABASE_ACCESS_TOKEN` | Secret | Personal access token, from supabase.com/dashboard/account/tokens |
+| `SUPABASE_ACCESS_TOKEN` | Secret | Personal access token (`sbp_...`), from supabase.com/dashboard/account/tokens. Not the project's `sb_secret_` API key: the CLI and Management API only accept personal access tokens. |
 | `SUPABASE_PROJECT_ID` | Secret, optional | The project ref, the part before `.supabase.co`. Only needed if the token can see more than one project. |
 | `SUPABASE_DB_PASSWORD` | Secret | The database password from project creation |
 | `RESEND_API_KEY` | Secret | Resend API key with sending access |
 | `AUTH_EMAIL_FROM` | Variable | Sender address on your verified Resend domain, like `play@mail.example.com` |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Variable, optional | Only if you want to override the lookup |
+| `COMPANY_BOARDS` | Variable, optional | `1` shows the company boards. Leave it unset until sign-in email reaches players. |
 
 The Resend key is never built into the game. Supabase uses it to send the sign-in emails.
+
+## Company boards and sign-in email
+
+Company boards are hidden until the `COMPANY_BOARDS` repository variable is `1`, because they need sign-in email that reaches players. Supabase's built-in sender only delivers to members of your Supabase organization, about 2 emails an hour, with no delivery guarantee. Global, Today and event boards don't need email and work without it.
+
+To turn company boards on, pick a sender that reaches anyone:
+
+- **Resend on a domain you register yourself.** A new domain costs about $10 to $15 a year and needs no IT, because you control its DNS. Add `RESEND_API_KEY` and `AUTH_EMAIL_FROM` and the workflow does the rest.
+- **Sign in with Google or Microsoft** (Supabase OAuth providers). No email is sent, and the provider vouches for the email address. This needs an OAuth app in Google Cloud or Azure, plus a small change to the game's sign-in screen.
+- **Gmail SMTP from a dedicated Gmail account with an app password.** No domain needed, but the codes come from a gmail.com address, and Gmail limits how much one account can send a day.
 
 ## Setup checklist
 

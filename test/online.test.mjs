@@ -49,6 +49,9 @@ test('online: a run posts with the device id, anon key headers and ranks back', 
   const store = memoryStore();
   const o = createOnline({ ...base, fetchImpl: f, store });
   assert.ok(o.enabled);
+  assert.equal(o.company, false, 'company boards stay off unless the build turns them on');
+  assert.equal(createOnline({ ...base, company: true, fetchImpl: f, store }).company, true);
+  assert.equal(createOnline({ company: true, fetchImpl: f, store }).company, false, 'never on while offline');
   assert.match(o.device(), /^[A-Za-z0-9_-]{16,64}$/);
   assert.equal(createOnline({ ...base, fetchImpl: f, store }).device(), o.device(), 'device id persists');
   o.startRun('daily', '2026-10-12', 'summit-2026');

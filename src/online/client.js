@@ -26,7 +26,7 @@ function errorCode(body, status) {
   return typeof m === 'string' && m ? m : `http_${status}`;
 }
 
-export function createOnline({ url, anonKey, fetchImpl = globalThis.fetch, store = { load, save }, now = () => Date.now() } = {}) {
+export function createOnline({ url, anonKey, company = false, fetchImpl = globalThis.fetch, store = { load, save }, now = () => Date.now() } = {}) {
   const base = (url || '').replace(/\/+$/, '');
   const enabled = !!(base && anonKey && fetchImpl);
 
@@ -102,6 +102,9 @@ export function createOnline({ url, anonKey, fetchImpl = globalThis.fetch, store
 
   const api = {
     enabled,
+    // Company boards need sign-in email that reaches players (custom SMTP), so they
+    // stay hidden until the build turns them on.
+    company: enabled && !!company,
     device: () => device,
     session: () => session,
     signedIn: () => !!session,

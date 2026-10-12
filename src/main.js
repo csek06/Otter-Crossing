@@ -218,7 +218,17 @@ function updatePowerChips() {
     }
   }
   screens.powers(trackerItems);
+  screens.sides(trackerItems);
 }
+// Between runs the desktop panels go back to all "not found yet".
+function resetSides() {
+  for (const it of trackerItems) {
+    it.state = 'off';
+    it.k = 0;
+  }
+  screens.sides(trackerItems);
+}
+resetSides();
 
 // Main loop. Large frame gaps are split into small steps so collisions stay fair.
 let last = performance.now();
@@ -237,6 +247,8 @@ function frame(now) {
   if (game.state === 'playing' || game.state === 'dying' || game.state === 'learn') {
     updatePowerChips();
     screens.hawk(game);
+  } else if (game.state === 'title' || game.state === 'demo') {
+    if (trackerItems.some((it) => it.state !== 'off')) resetSides();
   }
   requestAnimationFrame(frame);
 }

@@ -24,15 +24,14 @@ export function createRenderer(stage, game, opts) {
     v.rowH = v.tile * GRID.ROW_SCALE;
     v.ox = (stage.w - v.tile * GRID.COLS) / 2;
     v.line = Math.max(1, v.tile * 0.035);
-    // Wide screens: the lanes run on past the playfield to the screen edges,
-    // shaded so the 9 playable columns stay clear. Phones in portrait keep the
-    // half-tile margins (office facades, or forest in the habitat).
-    v.wide = v.ox > v.tile * 0.75;
+    // The world is only drawn on the 9 playable columns plus a half-tile margin
+    // each side (office facades, or forest in the habitat). Wide screens use the
+    // rest of the window for the power-up panels (screens.js), not the world.
     v.margin = Math.min(v.ox, v.tile / 2);
-    v.c0 = Math.floor(-v.ox / v.tile) - 1; // first and last visible columns
-    v.c1 = Math.ceil((v.w - v.ox) / v.tile);
-    v.gx0 = v.wide ? 0 : v.ox - 1; // where lane ground is drawn
-    v.gx1 = v.wide ? v.w : v.ox + v.tile * GRID.COLS + 1;
+    v.c0 = 0; // first and last columns with ground detail
+    v.c1 = GRID.COLS - 1;
+    v.gx0 = v.ox - 1; // where lane ground is drawn
+    v.gx1 = v.ox + v.tile * GRID.COLS + 1;
     game.viewRows = Math.ceil(stage.h / v.rowH) + 1;
   }
   layout();
@@ -42,13 +41,13 @@ export function createRenderer(stage, game, opts) {
   function drawFacade(row, y) {
     const t = v.tile;
     if (v.habitat) {
-      for (const side of [0, 1]) drawTreeline(ctx(), row, side, side === 0 ? 0 : v.ox + t * GRID.COLS, y - v.rowH, v.ox, v);
+      for (const side of [0, 1]) drawTreeline(ctx(), row, side, side === 0 ? v.ox - v.margin : v.ox + t * GRID.COLS, y - v.rowH, v.margin, v);
       return;
     }
     const top = y - v.rowH;
-    const mw = v.ox;
+    const mw = v.margin;
     for (const side of [0, 1]) {
-      const x = side === 0 ? 0 : v.ox + t * GRID.COLS;
+      const x = side === 0 ? v.ox - mw : v.ox + t * GRID.COLS;
       ctx().fillStyle = PAL.wall;
       ctx().fillRect(x, top, mw, v.rowH + 0.5);
       // One video-tile window per row. Every so often someone is recording.
@@ -104,8 +103,8 @@ export function createRenderer(stage, game, opts) {
       const lane = game.getLane(r);
       const y = rowY(r);
       if (lane) lane.mod.drawGround(c, lane, v, y);
-      if (!v.wide) drawFacade(r, y);
-      if (lane && lane.mod.drawSignals && !v.wide) lane.mod.drawSignals(c, lane, v, y);
+      drawFacade(r, y);
+      if (lane && lane.mod.drawSignals) lane.mod.drawSignals(c, lane, v, y);
     }
     const showMarkers = game.markers && game.markers.length && game.state !== 'title' && game.state !== 'demo';
     if (showMarkers) drawMarkerLines(c, first, last);
@@ -114,11 +113,9 @@ export function createRenderer(stage, game, opts) {
     const p = game.player;
     const pRow = p.dead ? p.row : Math.round(visualRow(p));
     c.save();
-    if (!v.wide) {
-      c.beginPath();
-      c.rect(v.ox, -v.h, v.tile * GRID.COLS, v.h * 3);
-      c.clip();
-    }
+    c.beginPath();
+    c.rect(v.ox, -v.h, v.tile * GRID.COLS, v.h * 3);
+    c.clip();
     for (let r = last; r >= first; r--) {
       const lane = game.getLane(r);
       const y = rowY(r);
@@ -139,19 +136,11 @@ export function createRenderer(stage, game, opts) {
       drawHawkShadow(c, v.ox + (p.x + 0.5) * v.tile, rowY(visualRow(p)) - v.rowH * 0.32, v, game.hawk.warn, v.time);
     }
     c.restore();
-    if (v.wide) {
-      drawOffField(c);
-      // Warning lamps go on top of the shade so they stay bright.
-      for (let r = first; r <= last; r++) {
-        const lane = game.getLane(r);
-        if (lane && lane.mod.drawSignals) lane.mod.drawSignals(c, lane, v, rowY(r));
-      }
-    }
     if (game.hawk.swoopT >= 0 && game.state !== 'title') drawSwoop(c);
     if (showMarkers) drawMarkerLabels(c, first, last);
     drawAlarm(c);
 
-    // Facade edges, or the edges of the playfield.
+    // Facade edges.
     c.fillStyle = v.habitat ? PAL.forestDeep : PAL.wallDark;
     c.fillRect(v.ox - v.line, 0, v.line, v.h);
     c.fillRect(v.ox + v.tile * GRID.COLS, 0, v.line, v.h);
@@ -183,14 +172,6 @@ export function createRenderer(stage, game, opts) {
     g.addColorStop(1, rgba(PAL.red, Math.min(0.7, a * 1.6)));
     c.fillStyle = g;
     c.fillRect(-v.tile, -v.tile, v.w + v.tile * 2, v.h + v.tile * 2); // covers screen shake too
-  }
-
-  // Wide screens: shade the world outside the 9 playable columns.
-  function drawOffField(c) {
-    const right = v.ox + v.tile * GRID.COLS;
-    c.fillStyle = rgba(v.habitat ? PAL.forestDeep : PAL.ink, v.habitat ? 0.42 : 0.38);
-    c.fillRect(0, 0, v.ox, v.h);
-    c.fillRect(right, 0, v.w - right, v.h);
   }
 
   // Where the hawk carries the otter during its swoop: [hawk y, otter lift].

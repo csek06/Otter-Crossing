@@ -417,6 +417,99 @@ canvas {
 .hud-hawk.is-alarm .hud-hawk-fill { background: var(--c-paper); }
 .hud-hawk.is-alarm .hud-hawk-bar { background: color-mix(in srgb, var(--c-red) 60%, var(--c-ink)); border-color: var(--c-paper); }
 
+/* Wide screens: the HUD sits over the playfield, between the side panels. */
+.stage.wide .hud { left: var(--side-w); right: var(--side-w); }
+
+/* Desktop power-up panels: the space beside the playfield holds one card per
+   power-up, with the same content as the first-pickup explainer. Grayed out but
+   readable until found; full color and glowing while active. */
+.side {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--side-w);
+  padding: clamp(12px, 2.2vh, 28px) clamp(12px, 1.6vw, 32px);
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(8px, 1.6vh, 18px);
+  overflow: hidden;
+  pointer-events: none;
+  --fs: clamp(12px, 1.45vh, 16px);
+}
+.stage.sides .side { display: flex; }
+.side.fit-1 .side-tagline { display: none; }
+.side.fit-2 .side-card .learn-label { display: none; }
+.side.fit-2 .side-card .learn-part { margin-top: calc(var(--fs) * 0.4); }
+.side-left { left: 0; }
+.side-right { right: 0; }
+.side-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: calc(var(--fs) * 0.9) calc(var(--fs) * 1.1) calc(var(--fs) * 1.1);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  border: 2px solid var(--c-ink);
+  border-radius: 10px;
+  box-shadow: 0 var(--edge) 0 var(--c-ink);
+  font-size: var(--fs);
+  overflow: hidden;
+  transition: opacity 0.3s, filter 0.3s;
+}
+.side-head { display: flex; align-items: center; gap: calc(var(--fs) * 0.8); }
+.side-icon.learn-icon { width: calc(var(--fs) * 2.8); height: calc(var(--fs) * 2.8); }
+.side-titles { min-width: 0; }
+.side-name { margin: 0; font: 800 calc(var(--fs) * 1.35) / 1.1 var(--f-display); }
+.side-badge {
+  margin: calc(var(--fs) * 0.25) 0 0;
+  font: 600 calc(var(--fs) * 0.8) / 1 var(--f-mono);
+  color: var(--c-ink-soft);
+}
+.side-tagline { margin: calc(var(--fs) * 0.6) 0 0; font: 800 var(--fs) / 1.25 var(--f-display); color: var(--c-ink-soft); }
+.side-card .learn-part {
+  margin-top: calc(var(--fs) * 0.6);
+  padding: calc(var(--fs) * 0.5) calc(var(--fs) * 0.7) calc(var(--fs) * 0.6);
+  border-left-width: calc(var(--fs) * 0.4);
+}
+.side-card .learn-label {
+  margin: 0 0 calc(var(--fs) * 0.35);
+  padding: calc(var(--fs) * 0.25) calc(var(--fs) * 0.6) calc(var(--fs) * 0.2);
+  font-size: calc(var(--fs) * 0.8);
+}
+.side-card .learn-text { font-size: calc(var(--fs) * 0.92); line-height: 1.35; }
+.side-time {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: calc(var(--fs) * 0.35);
+  background: transparent;
+}
+.side-time-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: var(--c-highlighter);
+}
+/* Not found yet, or used up: gray but still readable. */
+.side-card.is-off, .side-card.is-used { filter: grayscale(1); opacity: 0.66; box-shadow: none; }
+.side-card.is-used .side-badge { text-decoration: line-through; }
+/* Held (ready to use): full color with a steady outline. */
+.side-card.is-held { outline: 3px solid var(--c-highlighter); outline-offset: 2px; }
+.side-card.is-held .side-badge { color: var(--c-ink); font-weight: 800; }
+/* Active: brand blue edge and a soft glow that breathes every 1.6 seconds. */
+.side-card.is-active {
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 3px var(--c-brand), 0 0 28px 6px color-mix(in srgb, var(--c-brand) 70%, transparent);
+  animation: side-glow 1.6s ease-in-out infinite;
+}
+.side-card.is-active .side-badge { color: var(--c-brand); font-weight: 800; }
+@keyframes side-glow {
+  0%, 100% { box-shadow: 0 0 0 3px var(--c-brand), 0 0 18px 4px color-mix(in srgb, var(--c-brand) 55%, transparent); }
+  50% { box-shadow: 0 0 0 3px var(--c-brand), 0 0 36px 10px color-mix(in srgb, var(--c-brand) 80%, transparent); }
+}
+
 /* HUD power-up tracker: a second row under the score with one slot per power-up
    this run can spawn. Faded and dashed until found, a draining ring while active,
    a full ink ring while held, crossed out once a once-a-run power-up is spent. */
@@ -797,6 +890,8 @@ canvas {
 @media (prefers-reduced-motion: reduce) {
   .btn, .toast, .feature-toast { transition: none; }
   .hud-power.is-active { animation: none; }
+  .side-card.is-active { animation: none; }
+  .side-card { transition: none; }
 }
 
 /* Keep the debug panel out of the way of menus. */

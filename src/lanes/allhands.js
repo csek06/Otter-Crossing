@@ -32,7 +32,6 @@ export const allhands = {
     lane.t = 0;
     lane.idle = rng.range(0.6, lane.idleMax);
     lane.front = 0;
-    lane.exitFront = null;
     lane.signalT = 0;
   },
 
@@ -44,7 +43,6 @@ export const allhands = {
     if (lane.state === 'idle') {
       if (lane.t >= lane.idle) {
         lane.state = 'warn';
-        lane.exitFront = null;
         lane.t = 0;
         lane.signalT = 0;
       }
@@ -61,7 +59,6 @@ export const allhands = {
       const tail = lane.front - lane.dir * lane.trainLen;
       const gone = lane.dir > 0 ? tail > GRID.COLS + 0.5 : tail < -0.5;
       if (gone) {
-        lane.exitFront = lane.front; // only for drawing the train leaving on wide screens
         lane.state = 'idle';
         lane.t = 0;
         lane.idle = lane.runtime.range(lane.idleMin, lane.idleMax);
@@ -107,22 +104,6 @@ export const allhands = {
     return s ? [[s[0] + TUNING.HAZARD_INSET, s[1] - TUNING.HAZARD_INSET]] : [];
   },
 
-  // Where the train is drawn. Same as span while it passes. On wide screens it is
-  // also drawn on its way in during the warning, and on its way out after, both
-  // outside the playfield, so it never pops in or out of view.
-  drawFront(lane, v) {
-    if (lane.state === 'pass') return lane.front;
-    if (!v.wide) return null;
-    if (lane.state === 'warn') {
-      const entry = lane.dir > 0 ? -allhands.entryGap : GRID.COLS + allhands.entryGap;
-      return entry - lane.dir * lane.speed * (lane.warnTime - lane.t);
-    }
-    if (lane.exitFront == null) return null;
-    const f = lane.exitFront + lane.dir * lane.speed * lane.t;
-    const tail = f - lane.dir * lane.trainLen;
-    return (lane.dir > 0 ? tail > v.c1 + 1 : tail < v.c0 - 1) ? null : f;
-  },
-
   drawGround(ctx, lane, v, y) {
     const t = v.tile;
     const top = y - v.rowH;
@@ -136,9 +117,7 @@ export const allhands = {
       ctx.fillRect(x0, top, w, v.rowH + 0.5);
       // Ties and rails.
       ctx.fillStyle = PAL.railTie;
-      const c0 = v.wide ? v.c0 * 2 : 0;
-      const c1 = v.wide ? v.c1 * 2 : GRID.COLS * 2;
-      for (let c = c0; c < c1; c++) {
+      for (let c = 0; c < GRID.COLS * 2; c++) {
         ctx.fillRect(v.ox + c * t * 0.5 + t * 0.12, top + v.rowH * 0.18, t * 0.18, v.rowH * 0.64);
       }
       ctx.fillStyle = PAL.railSteel;
@@ -153,7 +132,7 @@ export const allhands = {
     }
   },
 
-  // Signal posts sit just outside the playfield on both sides of the lane. In
+  // Signal posts sit in the margins on both sides of the lane. In
   // the habitat they're wooden posts, with the same red lamps.
   drawSignals(ctx, lane, v, y) {
     const t = v.tile;
@@ -177,14 +156,12 @@ export const allhands = {
   },
 
   drawObjects(ctx, lane, v, y) {
-    const front = allhands.drawFront(lane, v);
-    if (front == null) return;
+    if (lane.state !== 'pass') return;
+    const front = lane.front;
     const t = v.tile;
     const gy = y - v.rowH * 0.14;
     const depth = v.rowH * 0.66;
     const height = t * 0.5;
-    const lo = v.wide ? v.c0 - 1 : -1.5;
-    const hi = v.wide ? v.c1 + 1 : GRID.COLS + 0.5;
     const tail = front - lane.dir * lane.trainLen;
     if (!v.habitat) shadow(ctx, v.ox + ((front + tail) / 2) * t, gy + v.rowH * 0.04, (lane.trainLen / 2) * t, v.rowH * 0.15);
     // Cars: one engine and a chain of envelopes, each one tile long.
@@ -192,7 +169,7 @@ export const allhands = {
     // goose and its flock.
     for (let i = 1; i < lane.trainLen; i++) {
       const pos = lane.dir > 0 ? front - (i + 1) : front + i;
-      if (pos > hi || pos < lo) continue;
+      if (pos > GRID.COLS + 0.5 || pos < -1.5) continue;
       if (i === 1) {
         const ex = lane.dir > 0 ? front - 2 : front;
         if (v.habitat) drawGoose(ctx, v.ox + ex * t, gy, v, lane.dir, true, i);

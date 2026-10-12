@@ -652,7 +652,7 @@ for (const size of SIZES) {
       inside: card.top >= stage.top && card.bottom <= stage.bottom && card.left >= stage.left && card.right <= stage.right,
       centered: Math.abs((card.left + card.right) / 2 - (stage.left + stage.right) / 2) < 2 && Math.abs((card.top + card.bottom) / 2 - (stage.top + stage.bottom) / 2) < stage.height * 0.12,
       card: document.getElementById('feature-toast').classList.contains('show'),
-      labels: [...document.querySelectorAll('.learn-label')].map((l) => getComputedStyle(l).backgroundColor), inside: document.querySelector('.learn-work .learn-label').textContent, logo: getComputedStyle(document.querySelector('.learn-logo svg')).color, titleLogo: getComputedStyle(document.querySelector('.logo-slot svg')).color,
+      labels: [...document.querySelectorAll('#learn .learn-label')].map((l) => getComputedStyle(l).backgroundColor), inside: document.querySelector('#learn .learn-work .learn-label').textContent, logo: getComputedStyle(document.querySelector('#learn .learn-logo svg')).color, titleLogo: getComputedStyle(document.querySelector('.logo-slot svg')).color,
     };
   });
   check(open1.state === 'learn' && open1.frozen, `${size.name}: first pickup opens the explainer and freezes play`);
@@ -1033,18 +1033,31 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
-// Full screen: the canvas fills the window at every size. Wide screens see the
-// world past the playfield, and the title drawer stays over the playfield.
+// Full screen: the canvas fills the window at every size. Wide screens keep the
+// title drawer over the playfield and use the space beside it for power-up panels.
 for (const size of [SIZES[1], SIZES[3], { name: 'desktop-1920x1080', width: 1920, height: 1080, dpr: 1, touch: false }]) {
-  const { ctx, page, errors } = await open(size, '?debug=1&seed=7');
+  const { ctx, page, errors } = await open(size, '?debug=1&seed=7&powerup=liveAssist');
   const box = await page.locator('#game').boundingBox();
   check(Math.abs(box.width - size.width) <= 1 && Math.abs(box.height - size.height) <= 1, `full screen ${size.name}: canvas fills the window (${box.width}x${box.height})`);
   const drawer = await page.locator('#screen-title .drawer').boundingBox();
   const wide = size.width > size.height * 0.75;
   check(wide ? drawer.width < size.width * 0.7 : Math.abs(drawer.width - size.width) <= 1, `full screen ${size.name}: title drawer ${wide ? 'sits over the playfield' : 'spans the screen'} (${Math.round(drawer.width)})`);
+  const panels = () => page.evaluate(() => ({
+    shown: getComputedStyle(document.getElementById('side-left')).display !== 'none',
+    cards: [...document.querySelectorAll('.side-card')].map((c) => c.dataset.id + ':' + c.className.replace(/.*is-/, '')),
+    fits: [...document.querySelectorAll('.side')].every((e) => e.scrollHeight <= e.clientHeight + 1),
+  }));
+  const before = await panels();
+  check(before.shown === wide && before.cards.length >= 4 && before.cards.every((c) => c.endsWith(':off')), `full screen ${size.name}: power-up panels ${wide ? 'beside the playfield, all grayed out' : 'hidden'} (${before.cards.length})`);
   if (wide) {
+    check(before.fits, `full screen ${size.name}: the panels fit the window`);
     await page.click('#btn-play');
     await wait(page, 500);
+    const during = await panels();
+    check(during.cards.includes('liveAssist:active') && during.cards.filter((c) => c.endsWith(':off')).length === during.cards.length - 1, `full screen ${size.name}: the active power-up lights up (${during.cards.join(' ')})`);
+    const hudBox = await page.locator('#hud').boundingBox();
+    const side = await page.locator('#side-left').boundingBox();
+    check(hudBox.x >= side.x + side.width - 1, `full screen ${size.name}: the HUD stays clear of the panels`);
     await page.screenshot({ path: join(shots, `wide-${size.name}.png`) });
   }
   check(errors.length === 0, `full screen ${size.name}: no console errors ${errors.join(' | ')}`);

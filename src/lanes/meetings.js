@@ -149,8 +149,7 @@ export const meetings = {
     ctx.fillRect(v.gx0, top, v.gx1 - v.gx0, v.rowH + 0.5);
     // Calendar slot lines: solid on the hour, faint on the half hour.
     ctx.fillStyle = PAL.trackLine;
-    const last = v.wide ? v.c1 : GRID.COLS;
-    for (let c = v.wide ? v.c0 : 0; c <= last; c++) {
+    for (let c = 0; c <= GRID.COLS; c++) {
       ctx.fillRect(v.ox + c * v.tile - 0.5, top, 1, v.rowH);
     }
     ctx.fillRect(v.gx0, top, v.gx1 - v.gx0, 1);
@@ -160,21 +159,15 @@ export const meetings = {
     const t = v.tile;
     const gy = y - v.rowH * 0.14;
     for (const car of lane.cars) {
-      const base = meetings.carLeft(lane, car);
-      // The lane is a ring, so on wide screens the same car shows up again one
-      // ring length away, exactly where it will be after it wraps.
-      for (let k = -1; k <= 1; k++) {
-        const l = base + k * lane.ring;
-        if (l > v.c1 + 0.5 || l + car.len < v.c0 - 0.5) continue;
-        if (!v.wide && (l > GRID.COLS + 0.5 || l + car.len < -0.5)) continue;
-        const x = v.ox + l * t;
-        if (v.habitat) {
-          drawAnimal(ctx, x, gy, car, lane.dir, v);
-          continue;
-        }
-        shadow(ctx, x + (car.len * t) / 2, gy + v.rowH * 0.04, (car.len * t) / 2, v.rowH * 0.14);
-        drawMeeting(ctx, x, gy, car, v, lane.dir);
+      const l = meetings.carLeft(lane, car);
+      if (l > GRID.COLS + 0.5 || l + car.len < -0.5) continue;
+      const x = v.ox + l * t;
+      if (v.habitat) {
+        drawAnimal(ctx, x, gy, car, lane.dir, v);
+        continue;
       }
+      shadow(ctx, x + (car.len * t) / 2, gy + v.rowH * 0.04, (car.len * t) / 2, v.rowH * 0.14);
+      drawMeeting(ctx, x, gy, car, v, lane.dir);
     }
   },
 };

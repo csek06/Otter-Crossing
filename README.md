@@ -2,7 +2,7 @@
 
 An endless lane-hopper for Otter.ai. Hop an otter across a workday full of meetings, a river of feature blurbs with highlighted logs to ride, the all-hands express and a deadline that will not wait. Power-ups teach Otter features, and the game over screen says which feature would have saved you.
 
-Runs are about 30 to 120 seconds. It works on phones, tablets and desktops, offline, from one HTML file. The game fills the screen: on a laptop or monitor the lanes run on past the 9 playable columns to the screen edges, shaded so the playfield stays clear.
+Runs are about 30 to 120 seconds. It works on phones, tablets and desktops, offline, from one HTML file. The game fills the screen. On a laptop or monitor the playfield stays centered, and the space on each side shows a panel of power-up cards with the same content as the first-pickup explainer: what each one does in the game and inside Otter. Cards are grayed out until you find that power-up, light up and glow while it's active, and go back to gray once a run ends. The panels show when there's at least 300px beside the playfield, and drop the taglines and labels on short windows so the cards fit. The pickup toast and the explainer still show as before.
 
 ## Play it
 

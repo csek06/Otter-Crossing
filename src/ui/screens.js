@@ -604,6 +604,86 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
   const hawkSr = $('hud-hawk-sr');
   let hawkShown = -1;
 
+  // Desktop power-up panels beside the playfield: one card per power-up this run
+  // can spawn, with the same content as the first-pickup explainer. Grayed out
+  // until found, glowing while active. Hidden by CSS unless there's room.
+  const sideEls = [$('side-left'), $('side-right')];
+  const sideCards = new Map();
+  const starSvg = document.querySelector('.learn-game .learn-label svg');
+  function sideCard(it) {
+    const f = CONTENT.features[it.featureId];
+    const L = CONTENT.learn;
+    const card = el('article', 'side-card is-off');
+    card.dataset.id = it.id;
+    const head = el('div', 'side-head');
+    const icon = el('span', 'learn-icon side-icon');
+    icon.innerHTML = iconSvg(it.featureId);
+    const titles = el('div', 'side-titles');
+    titles.appendChild(el('h3', 'side-name', f.name));
+    card.badge = el('p', 'side-badge', C.powerBadge.off);
+    titles.appendChild(card.badge);
+    head.append(icon, titles);
+    card.appendChild(head);
+    card.appendChild(el('p', 'side-tagline', f.tagline));
+    const game = el('div', 'learn-part learn-game');
+    const gl = el('h4', 'learn-label');
+    if (starSvg) gl.appendChild(starSvg.cloneNode(true));
+    gl.appendChild(el('span', null, L.inGame));
+    game.append(gl, el('p', 'learn-text', CONTENT.powers[it.id] || ''));
+    const work = el('div', 'learn-part learn-work');
+    const wl = el('h4', 'learn-label');
+    const logo = el('span', 'learn-logo');
+    if (mark) logo.appendChild(mark.cloneNode(true));
+    wl.append(logo, el('span', null, L.insideOtter));
+    work.append(wl, el('p', 'learn-text', f.description));
+    card.append(game, work);
+    const bar = el('span', 'side-time');
+    bar.setAttribute('aria-hidden', 'true');
+    card.fill = el('span', 'side-time-fill');
+    bar.appendChild(card.fill);
+    card.appendChild(bar);
+    return card;
+  }
+  // Short windows: drop the taglines, then the label chips, until the cards fit.
+  function fitSides() {
+    for (const e of sideEls) {
+      e.classList.remove('fit-1', 'fit-2');
+      if (!e.clientHeight) continue;
+      for (const level of ['fit-1', 'fit-2']) {
+        if (e.scrollHeight <= e.clientHeight + 1) break;
+        e.classList.add(level);
+      }
+    }
+  }
+  window.addEventListener('resize', fitSides);
+  function sides(items) {
+    if (sideCards.size !== items.length) {
+      for (const e of sideEls) e.textContent = '';
+      sideCards.clear();
+      const half = Math.ceil(items.length / 2);
+      items.forEach((it, i) => {
+        const card = sideCard(it);
+        sideCards.set(it.id, card);
+        sideEls[i < half ? 0 : 1].appendChild(card);
+      });
+      fitSides();
+    }
+    for (const it of items) {
+      const card = sideCards.get(it.id);
+      if (!card) continue;
+      if (card.state !== it.state) {
+        card.state = it.state;
+        card.className = `side-card is-${it.state}`;
+        card.badge.textContent = C.powerBadge[it.state];
+      }
+      const k = it.state === 'active' ? Math.max(0, Math.min(1, it.k)) : 0;
+      if (card.k !== k) {
+        card.k = k;
+        card.fill.style.transform = `scaleX(${k.toFixed(3)})`;
+      }
+    }
+  }
+
   // HUD power-up chips with a timer ring.
   const powersEl = $('hud-powers');
   const chips = new Map();
@@ -675,6 +755,7 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
     hideLearn() {
       $('learn').hidden = true;
     },
+    sides,
     // items: [{ id, featureId, state: off | active | held | used, k (0 to 1 remaining) }]
     powers(items) {
       const seen = new Set();

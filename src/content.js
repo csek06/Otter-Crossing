@@ -47,9 +47,12 @@ export const CONTENT = {
     recapEmpty: 'Grab a glowing pickup next run to try an Otter feature.',
     learnMore: 'Learn more',
     powerTracker: 'Power-ups',
+    powerPanels: 'Power-ups and the Otter features behind them',
     // The HUD countdown to the Deadline Hawk. {n} is whole seconds left.
     hawkTimer: 'Seconds until the hawk strikes: {n}. Hop forward to reset it.',
     powerState: { off: 'not found yet', active: 'active', held: 'ready', used: 'used' },
+    // Badges on the desktop power-up panels.
+    powerBadge: { off: 'Not found yet', active: 'Active', held: 'Ready', used: 'Used this run' },
     itemsShort: 'items',
     daily: 'Daily',
     outfits: 'Outfits',

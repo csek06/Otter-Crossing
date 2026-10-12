@@ -171,17 +171,12 @@ export const river = {
   drawObjects(ctx, lane, v, y) {
     const t = v.tile;
     for (const plat of lane.platforms) {
-      const base = river.left(lane, plat);
-      // Copies one ring length away fill wide screens (see meetings.js).
-      for (let k = -1; k <= 1; k++) {
-        const l = base + k * lane.ring;
-        if (l > v.c1 + 0.5 || l + plat.len < v.c0 - 0.5) continue;
-        if (!v.wide && (l > GRID.COLS + 0.5 || l + plat.len < -0.5)) continue;
-        drawHighlight(ctx, v.ox + l * t, y, plat, v);
-        if (plat.token && !plat.taken) drawToken(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.62, v, v.time);
-        const pu = lane.powerup;
-        if (pu && pu.plat === plat && !pu.taken) drawPickup(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.45, v, pu.id, v.time);
-      }
+      const l = river.left(lane, plat);
+      if (l > GRID.COLS + 0.5 || l + plat.len < -0.5) continue;
+      drawHighlight(ctx, v.ox + l * t, y, plat, v);
+      if (plat.token && !plat.taken) drawToken(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.62, v, v.time);
+      const pu = lane.powerup;
+      if (pu && pu.plat === plat && !pu.taken) drawPickup(ctx, v.ox + (l + plat.len / 2) * t, y - v.rowH * 0.45, v, pu.id, v.time);
     }
   },
 };

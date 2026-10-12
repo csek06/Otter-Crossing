@@ -1,12 +1,14 @@
-// The stage fills the window. Phones in portrait see the 9 columns edge to edge;
-// wider screens see the world carry on past the playfield (see tileSize).
-// The UI keeps a phone-width scale: --stage-w is the width of a 9:16 column.
+// The stage fills the window. Phones in portrait see the 9 columns edge to edge.
+// On wider screens the playfield stays centered (see tileSize) and the space on
+// either side holds the power-up panels. The UI keeps a phone-width scale:
+// --stage-w is the width of a 9:16 column.
 // Canvas backing store capped at 2x DPR and about 5 million pixels.
 
 import { GRID } from '../config.js';
 
 const ASPECT = 9 / 16;
 const MAX_PIXELS = 5e6;
+const MIN_SIDE = 300; // px beside the playfield before the power-up panels show
 
 // Tile size for a w by h stage: 10 tiles across, unless that would show fewer
 // than MIN_ROWS rows.
@@ -25,6 +27,12 @@ export function createStage(stageEl, canvas) {
     stageEl.style.height = h + 'px';
     stageEl.style.setProperty('--stage-w', Math.floor(Math.min(w, h * ASPECT)) + 'px');
     stageEl.classList.toggle('wide', w > h * 0.75);
+    // The space beside the playfield (and its half-tile margins). Wide enough,
+    // it holds the power-up panels.
+    const t = tileSize(w, h);
+    const side = Math.max(0, (w - t * GRID.COLS) / 2 - t / 2);
+    stageEl.style.setProperty('--side-w', Math.floor(side) + 'px');
+    stageEl.classList.toggle('sides', side >= MIN_SIDE);
     const dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PIXELS / Math.max(1, w * h)));
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);

@@ -36,6 +36,11 @@ async function run() {
     target: ['es2019'],
     write: false,
     legalComments: 'none',
+    // Online leaderboards (optional). Both empty means offline-only.
+    define: {
+      __SUPABASE_URL__: JSON.stringify(process.env.SUPABASE_URL || ''),
+      __SUPABASE_ANON_KEY__: JSON.stringify(process.env.SUPABASE_ANON_KEY || ''),
+    },
   });
   const js = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   const css = readFileSync(join(src, 'styles.css'), 'utf8');
@@ -45,7 +50,8 @@ async function run() {
     .replace('/*SCRIPT*/', () => js);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html);
-  console.log(`Built ${out} (${(html.length / 1024).toFixed(0)} KB) in ${Date.now() - t0}ms`);
+  const online = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY ? `online boards: ${process.env.SUPABASE_URL}` : 'offline only';
+  console.log(`Built ${out} (${(html.length / 1024).toFixed(0)} KB, ${online}) in ${Date.now() - t0}ms`);
 }
 
 await run();

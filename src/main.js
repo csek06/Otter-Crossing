@@ -14,6 +14,9 @@ import { createMusic } from './core/music.js';
 import { createWardrobe } from './game/wardrobe.js';
 import { recordDaily } from './game/daily.js';
 import { spawnable, POWERUP_BY_ID } from './powerups/registry.js';
+import { createOnline } from './online/client.js';
+import { ONLINE_CONFIG } from './online/config.js';
+import { load, save } from './core/storage.js';
 
 loadPalette();
 
@@ -25,6 +28,20 @@ let game = null;
 const booth = FLAGS.BOOTH_MODE || PARAMS.booth;
 const wardrobe = createWardrobe();
 const music = createMusic();
+
+// Online boards (off unless the build has a Supabase project). An ?event= code
+// in the URL is remembered on this device; booth staff can also set it in admin.
+const online = createOnline(ONLINE_CONFIG);
+if (PARAMS.event) save('event', PARAMS.event);
+const eventCode = () => load('event', null);
+if (online.enabled) {
+  online.flush().catch(() => {});
+  window.addEventListener('online', () => online.flush().catch(() => {}));
+  // A magic link sign-in lands here with the session in the hash.
+  if (/access_token=/.test(location.hash)) {
+    online.fromHash(location.hash).finally(() => history.replaceState(null, '', location.pathname + location.search));
+  }
+}
 
 const input = createInput(stage.canvas, {
   onPause: () => {
@@ -82,6 +99,7 @@ function play(mode = 'free') {
   music.step = 0;
   music.setLanes(0);
   game.start(mode);
+  if (online.enabled) online.startRun(mode, game.dailyKey, eventCode());
 }
 function pause() { game.setPaused(true); }
 function resume() { game.setPaused(false); }
@@ -102,8 +120,9 @@ screens = createScreens(
     outfitChanged: (id) => { game.outfit = id; },
     musicChanged: () => music.refresh(),
     cleared: () => { game.best = 0; game.outfit = wardrobe.wearing(); },
+    setEvent: (code) => save('event', code),
   },
-  { wardrobe, booth },
+  { wardrobe, booth, online, eventCode },
 );
 game.outfit = wardrobe.wearing();
 
@@ -137,7 +156,7 @@ if (PARAMS.debug) {
   panel.hidden = false;
   document.getElementById('dbg-inv').addEventListener('change', (e) => { game.debug.invincible = e.target.checked; });
   document.getElementById('dbg-hit').addEventListener('change', (e) => { game.debug.hitboxes = e.target.checked; });
-  window.__otter = { game, input, play, pause, resume, quit, music, wardrobe, screens, powerups: POWERUP_BY_ID };
+  window.__otter = { game, input, play, pause, resume, quit, music, wardrobe, screens, powerups: POWERUP_BY_ID, online };
 }
 
 document.addEventListener('visibilitychange', () => {

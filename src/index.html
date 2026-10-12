@@ -79,9 +79,26 @@
 
   <section id="screen-board" class="screen" hidden>
     <div class="drawer drawer-tall">
-      <h2 class="drawer-heading" data-copy="game.leaderboardHeading"></h2>
+      <h2 class="drawer-heading" id="board-heading" data-copy="game.leaderboardHeading"></h2>
+      <div id="board-tabs" class="board-tabs" role="tablist" data-copy-label="online.tabsLabel" hidden></div>
+      <p id="board-status" class="board-status" role="status" aria-live="polite" hidden></p>
       <ol id="board-list" class="board-list"></ol>
       <p id="board-empty" class="board-empty" data-copy="game.noScores" hidden></p>
+      <form id="board-signin" class="signin" hidden novalidate>
+        <p class="signin-intro" data-copy="online.companyIntro"></p>
+        <label class="optin-field"><span data-copy="online.emailLabel"></span><input id="signin-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false"></label>
+        <label id="signin-code-field" class="optin-field" hidden><span data-copy="online.codeLabel"></span><input id="signin-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10"></label>
+        <button id="btn-signin" class="btn" type="submit"></button>
+        <p id="signin-msg" class="optin-msg" role="status" aria-live="polite"></p>
+      </form>
+      <div id="board-account" class="board-account" hidden>
+        <p id="board-account-text" class="board-account-text"></p>
+        <div class="btn-row">
+          <button id="btn-signout" class="btn btn-quiet" type="button" data-copy="online.signOut"></button>
+          <button id="btn-forget" class="btn btn-quiet" type="button" data-copy="online.forget"></button>
+        </div>
+        <p id="account-msg" class="optin-msg" role="status" aria-live="polite"></p>
+      </div>
       <button id="btn-board-back" class="btn btn-primary" type="button" data-copy="game.back"></button>
     </div>
   </section>
@@ -106,6 +123,10 @@
         <button id="btn-admin-clear" class="btn" type="button" data-copy="admin.clearSignups"></button>
         <button id="btn-admin-clear-scores" class="btn" type="button" data-copy="admin.clearScores"></button>
       </div>
+      <form id="admin-event-form" class="admin-event" novalidate>
+        <label class="optin-field"><span data-copy="admin.eventLabel"></span><input id="admin-event" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40"></label>
+        <button id="btn-admin-event" class="btn" type="submit" data-copy="admin.eventSave"></button>
+      </form>
       <p id="admin-msg" class="admin-msg" role="status" aria-live="polite"></p>
       <button id="btn-admin-back" class="btn btn-primary" type="button" data-copy="game.back"></button>
     </div>
@@ -152,12 +173,15 @@
       </div>
 
       <form id="initials" class="initials" hidden>
-        <p class="initials-heading" data-copy="game.madeTop10"></p>
+        <p id="initials-heading" class="initials-heading" data-copy="game.madeTop10"></p>
         <fieldset class="initials-slots">
           <legend class="sr-only" data-copy="game.initialsLabel"></legend>
         </fieldset>
+        <label id="post-online-row" class="post-check" hidden><input id="post-online" type="checkbox"><span data-copy="online.postLabel"></span></label>
+        <label id="post-company-row" class="post-check" hidden><input id="post-company" type="checkbox"><span id="post-company-text"></span></label>
         <button id="btn-save" class="btn" type="submit" data-copy="game.saveScore"></button>
       </form>
+      <p id="post-msg" class="post-msg" role="status" aria-live="polite"></p>
 
       <button id="btn-again" class="btn btn-primary" type="button" data-copy="game.playAgain"></button>
 

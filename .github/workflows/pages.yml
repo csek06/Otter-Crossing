@@ -22,6 +22,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,10 +37,22 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Database checks (migration against Postgres 16)
+        run: npm run test:db
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
       - name: Unit tests (generator rules, copy checks, stretch goals)
         run: npm test
       - name: Build the single-file game
         run: npm run build
+        env:
+          # Online boards. Repository variables (Settings > Secrets and variables > Actions > Variables).
+          # Both are public by design: the anon key only reaches the functions the migration grants.
+          # Leave them unset and the game builds offline only.
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       - name: Stage the site
         run: |
           mkdir -p _site

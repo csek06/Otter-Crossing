@@ -72,6 +72,10 @@ Notes:
 - A GitHub Pages site is public, even when the repo is private. Pages on a private repo needs a paid GitHub plan.
 - Copy marked draft in `COPY_REVIEW.md` is live on that URL until it is signed off.
 
+### Online boards (Supabase, optional)
+
+Global, daily, event and company boards run on Supabase. They're off until the `SUPABASE_URL` and `SUPABASE_ANON_KEY` repository variables are set, and the build log says `offline only` until then. Migrations deploy from `.github/workflows/supabase.yml`. See [docs/backend.md](docs/backend.md) for the design, the setup checklist and `npm run test:db`.
+
 ### Other static hosts
 
 Examples:
@@ -84,7 +88,7 @@ Examples:
 Notes:
 
 - The JS and CSS are inline. If your site sends a Content-Security-Policy header, it needs `'unsafe-inline'` for `script-src` and `style-src`, and `data:` for `font-src`.
-- The file makes no network requests and has no analytics. The only links out are Try Otter and the Learn more links on the game over screen.
+- With online boards off (the default), the file makes no network requests. It has no analytics either way. The only links out are Try Otter and the Learn more links on the game over screen.
 - For a booth, open the file once in a full-screen browser window, or add it to the home screen on a tablet.
 
 ## Flags
@@ -117,8 +121,8 @@ All on-screen text is in `src/content.js`: feature names, taglines, descriptions
 
 ## Brand
 
-- **Colors:** eight CSS variables at the top of `src/styles.css`, including `--c-water` for the river and `--c-logo` for the logo. `--c-brand` is `#1D25E2`, the blue otter.ai uses for links. Confirm it with brand before launch. The game art reads these variables too, so one change updates menus and canvas.
-- **Logo:** the Otter logo mark from the otter.ai site header is inlined in `<div class="logo-slot">` in `src/index.html`. It uses `currentColor` and is drawn in `--c-logo` (#144FFF, the logo blue from the otter.ai media kit). The power-up explainer's "Inside Otter" label reuses the same mark. Confirm usage with brand before launch. To swap it, replace the SVG in that slot.
+- **Colors:** seven CSS variables at the top of `src/styles.css`, including `--c-water` for the river. `--c-brand` is `#144FFF`, the logo blue from the otter.ai media kit, and it is the only brand blue in the game: logo, buttons, signs, glows and pickups. The game art reads these variables too, so one change updates menus and canvas.
+- **Logo:** the Otter logo mark from the otter.ai site header is inlined in `<div class="logo-slot">` in `src/index.html`. It uses `currentColor` and is drawn in `--c-brand`. The power-up explainer's "Inside Otter" label reuses the same mark. Confirm usage with brand before launch. To swap it, replace the SVG in that slot.
 - **Fonts:** Overpass ExtraBold (display) and Overpass Mono (numbers, the river), both SIL Open Font License 1.1, inlined as base64 at build time from `@fontsource`. Body text uses the system font.
 
 ## Add a lane type

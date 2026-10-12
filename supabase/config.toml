@@ -1,0 +1,8 @@
+# Minimal Supabase CLI config. The CLI links to the real project in CI
+# (.github/workflows/supabase.yml); this name is only for local `supabase start`.
+project_id = "otter-crossing"
+
+[auth]
+# The GitHub Pages site. Add it in the dashboard too (Authentication > URL Configuration).
+site_url = "https://csek06.github.io/Otter-Crossing/"
+additional_redirect_urls = ["https://csek06.github.io/Otter-Crossing/otter-crossing.html"]

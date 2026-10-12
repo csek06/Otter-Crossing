@@ -32,7 +32,7 @@ const check = (cond, msg) => {
 
 const browser = await chromium.launch({ executablePath });
 
-async function open(size, query = '') {
+async function open(size, query = '', { allow = null } = {}) {
   const ctx = await browser.newContext({
     viewport: { width: size.width, height: size.height },
     deviceScaleFactor: size.dpr,
@@ -42,13 +42,64 @@ async function open(size, query = '') {
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(String(e)));
-  page.on('request', (r) => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:')) errors.push('network request: ' + r.url()); });
+  page.on('request', (r) => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:') && !(allow && r.url().startsWith(allow))) errors.push('network request: ' + r.url()); });
+  if (allow) await page.route((u) => u.href.startsWith(allow), (route) => mockSupabase(route));
   await page.goto(file + query);
   await page.waitForTimeout(400);
   return { ctx, page, errors };
 }
 
 const wait = (page, ms) => page.waitForTimeout(ms);
+
+// A pretend Supabase project for the online board checks. Same functions and
+// shapes as supabase/migrations, with the rules kept simple.
+const MOCK = 'https://mock-project.supabase.test';
+const mock = { runs: [], scores: [], calls: [], down: false };
+function mockSupabase(route) {
+  const req = route.request();
+  const url = new URL(req.url());
+  const body = req.postData() ? JSON.parse(req.postData()) : {};
+  const auth = req.headers()['authorization'] || '';
+  mock.calls.push({ path: url.pathname + url.search, body, auth, apikey: req.headers()['apikey'] });
+  const json = (status, data) => route.fulfill({ status, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) });
+  if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'POST' } });
+  if (mock.down) return route.abort('internetdisconnected');
+  const signedIn = auth === 'Bearer user-token';
+  switch (url.pathname) {
+    case '/rest/v1/rpc/start_run': {
+      const id = 'run-' + (mock.runs.length + 1);
+      mock.runs.push({ id, ...body });
+      return json(200, id);
+    }
+    case '/rest/v1/rpc/submit_score': {
+      const run = mock.runs.find((r) => r.id === body.p_run);
+      mock.scores.push({ ...body, mode: run.p_mode, event: run.p_event, domain: body.p_company && signedIn ? 'acme-robotics.com' : null });
+      const r = { global: 1 };
+      if (run.p_event) r.event = 1;
+      if (body.p_company && signedIn) r.company = 1;
+      return json(200, r);
+    }
+    case '/rest/v1/rpc/leaderboard': {
+      const rows = mock.scores
+        .filter((s) => (body.p_board === 'company' ? signedIn && s.domain : body.p_board === 'event' ? s.event === body.p_key : true))
+        .map((s, i) => ({ rank: i + 1, initials: s.p_initials, score: s.p_score, items: s.p_items, is_you: s.p_device === body.p_device }));
+      return json(200, [...rows, { rank: rows.length + 1, initials: 'JKL', score: 1, items: 0, is_you: false }]);
+    }
+    case '/rest/v1/rpc/event_info':
+      return json(200, body.p_event === 'summit-2026' ? { id: 'summit-2026', name: 'Fictional Summit 2026' } : null);
+    case '/auth/v1/otp':
+      return json(200, {});
+    case '/auth/v1/verify':
+      return body.token === '123456'
+        ? json(200, { access_token: 'user-token', refresh_token: 'refresh', expires_in: 3600, user: { email: body.email } })
+        : json(403, { msg: 'Token has expired or is invalid' });
+    case '/rest/v1/rpc/claim_company':
+      return json(200, signedIn ? 'acme-robotics.com' : null);
+    case '/auth/v1/logout':
+      return route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*' } });
+  }
+  return json(404, { message: 'not found' });
+}
 const state = (page) => page.evaluate(() => {
   const g = window.__otter.game;
   return { state: g.state, score: g.score, row: g.player.row, cause: g.player.deathCause, cam: g.camRow };
@@ -372,7 +423,7 @@ for (const start of [0, 120, 400]) {
   check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
   check(r.slots === 6, `the tracker has a slot for each released power-up (${r.slots})`);
   check(r.active.length === 1 && r.active[0] === 'Otter Notetaker, active', `the tracker shows the active power-up (${r.active})`);
-  check(r.glow && r.glow.shadow !== 'none' && r.glow.anim === 'power-glow' && r.glow.bg === 'rgb(29, 37, 226)', `the active slot is filled and glowing (${r.glow && r.glow.anim}, ${r.glow && r.glow.bg})`);
+  check(r.glow && r.glow.shadow !== 'none' && r.glow.anim === 'power-glow' && r.glow.bg === 'rgb(20, 79, 255)', `the active slot is filled and glowing (${r.glow && r.glow.anim}, ${r.glow && r.glow.bg})`);
   await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
   check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
   await ctx.close();
@@ -623,6 +674,100 @@ for (const size of SIZES) {
   });
   check(again.state === 'playing' && again.card, `${size.name}: a repeat pickup shows the bottom card, not the explainer`);
   check(errors.length === 0, `${size.name} explainer: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Online boards against the mock: post on game over, read the tabs, sign in for the company board.
+{
+  const q = `?debug=1&lane=focus&seed=6&event=summit-2026&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`;
+  const { ctx, page, errors } = await open(SIZES[1], q, { allow: MOCK });
+  await page.click('#btn-play');
+  await wait(page, 400);
+  const start = mock.calls.find((c) => c.path === '/rest/v1/rpc/start_run');
+  check(start && start.body.p_event === 'summit-2026' && start.apikey === 'anon-key' && /^[A-Za-z0-9_-]{16,64}$/.test(start.body.p_device), 'a run opens on the server with the event code and device id');
+  await page.evaluate(() => { const g = window.__otter.game; g.maxRow = g.startRow + 7; g.score = 7; g.actionItems = 2; g.kill('meeting', null); });
+  await wait(page, 1600);
+  check(await page.isVisible('#initials') && await page.isVisible('#post-online-row') && await page.isChecked('#post-online'), 'game over offers to post online');
+  check(!(await page.isVisible('#post-company-row')), 'no company option before signing in');
+  await page.click('#btn-save');
+  await page.waitForFunction(() => /^Posted/.test(document.getElementById('post-msg').textContent), null, { timeout: 3000 }).catch(() => {});
+  const posted = await page.textContent('#post-msg');
+  check(posted === 'Posted: #1 worldwide, #1 at Fictional Summit 2026.', `posting says where it placed (${posted})`);
+  const sub = mock.calls.find((c) => c.path === '/rest/v1/rpc/submit_score');
+  check(sub && sub.body.p_score === 7 && sub.body.p_items === 2 && sub.body.p_run === 'run-1' && sub.body.p_initials.length === 3, 'the score posts for that run');
+  await page.screenshot({ path: join(shots, 'online-posted.png') });
+
+  await page.click('#btn-over-board');
+  await wait(page, 300);
+  const tabs = await page.$$eval('.board-tab', (b) => b.map((x) => x.textContent));
+  check(tabs.join('|') === 'This device|Global|Today|Fictional Summit 2026|My company', `board tabs (${tabs.join(', ')})`);
+  await page.click('.board-tab[data-tab="global"]');
+  await page.waitForSelector('.board-you', { timeout: 3000 }).catch(() => {});
+  const rows = await page.$$eval('#board-list .board-row', (r) => r.map((x) => x.textContent));
+  check(rows.length === 2 && /You/.test(rows[0]), `global board marks you (${rows.join(' / ')})`);
+  check((await page.textContent('#board-heading')) === 'Top 10 worldwide', 'the heading follows the tab');
+  await page.screenshot({ path: join(shots, 'online-global.png') });
+
+  await page.click('.board-tab[data-tab="company"]');
+  check(await page.isVisible('#board-signin'), 'company tab asks for a work email');
+  await page.fill('#signin-email', 'nope');
+  await page.click('#btn-signin');
+  check((await page.textContent('#signin-msg')) === 'Enter a valid email address.', 'checks the email');
+  await page.fill('#signin-email', 'pat.lee@acme-robotics.com');
+  await page.click('#btn-signin');
+  await page.waitForSelector('#signin-code-field:not([hidden])', { timeout: 3000 }).catch(() => {});
+  check(await page.isVisible('#signin-code'), 'then asks for the code');
+  await page.screenshot({ path: join(shots, 'online-signin.png') });
+  await page.fill('#signin-code', '000000');
+  await page.click('#btn-signin');
+  await page.waitForFunction(() => /didn/.test(document.getElementById('signin-msg').textContent), null, { timeout: 3000 }).catch(() => {});
+  check(/didn.t work/.test(await page.textContent('#signin-msg')), 'a wrong code is refused');
+  await page.fill('#signin-code', '123456');
+  await page.click('#btn-signin');
+  await page.waitForFunction(() => /acme-robotics/.test(document.getElementById('board-status').textContent), null, { timeout: 3000 }).catch(() => {});
+  check((await page.textContent('#board-status')) === 'Players at acme-robotics.com', 'signed in: the company board');
+  check((await page.textContent('#board-heading')) === 'Top 10 at your company', 'company heading');
+  check((await page.textContent('#board-account-text')) === 'Signed in as pat.lee@acme-robotics.com', 'shows who is signed in');
+  await page.screenshot({ path: join(shots, 'online-company.png') });
+
+  // Next run offers the company board too.
+  await page.click('#btn-board-back');
+  await page.click('#btn-again');
+  await wait(page, 300);
+  await page.evaluate(() => { const g = window.__otter.game; g.maxRow = g.startRow + 4; g.score = 4; g.kill('meeting', null); });
+  await wait(page, 1600);
+  check(await page.isVisible('#post-company-row') && (await page.textContent('#post-company-text')) === 'Also post to the acme-robotics.com board', 'signed in: offers the company board');
+  await page.click('#btn-save');
+  await page.waitForFunction(() => /^Posted/.test(document.getElementById('post-msg').textContent), null, { timeout: 3000 }).catch(() => {});
+  check(/#1 at acme-robotics\.com\.$/.test(await page.textContent('#post-msg')), `posts to the company board (${await page.textContent('#post-msg')})`);
+  const sub2 = mock.calls.filter((c) => c.path === '/rest/v1/rpc/submit_score')[1];
+  check(sub2 && sub2.auth === 'Bearer user-token' && sub2.body.p_company === true, 'company posts carry the sign-in');
+
+  // Offline: the board says so, and a post waits in the queue.
+  mock.down = true;
+  await page.click('#btn-over-board');
+  await page.click('.board-tab[data-tab="global"]');
+  await page.waitForFunction(() => /reach/.test(document.getElementById('board-status').textContent), null, { timeout: 9000 }).catch(() => {});
+  check((await page.textContent('#board-status')) === 'Can\'t reach the online boards right now.', 'offline: the board says so');
+  mock.down = false;
+  await page.click('.board-tab[data-tab="company"]');
+  await page.click('#btn-signout');
+  await wait(page, 300);
+  check(await page.isVisible('#board-signin'), 'sign out returns to the sign-in form');
+  // The wrong code (403) and the offline check fail on purpose, and Chromium logs those loads.
+  const unexpected = errors.filter((e) => !/^Failed to load resource: (the server responded with a status of 403|net::ERR_INTERNET_DISCONNECTED)/.test(e));
+  check(unexpected.length === 0, `online boards: no console errors ${unexpected.join(' | ')}`);
+  await ctx.close();
+}
+
+// Booth mode with online boards: no company sign-in on a shared device.
+{
+  const { ctx, page, errors } = await open(SIZES[2], `?debug=1&booth=1&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`, { allow: MOCK });
+  await page.click('#btn-board');
+  await wait(page, 200);
+  const tabs = await page.$$eval('.board-tab', (b) => b.map((x) => x.textContent));
+  check(!tabs.includes('My company'), `booth: no company tab (${tabs.join(', ')})`);
+  check(errors.length === 0, `booth online: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }
 

@@ -8,9 +8,10 @@ import { isMuted, setMuted, isMusicOn, setMusicOn } from '../core/audio.js';
 import { iconSvg } from '../render/icons.js';
 import { topScores, qualifies, addScore, lastInitials, clearScores } from '../game/leaderboard.js';
 import { OUTFITS } from '../game/wardrobe.js';
-import { shareText } from '../game/daily.js';
+import { shareText, dateKey } from '../game/daily.js';
 import { signups, addSignup, clearSignups, toCsv, validEmail } from '../game/booth.js';
 import { drawOtter } from '../render/otter.js';
+import { load, save } from '../core/storage.js';
 
 const $ = (id) => document.getElementById(id);
 const C = CONTENT.game;
@@ -34,7 +35,11 @@ function el(tag, cls, text) {
 
 // handlers: play, daily, pause, resume, quit, and optional saved, outfitChanged, cleared.
 // opts: { wardrobe, booth }
-export function createScreens(handlers, { wardrobe, booth = false } = {}) {
+// online: the client from src/online/client.js (may be disabled).
+// eventCode: () => the event code for this device, or null.
+export function createScreens(handlers, { wardrobe, booth = false, online = null, eventCode = () => null } = {}) {
+  const ON = CONTENT.online;
+  const live = !!(online && online.enabled);
   // Fill copy.
   document.querySelectorAll('[data-copy]').forEach((e) => {
     const s = lookup(e.dataset.copy);
@@ -142,23 +147,181 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
   $('btn-over-board').addEventListener('click', () => openBoard('over'));
   $('btn-board-back').addEventListener('click', () => show(boardFrom));
 
-  // Leaderboard.
+  // Leaderboards: this device, plus the online boards when the build has them.
   let highlightId = null;
-  function openBoard(from) {
-    boardFrom = from;
+  let boardTab = 'device';
+  let boardLoad = 0; // ignore answers for a tab that is no longer showing
+  let eventName = null;
+  function tabs() {
+    const list = [['device', ON.tabDevice]];
+    if (!live) return list;
+    list.push(['global', ON.tabGlobal], ['daily', ON.tabDaily]);
+    if (eventCode()) list.push(['event', eventName || ON.tabEvent]);
+    if (!booth) list.push(['company', ON.tabCompany]);
+    return list;
+  }
+  function renderTabs() {
+    const box = $('board-tabs');
+    const list = tabs();
+    const headings = { device: C.leaderboardHeading, global: ON.headingGlobal, daily: ON.headingDaily, event: fmt(ON.headingEvent, { event: eventName || ON.tabEvent }), company: ON.headingCompany };
+    $('board-heading').textContent = headings[boardTab] || C.leaderboardHeading;
+    box.hidden = list.length < 2;
+    box.textContent = '';
+    for (const [id, label] of list) {
+      const b = el('button', 'board-tab', label);
+      b.type = 'button';
+      b.setAttribute('role', 'tab');
+      b.dataset.tab = id;
+      b.setAttribute('aria-selected', String(id === boardTab));
+      b.addEventListener('click', () => { boardTab = id; renderTabs(); loadTab(); });
+      box.appendChild(b);
+    }
+  }
+  function boardStatus(text) {
+    const p = $('board-status');
+    p.textContent = text || '';
+    p.hidden = !text;
+  }
+  function renderRows(rows) {
     const ol = $('board-list');
     ol.textContent = '';
-    const scores = topScores();
-    $('board-empty').hidden = scores.length > 0;
-    scores.forEach((s, i) => {
-      const li = el('li', 'board-row' + (s.id === highlightId ? ' is-new' : ''));
-      li.appendChild(el('span', 'board-rank', String(i + 1)));
-      li.appendChild(el('span', 'board-initials', s.initials));
+    rows.forEach((s, i) => {
+      const you = s.is_you || (s.id != null && s.id === highlightId);
+      const li = el('li', 'board-row' + (you ? ' is-new' : ''));
+      li.appendChild(el('span', 'board-rank', String(s.rank || i + 1)));
+      const who = el('span', 'board-initials', s.initials);
+      if (s.is_you) who.appendChild(el('span', 'board-you', ON.you));
+      li.appendChild(who);
       li.appendChild(el('span', 'board-items', `${s.items || 0} ${C.itemsShort}`));
       li.appendChild(el('span', 'board-score', String(s.score)));
       ol.appendChild(li);
     });
+  }
+  function showAccount() {
+    const sess = online.session();
+    $('board-account').hidden = !sess;
+    if (sess) $('board-account-text').textContent = fmt(ON.signedIn, { email: sess.email || '' });
+    $('account-msg').textContent = '';
+  }
+  async function loadTab() {
+    const load = ++boardLoad;
+    $('board-empty').hidden = true;
+    $('board-signin').hidden = true;
+    $('board-account').hidden = true;
+    renderRows([]);
+    if (boardTab === 'device') {
+      boardStatus('');
+      const scores = topScores();
+      renderRows(scores);
+      $('board-empty').textContent = C.noScores;
+      $('board-empty').hidden = scores.length > 0;
+      return;
+    }
+    if (boardTab === 'company') {
+      if (!online.signedIn()) { boardStatus(''); openSignin(); return; }
+      showAccount();
+      if (!online.domain()) { boardStatus(ON.personal); return; }
+    }
+    boardStatus(ON.loading);
+    const key = boardTab === 'daily' ? dateKey() : boardTab === 'event' ? eventCode() : null;
+    try {
+      const rows = await online.board(boardTab, key);
+      if (load !== boardLoad) return;
+      boardStatus(boardTab === 'company' ? fmt(ON.companyHeading, { domain: online.domain() }) : '');
+      renderRows(Array.isArray(rows) ? rows : []);
+      $('board-empty').textContent = ON.emptyOnline;
+      $('board-empty').hidden = Array.isArray(rows) && rows.length > 0;
+    } catch {
+      if (load === boardLoad) boardStatus(ON.unreachable);
+    }
+  }
+  function fetchEventName() {
+    const code = eventCode();
+    if (!live || !code || eventName) return;
+    online.eventInfo(code).then((info) => {
+      if (info && info.name && code === eventCode()) { eventName = info.name; if (current === 'board') renderTabs(); }
+    });
+  }
+  fetchEventName();
+  function openBoard(from) {
+    boardFrom = from;
+    if (!tabs().some(([id]) => id === boardTab)) boardTab = 'device';
+    renderTabs();
+    loadTab();
     show('board');
+    fetchEventName();
+  }
+
+  // Work email sign-in for the company board: email, then a one-time code.
+  let signinEmail = '';
+  function openSignin() {
+    $('board-signin').hidden = false;
+    $('signin-code-field').hidden = !signinEmail;
+    $('btn-signin').textContent = signinEmail ? ON.verify : ON.sendCode;
+    $('signin-msg').textContent = '';
+  }
+  if (live) {
+    $('board-signin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = $('signin-msg');
+      const btn = $('btn-signin');
+      if (!signinEmail) {
+        const email = $('signin-email').value.trim();
+        if (!validEmail(email)) { msg.textContent = ON.badEmail; return; }
+        btn.disabled = true;
+        try {
+          await online.sendCode(email);
+          signinEmail = email;
+          openSignin();
+          msg.textContent = ON.codeSent;
+          $('signin-code').focus();
+        } catch {
+          msg.textContent = ON.sendFailed;
+        } finally {
+          btn.disabled = false;
+        }
+        return;
+      }
+      const code = $('signin-code').value.replace(/\s/g, '');
+      if (!/^\d{6,10}$/.test(code)) { msg.textContent = ON.badCode; return; }
+      btn.disabled = true;
+      try {
+        await online.verifyCode(signinEmail, code);
+        signinEmail = '';
+        $('signin-code').value = '';
+        loadTab();
+      } catch {
+        msg.textContent = ON.badCode;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    $('signin-email').addEventListener('input', () => {
+      if (signinEmail) { signinEmail = ''; openSignin(); }
+    });
+    $('btn-signout').addEventListener('click', async () => {
+      await online.signOut();
+      loadTab();
+    });
+    let forgetArmed = 0;
+    $('btn-forget').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      if (!forgetArmed) {
+        btn.textContent = ON.forgetConfirm;
+        forgetArmed = setTimeout(() => { forgetArmed = 0; btn.textContent = ON.forget; }, 3000);
+        return;
+      }
+      clearTimeout(forgetArmed);
+      forgetArmed = 0;
+      btn.textContent = ON.forget;
+      try {
+        await online.forget();
+        loadTab();
+        boardStatus(ON.forgotten);
+      } catch {
+        $('account-msg').textContent = ON.unreachable;
+      }
+    });
   }
 
   // Initials entry: three letter slots with up and down buttons. Typing works too.
@@ -212,12 +375,37 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!pending) return;
-    highlightId = addScore(letters.map((n) => LETTERS[n]).join(''), pending.score, pending.items);
+    const initials = letters.map((n) => LETTERS[n]).join('');
+    if (pending.local) highlightId = addScore(initials, pending.score, pending.items);
+    if (pending.online) postOnline(initials, pending);
     pending = null;
     form.hidden = true;
     $('btn-again').focus({ preventScroll: true });
     if (handlers.saved) handlers.saved();
   });
+
+  // Posts the run to the online boards and says where it placed.
+  async function postOnline(initials, run) {
+    const msg = $('post-msg');
+    const post = $('post-online').checked;
+    save('online.post', post);
+    if (!post) return;
+    const company = !$('post-company-row').hidden && $('post-company').checked;
+    if (!$('post-company-row').hidden) save('online.postCompany', company);
+    msg.textContent = ON.posting;
+    try {
+      const r = await online.submit({ initials, score: run.score, items: run.items, company });
+      if (r && r.queued) { msg.textContent = ON.queued; return; }
+      const parts = [];
+      if (r.global) parts.push(fmt(ON.rankGlobal, { n: r.global }));
+      if (r.daily) parts.push(fmt(ON.rankDaily, { n: r.daily }));
+      if (r.event) parts.push(fmt(ON.rankEvent, { n: r.event, event: eventName || eventCode() }));
+      if (r.company) parts.push(fmt(ON.rankCompany, { n: r.company, domain: online.domain() }));
+      msg.textContent = parts.length ? fmt(ON.posted, { ranks: parts.join(', ') }) : '';
+    } catch {
+      msg.textContent = ON.failed;
+    }
+  }
 
   // Outfits: a preview of each, drawn with the same code as the game otter.
   function drawPreview(canvas, id) {
@@ -331,6 +519,8 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
     $('admin-signups').textContent = fmt(A.signups, { n: signups().length });
     $('admin-scores').textContent = fmt(A.scores, { n: topScores().length });
     $('admin-msg').textContent = '';
+    $('admin-event').value = eventCode() || '';
+    $('admin-event-form').hidden = !live;
     disarm();
     show('admin');
   }
@@ -371,6 +561,15 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
     armTimer = setTimeout(disarm, 3000);
   }
   $('btn-admin-clear').addEventListener('click', (e) => confirmThen(e.currentTarget, clearSignups));
+  $('admin-event-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = $('admin-event').value.trim().toLowerCase();
+    if (code && !/^[a-z0-9][a-z0-9-]{1,39}$/.test(code)) { $('admin-msg').textContent = A.eventBad; return; }
+    if (handlers.setEvent) handlers.setEvent(code || null);
+    eventName = null;
+    fetchEventName();
+    $('admin-msg').textContent = code ? fmt(A.eventSaved, { code }) : A.eventCleared;
+  });
   $('btn-admin-clear-scores').addEventListener('click', (e) => confirmThen(e.currentTarget, () => {
     clearScores();
     wardrobe.reset();
@@ -522,9 +721,20 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
         optinRun = { score: game.score, items: game.actionItems };
       }
 
-      // Initials, if a free run made the local top 10.
-      if (!daily && qualifies(game.score)) {
-        pending = { score: game.score, items: game.actionItems };
+      // Initials, if a free run made the local top 10, or to post online.
+      const local = !daily && qualifies(game.score);
+      const onlineRun = live && online.hasRun() && game.score > 0;
+      $('post-msg').textContent = '';
+      $('post-online-row').hidden = !onlineRun;
+      $('post-company-row').hidden = !(onlineRun && !booth && online.domain());
+      if (onlineRun) {
+        $('post-online').checked = load('online.post', true);
+        $('post-company').checked = load('online.postCompany', true);
+        $('post-company-text').textContent = fmt(ON.companyLabel, { domain: online.domain() || '' });
+      }
+      $('initials-heading').textContent = local ? C.madeTop10 : ON.saveHeading;
+      if (local || onlineRun) {
+        pending = { score: game.score, items: game.actionItems, local, online: onlineRun };
         const init = lastInitials();
         for (let i = 0; i < 3; i++) letters[i] = Math.max(0, LETTERS.indexOf(init[i] || 'A'));
         render();

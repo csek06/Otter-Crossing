@@ -4,7 +4,7 @@
 const FALLBACK = {
   paper: '#F3EEE4',
   ink: '#2A211C',
-  brand: '#1D25E2',
+  brand: '#144FFF',
   teal: '#0F2F37',
   highlighter: '#FFE14D',
   red: '#E5484D',

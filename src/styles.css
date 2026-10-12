@@ -4,12 +4,11 @@
   /* Seven named colors. The game art reads these too. */
   --c-paper: #F3EEE4;
   --c-ink: #2A211C;
-  --c-brand: #1D25E2; /* REVIEW: the blue used for links on otter.ai. Confirm with brand. */
+  --c-brand: #144FFF; /* the Otter logo blue, from the otter.ai media kit (blue-horizontal.svg). One blue everywhere. */
   --c-teal: #0F2F37;
   --c-highlighter: #FFE14D;
   --c-red: #E5484D;
   --c-water: #1F5FA8; /* the river */
-  --c-logo: #144FFF; /* the logo blue, from the otter.ai media kit (blue-horizontal.svg) */
 
   --c-paper-dark: color-mix(in srgb, var(--c-paper) 90%, var(--c-ink));
   --c-ink-soft: color-mix(in srgb, var(--c-ink) 70%, var(--c-paper));
@@ -160,7 +159,7 @@ canvas {
   border-radius: 6px;
   opacity: 1;
 }
-.logo-slot svg { display: block; width: calc(var(--u) * 20); height: auto; color: var(--c-logo); }
+.logo-slot svg { display: block; width: calc(var(--u) * 20); height: auto; color: var(--c-brand); }
 
 .sign {
   display: flex;
@@ -505,7 +504,7 @@ canvas {
 /* Inside Otter: paper chip so the logo can stay blue. */
 .learn-work .learn-label { background: var(--c-paper); color: var(--c-brand); border-color: var(--c-brand); }
 .learn-logo { display: inline-flex; }
-.learn-logo svg { width: 2.6em; height: 1em; color: var(--c-logo); }
+.learn-logo svg { width: 2.6em; height: 1em; color: var(--c-brand); }
 .learn-text { margin: 0; font: 400 max(16px, calc(var(--u) * 4.2)) / 1.4 var(--f-ui); text-wrap: pretty; }
 .learn-go {
   display: flex;
@@ -754,3 +753,72 @@ canvas {
 
 /* Keep the debug panel out of the way of menus. */
 .stage:has(.screen:not([hidden])) .debug { display: none; }
+
+/* Online boards: tabs, status, sign-in, account, and posting on game over. */
+.board-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 1.6);
+}
+.board-tab {
+  min-height: 48px;
+  padding: 0 calc(var(--u) * 3.4);
+  font: 800 max(14px, calc(var(--u) * 3.8)) / 1 var(--f-display);
+  color: var(--c-ink);
+  background: var(--c-paper);
+  border: 2px solid var(--c-ink);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.board-tab[aria-selected="true"] { background: var(--c-brand); color: var(--c-paper); }
+.board-tab:focus-visible { outline: 3px solid var(--c-brand); outline-offset: 2px; }
+.board-status {
+  margin: 0;
+  font: 600 max(13px, calc(var(--u) * 3.4)) / 1.35 var(--f-mono);
+  color: var(--c-ink-soft);
+}
+.board-you {
+  margin-left: calc(var(--u) * 2);
+  padding: 2px calc(var(--u) * 1.6);
+  font: 800 max(11px, calc(var(--u) * 2.8)) / 1.2 var(--f-display);
+  letter-spacing: 0;
+  color: var(--c-paper);
+  background: var(--c-brand);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.signin {
+  display: grid;
+  gap: calc(var(--u) * 2.4);
+  padding: calc(var(--u) * 3);
+  border: 2px solid var(--c-ink);
+  border-left: calc(var(--u) * 1.6) solid var(--c-brand);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-brand) 8%, var(--c-paper));
+}
+.signin-intro, .board-account-text {
+  margin: 0;
+  font: 400 max(15px, calc(var(--u) * 4)) / 1.4 var(--f-ui);
+}
+.signin .optin-field input { background: var(--c-paper); }
+.board-account { display: grid; gap: calc(var(--u) * 1.6); }
+.post-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: calc(var(--u) * 2.4);
+  align-items: center;
+  min-height: 48px;
+  font: 400 max(14px, calc(var(--u) * 3.8)) / 1.35 var(--f-ui);
+  cursor: pointer;
+}
+.post-check[hidden] { display: none; }
+.post-check input { width: 28px; height: 28px; margin: 0; accent-color: var(--c-brand); }
+.post-check input:focus-visible { outline: 3px solid var(--c-brand); outline-offset: 2px; }
+.post-msg {
+  margin: 0;
+  font: 800 max(15px, calc(var(--u) * 4)) / 1.3 var(--f-display);
+  color: var(--c-brand);
+}
+.post-msg:empty { display: none; }
+.admin-event { display: grid; gap: calc(var(--u) * 2); }
+.admin-event[hidden] { display: none; }

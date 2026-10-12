@@ -15,7 +15,7 @@ These lines say a little more than the taglines, or depend on product details I 
 - [ ] **Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.
 - [ ] **Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.
 - [ ] **Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.
-- [ ] **Logo and brand blue.** The logo mark comes from the otter.ai site header and is now drawn in #144FFF, the logo blue in the otter.ai media kit (blue-horizontal.svg). The UI brand blue (#1D25E2) is still the otter.ai link color. Confirm both with brand before launch.
+- [ ] **One brand blue.** Everything blue in the game (logo, buttons, signs, glows, pickups) is #144FFF, the logo blue in the otter.ai media kit (blue-horizontal.svg). The river is its own water blue. The logo mark itself comes from the otter.ai site header. Confirm usage with brand before launch.
 
 ## Validation, October 12, 2026
 
@@ -215,7 +215,8 @@ Only shown when `BOOTH_MODE` is true. The sign-up box is unchecked by default an
 - [ ] Consent (Legal): "Placeholder consent text pending Legal review. Yes, Otter.ai can email me."
 - [ ] Privacy link (Legal): "Privacy policy" https://otter.ai/privacy-policy
 - [ ] "Sign up", "Thanks. You are on the list.", "Check the email address.", "Tick the box to sign up."
-- [ ] Staff admin screen: "Booth admin", "Everything here is stored only in this browser on this device.", "Sign-ups saved: {n}", "Top 10 scores saved: {n}", "Export sign-ups (CSV)", "Clear sign-ups", "Clear scores and outfits", "Tap again to confirm", "Cleared.", "Saved {file}."
+- [ ] Staff admin screen: "Booth admin", "Everything here is stored only in this browser on this device.", "Sign-ups saved: {n}", "Top 10 scores saved: {n}", "Export sign-ups (CSV)", "Clear sign-ups", "Clear scores and outfits", "Tap again to confirm", "Cleared.", "Saved {file}.", "Event code for the online event board", "Save event code", "Event code saved: {code}", "No event code. Scores go to the global board only.", "Use 2 to 40 lowercase letters, numbers or dashes."
+- [ ] Online boards (live only when Supabase is configured; check with legal: the company board stores the email domain): "true", "Save your score", "Post to the online boards (initials only)", "Also post to the {domain} board", "Posting your score...", "Posted: {ranks}.", "#{n} worldwide", "#{n} in today's challenge", "#{n} at {event}", "#{n} at {domain}", "You're offline. Your score will post when you're back online.", "Couldn't post that score.", "Leaderboards", "This device", "Global", "Today", "Event", "My company", "Top 10 worldwide", "Today's top 10", "Top 10 at {event}", "Top 10 at your company", "Loading...", "Can't reach the online boards right now.", "No scores here yet. Be the first.", "Players at {domain}", "You", "Compete with your company. Sign in with your work email and we'll send you a 6-digit code. Your company board only shows initials, and only people at your company can see it.", "Work email", "6-digit code", "Send code", "Sign in", "Check your inbox for a 6-digit code.", "Enter a valid email address.", "That code didn't work. Check it and try again.", "Couldn't send a code right now. Try again in a minute.", "Personal email addresses like Gmail don't get a company board. Sign out and try your work email.", "Signed in as {email}", "Sign out", "Remove my online scores", "Tap again to remove them", "Your online scores are removed."
 
 ## 11. Screen labels
 

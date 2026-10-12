@@ -1,0 +1,58 @@
+# Applies supabase/migrations to the linked Supabase project.
+# Runs when a migration changes on the default branch, or by hand.
+# Setup (once): add these repository secrets under Settings > Secrets and variables > Actions:
+#   SUPABASE_ACCESS_TOKEN  a personal access token from supabase.com/dashboard/account/tokens
+#   SUPABASE_DB_PASSWORD   the database password set when the project was created
+#   SUPABASE_PROJECT_ID    the project ref, the part before .supabase.co in the project URL
+# Without them the job checks the migrations against Postgres and skips the deploy.
+
+name: Supabase migrations
+
+on:
+  push:
+    branches: [ccr-abd75a4b-vapjnc]
+    paths: ['supabase/**', 'test/db/**', 'test/db.test.sh']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the migrations against Postgres 16
+        run: bash test/db.test.sh
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+      - uses: supabase/setup-cli@v1
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        with:
+          version: latest
+      - name: Push the migrations
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+          supabase db push --password "$SUPABASE_DB_PASSWORD"
+      - name: Skipped the deploy
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "No SUPABASE_ACCESS_TOKEN secret, so the migrations were checked but not pushed."

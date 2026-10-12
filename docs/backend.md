@@ -64,7 +64,7 @@ All of these go in GitHub, under Settings > Secrets and variables > Actions. Use
 | Name | Kind | What it is |
 | --- | --- | --- |
 | `SUPABASE_ACCESS_TOKEN` | Secret | Personal access token, from supabase.com/dashboard/account/tokens |
-| `SUPABASE_PROJECT_ID` | Secret | The project ref, the part before `.supabase.co` |
+| `SUPABASE_PROJECT_ID` | Secret, optional | The project ref, the part before `.supabase.co`. Only needed if the token can see more than one project. |
 | `SUPABASE_DB_PASSWORD` | Secret | The database password from project creation |
 | `RESEND_API_KEY` | Secret | Resend API key with sending access |
 | `AUTH_EMAIL_FROM` | Variable | Sender address on your verified Resend domain, like `play@mail.example.com` |
@@ -74,7 +74,7 @@ The Resend key is never built into the game. Supabase uses it to send the sign-i
 
 ## Setup checklist
 
-1. Create a Supabase project and add the three Supabase secrets above.
+1. Create a Supabase project and add the Supabase secrets above.
 2. Set up Resend:
    1. Sign up at resend.com.
    2. Under Domains, add a domain or subdomain you control, and add the DNS records Resend shows you (an MX and SPF TXT on the sending subdomain, plus a DKIM TXT). On a company domain, someone with DNS access has to add them. Wait for Resend to show the domain as verified.

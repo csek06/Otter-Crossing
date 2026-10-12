@@ -5,7 +5,8 @@
 # Repository secrets (Settings > Secrets and variables > Actions > Secrets):
 #   SUPABASE_ACCESS_TOKEN  personal access token from supabase.com/dashboard/account/tokens
 #   SUPABASE_DB_PASSWORD   the database password set when the project was created
-#   SUPABASE_PROJECT_ID    the project ref, the part before .supabase.co in the project URL
+#   SUPABASE_PROJECT_ID    optional, the project ref (the part before .supabase.co). Needed only
+#                          when the token can see more than one project.
 #   RESEND_API_KEY         optional, a Resend API key with sending access
 # Repository variables (same page > Variables):
 #   AUTH_EMAIL_FROM        optional, the sender address on your Resend domain
@@ -44,6 +45,7 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID || secrets.SUPABASE_PROJECT_REF || vars.SUPABASE_PROJECT_ID || vars.SUPABASE_PROJECT_REF }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       AUTH_EMAIL_FROM: ${{ vars.AUTH_EMAIL_FROM || secrets.AUTH_EMAIL_FROM }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Which settings this workflow can see (names only, never values)
@@ -66,19 +68,26 @@ jobs:
           PGHOST: localhost
           PGUSER: postgres
           PGPASSWORD: postgres
+      - name: Find the project
+        # SUPABASE_PROJECT_ID is optional: the ref in SUPABASE_URL, or the only
+        # project the token can see, works too. Sets PROJECT_REF.
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        run: node tools/supabase-project.mjs
       - uses: supabase/setup-cli@v1
-        if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_ID != ''
+        if: env.PROJECT_REF != ''
         with:
           version: latest
       - name: Push the migrations
-        if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_ID != ''
+        if: env.PROJECT_REF != ''
         run: |
           if [ -z "$SUPABASE_DB_PASSWORD" ]; then echo "::error::SUPABASE_DB_PASSWORD secret is missing."; exit 1; fi
-          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+          supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
           supabase db push --password "$SUPABASE_DB_PASSWORD"
       - name: Configure Auth, email and events
-        if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_ID != ''
+        if: env.PROJECT_REF != ''
         run: node tools/supabase-setup.mjs
+        env:
+          SUPABASE_PROJECT_ID: ${{ env.PROJECT_REF }}
       - name: Skipped the deploy
-        if: env.SUPABASE_ACCESS_TOKEN == '' || env.SUPABASE_PROJECT_ID == ''
-        run: echo "No SUPABASE_ACCESS_TOKEN or SUPABASE_PROJECT_ID secret, so the migrations were checked but not pushed."
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "No SUPABASE_ACCESS_TOKEN secret, so the migrations were checked but not pushed."

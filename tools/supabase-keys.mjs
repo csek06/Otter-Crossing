@@ -3,10 +3,14 @@
 // public by design. Writes them to $GITHUB_ENV; on any problem it warns and the
 // game builds offline only.
 import { appendFileSync } from 'node:fs';
+import { resolveRef } from './supabase-project.mjs';
 
-const { SUPABASE_ACCESS_TOKEN: token, SUPABASE_PROJECT_ID: ref, GITHUB_ENV: out } = process.env;
+const { SUPABASE_ACCESS_TOKEN: token, GITHUB_ENV: out } = process.env;
 const warn = (m) => { console.log(`::warning::${m} The game builds offline only.`); process.exit(0); };
-if (!token || !ref) warn('No SUPABASE_URL and SUPABASE_ANON_KEY variables, and no access token to look them up.');
+if (!token) warn('No SUPABASE_URL and SUPABASE_ANON_KEY variables, and no access token to look them up.');
+const found = await resolveRef({ token, ref: process.env.SUPABASE_PROJECT_ID, url: process.env.SUPABASE_URL });
+if (found.error) warn(found.error);
+const ref = found.ref;
 
 const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/api-keys`, { headers: { Authorization: `Bearer ${token}` } }).catch((e) => warn(`Supabase lookup failed: ${e.message}.`));
 if (!res.ok) warn(`Supabase key lookup failed (${res.status}).`);

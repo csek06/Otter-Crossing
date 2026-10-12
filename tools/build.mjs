@@ -28,6 +28,7 @@ function fontCss() {
 
 async function run() {
   const t0 = Date.now();
+  const { url: sbUrl, key: sbKey, kind } = publicKey();
   const result = await build({
     entryPoints: [join(src, 'main.js')],
     bundle: true,
@@ -38,8 +39,8 @@ async function run() {
     legalComments: 'none',
     // Online leaderboards (optional). Both empty means offline-only.
     define: {
-      __SUPABASE_URL__: JSON.stringify(process.env.SUPABASE_URL || ''),
-      __SUPABASE_ANON_KEY__: JSON.stringify(process.env.SUPABASE_ANON_KEY || ''),
+      __SUPABASE_URL__: JSON.stringify(sbUrl),
+      __SUPABASE_ANON_KEY__: JSON.stringify(sbKey),
       __COMPANY_BOARDS__: JSON.stringify(process.env.COMPANY_BOARDS === '1'),
     },
   });
@@ -51,8 +52,32 @@ async function run() {
     .replace('/*SCRIPT*/', () => js);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html);
-  const online = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY ? `online boards: ${process.env.SUPABASE_URL}${process.env.COMPANY_BOARDS === '1' ? ', company boards on' : ''}` : 'offline only';
+  const online = sbUrl && sbKey ? `online boards: ${sbUrl}, ${kind} key${process.env.COMPANY_BOARDS === '1' ? ', company boards on' : ''}` : 'offline only';
   console.log(`Built ${out} (${(html.length / 1024).toFixed(0)} KB, ${online}) in ${Date.now() - t0}ms`);
+}
+
+// The key ends up in a public web page, so only a public key may go in. A secret
+// or service_role key here would hand out full database access: refuse it and
+// build offline instead, with an error in the CI log.
+export function keyKind(key) {
+  if (/^sb_publishable_/.test(key)) return 'publishable';
+  if (/^sb_secret_/.test(key)) return 'secret';
+  if (/^eyJ/.test(key)) {
+    try {
+      const role = JSON.parse(Buffer.from(key.split('.')[1], 'base64url').toString()).role;
+      return role === 'anon' ? 'legacy anon' : `legacy ${role || 'unknown'}`;
+    } catch { return 'unknown'; }
+  }
+  return 'unknown';
+}
+function publicKey() {
+  const url = process.env.SUPABASE_URL || '';
+  const key = (process.env.SUPABASE_ANON_KEY || '').trim();
+  if (!url || !key) return { url: '', key: '', kind: '' };
+  const kind = keyKind(key);
+  if (kind === 'publishable' || kind === 'legacy anon') return { url, key, kind };
+  console.log(`::error::SUPABASE_ANON_KEY is a ${kind} key, which must never go in the public game. Built offline instead. Use the project's publishable key (sb_publishable_...) or remove SUPABASE_ANON_KEY so the build looks it up.`);
+  return { url: '', key: '', kind: '' };
 }
 
 await run();

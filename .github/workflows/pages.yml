@@ -8,6 +8,11 @@ on:
     # The default branch. Add main here if the repo moves to one.
     branches: [ccr-abd75a4b-vapjnc]
   workflow_dispatch:
+  # Rebuild after the database and Auth setup run, so a new project goes live without a push.
+  workflow_run:
+    workflows: ['Supabase migrations']
+    types: [completed]
+    branches: [ccr-abd75a4b-vapjnc]
 
 permissions:
   contents: read
@@ -45,14 +50,23 @@ jobs:
           PGPASSWORD: postgres
       - name: Unit tests (generator rules, copy checks, stretch goals)
         run: npm test
+      - name: Find the Supabase project
+        # Uses the SUPABASE_URL and SUPABASE_ANON_KEY variables when they're set,
+        # and otherwise looks both up with the access token the migrations use.
+        env:
+          URL_SET: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          KEY_SET: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID || secrets.SUPABASE_PROJECT_REF || vars.SUPABASE_PROJECT_ID || vars.SUPABASE_PROJECT_REF }}
+        run: |
+          if [ -n "$URL_SET" ] && [ -n "$KEY_SET" ]; then
+            printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' "$URL_SET" "$KEY_SET" >> "$GITHUB_ENV"
+            echo "Online boards: $URL_SET (from repository settings)"
+          else
+            node tools/supabase-keys.mjs
+          fi
       - name: Build the single-file game
         run: npm run build
-        env:
-          # Online boards. Repository variables (Settings > Secrets and variables > Actions > Variables).
-          # Both are public by design: the anon key only reaches the functions the migration grants.
-          # Leave them unset and the game builds offline only.
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       - name: Stage the site
         run: |
           mkdir -p _site

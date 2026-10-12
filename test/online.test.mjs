@@ -57,7 +57,7 @@ test('online: a run posts with the device id, anon key headers and ranks back', 
   const [start, submit] = f.calls;
   assert.deepEqual(start.body, { p_device: o.device(), p_mode: 'daily', p_daily_key: '2026-10-12', p_event: 'summit-2026' });
   assert.equal(start.headers.apikey, 'anon-key');
-  assert.equal(start.headers.Authorization, 'Bearer anon-key');
+  assert.equal(start.headers.Authorization, undefined, 'no Bearer without a sign-in: publishable keys are not JWTs');
   assert.equal(submit.body.p_run, 'run-1');
   assert.equal(submit.body.p_company, false, 'no company without a signed-in work domain');
   await assert.rejects(o.submit({ initials: 'PAT', score: 40, items: 3 }), /no_run/, 'one post per run');

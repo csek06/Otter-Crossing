@@ -1,0 +1,5 @@
+{
+  "_help": "Event boards. Add one per event, then push (or run the Supabase migrations workflow). id is the ?event= code: 2 to 40 lowercase letters, numbers or dashes. Times are ISO 8601 with a time zone. Scores count only between starts_at and ends_at.",
+  "_example": { "id": "summit-2026", "name": "Summit 2026", "starts_at": "2026-11-03T08:00:00-08:00", "ends_at": "2026-11-06T18:00:00-08:00" },
+  "events": []
+}

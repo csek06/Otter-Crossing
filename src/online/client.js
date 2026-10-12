@@ -43,7 +43,11 @@ export function createOnline({ url, anonKey, fetchImpl = globalThis.fetch, store
     const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), TIMEOUT) : 0;
     const headers = { apikey: anonKey, 'Content-Type': 'application/json' };
-    if (auth) headers.Authorization = `Bearer ${bearer || (await token()) || anonKey}`;
+    // Only a signed-in player's token goes in Authorization. The project key rides on
+    // apikey alone: new publishable keys (sb_publishable_...) aren't JWTs and the
+    // platform rejects them as a Bearer token.
+    const user = auth ? bearer || (await token()) : null;
+    if (user) headers.Authorization = `Bearer ${user}`;
     try {
       const res = await fetchImpl(base + path, { method, headers, body: body == null ? undefined : JSON.stringify(body), signal: ctrl ? ctrl.signal : undefined });
       const text = await res.text();

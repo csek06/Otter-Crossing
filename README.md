@@ -74,7 +74,7 @@ Notes:
 
 ### Online boards (Supabase, optional)
 
-Global, daily, event and company boards run on Supabase. They're off until the `SUPABASE_URL` and `SUPABASE_ANON_KEY` repository variables are set, and the build log says `offline only` until then. Migrations deploy from `.github/workflows/supabase.yml`. See [docs/backend.md](docs/backend.md) for the design, the setup checklist and `npm run test:db`.
+Global, daily, event and company boards run on Supabase. They're off until the Supabase secrets are in GitHub. The Pages build then looks up the project URL and publishable key itself, and the build log says `offline only` until it finds them. `.github/workflows/supabase.yml` deploys the migrations and configures Auth and email (Resend). See [docs/backend.md](docs/backend.md) for the design, where each setting lives and `npm run test:db`.
 
 ### Other static hosts
 

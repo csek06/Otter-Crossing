@@ -1,6 +1,6 @@
 # Online boards (Supabase)
 
-The game works offline by default. When the build is given a Supabase project URL and anon key, it adds online boards. Without them it behaves exactly as before and makes no network calls.
+The game works offline by default. When the build is given a Supabase project URL and publishable (or legacy anon) key, it adds online boards. Without them it behaves exactly as before and makes no network calls.
 
 ## What's built
 
@@ -44,28 +44,45 @@ If a board gets abused, the next steps are Cloudflare Turnstile on `start_run`, 
 
 ## GitHub integration
 
-Two workflows do the work:
+Everything is set from GitHub. You never need to paste settings into the Supabase dashboard.
 
-- `.github/workflows/pages.yml` builds the site. It now runs the database checks against a Postgres 16 service, then builds with the `SUPABASE_URL` and `SUPABASE_ANON_KEY` repository variables. If the variables are unset, the build is offline only.
-- `.github/workflows/supabase.yml` runs when anything under `supabase/` changes. It checks the migrations against Postgres, then runs `supabase db push` to apply new migrations to the real project. Without the secrets, it checks and skips the push.
+- `.github/workflows/supabase.yml` runs when `supabase/`, `tools/supabase-setup.mjs` or the workflow itself changes, or by hand. It does four things:
+  1. It prints which settings it can see (names only).
+  2. It checks the migrations against Postgres 16.
+  3. It runs `supabase db push`.
+  4. It runs `tools/supabase-setup.mjs`, which uses the Management API to set the sign-in URLs, the code email, Resend as the email sender and the rows in `supabase/events.json`.
+- `.github/workflows/pages.yml` builds the site and also runs after each Supabase run. It uses the `SUPABASE_URL` and `SUPABASE_ANON_KEY` variables if you set them. Otherwise it looks up the project URL and publishable key with the access token. If it finds neither, the build is offline only.
 
-Supabase also has its own GitHub integration (project settings > Integrations > GitHub). It applies migrations from a branch and can make preview branches per pull request. It's a paid-plan feature. The workflow above does the same job on the free plan, so pick one, not both.
+Supabase also has its own GitHub integration (project settings > Integrations > GitHub). It applies migrations from a branch and can make preview branches per pull request, but it's a paid-plan feature. The workflow does the same job on the free plan, so pick one, not both.
 
 To change the database, add a new file in `supabase/migrations/` (named `YYYYMMDDHHMMSS_what.sql`) and never edit one that's already been pushed. Run `npm run test:db` locally. It needs Postgres and `psql`.
 
+## Where each setting lives
+
+All of these go in GitHub, under Settings > Secrets and variables > Actions. Use repository secrets, not environment secrets. The workflow pushes the email settings into Supabase.
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `SUPABASE_ACCESS_TOKEN` | Secret | Personal access token, from supabase.com/dashboard/account/tokens |
+| `SUPABASE_PROJECT_ID` | Secret | The project ref, the part before `.supabase.co` |
+| `SUPABASE_DB_PASSWORD` | Secret | The database password from project creation |
+| `RESEND_API_KEY` | Secret | Resend API key with sending access |
+| `AUTH_EMAIL_FROM` | Variable | Sender address on your verified Resend domain, like `play@mail.example.com` |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Variable, optional | Only if you want to override the lookup |
+
+The Resend key is never built into the game. Supabase uses it to send the sign-in emails.
+
 ## Setup checklist
 
-1. Create a Supabase project. Copy the project URL, the anon (publishable) key, the project ref and the database password.
-2. In GitHub, go to Settings > Secrets and variables > Actions:
-   - **Secrets:** `SUPABASE_ACCESS_TOKEN` (from supabase.com/dashboard/account/tokens), `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID`.
-   - **Variables:** `SUPABASE_URL` (like `https://abcd.supabase.co`), `SUPABASE_ANON_KEY`.
-3. Run the "Supabase migrations" workflow (Actions tab > Run workflow), then rerun "Deploy to GitHub Pages".
-4. Set up Supabase Auth:
-   - Under Authentication > URL Configuration, set the Site URL to `https://csek06.github.io/Otter-Crossing/`.
-   - Under Authentication > Email Templates, edit the magic link template so it includes `{{ .Token }}`. The game asks for the 6-digit code, and the link in the same email also works.
-   - Under Authentication > SMTP, add a sender (Resend, Postmark, SES or similar). The built-in sender only allows a few emails an hour and is meant for testing.
-5. Add events: `insert into events (id, name, starts_at, ends_at) values ('summit-2026', 'Summit 2026', '2026-11-03', '2026-11-06');`
-6. Have legal review the privacy side. The game stores a random device id, initials, scores and, if someone signs in, their email in Supabase Auth plus the domain.
+1. Create a Supabase project and add the three Supabase secrets above.
+2. Set up Resend:
+   1. Sign up at resend.com.
+   2. Under Domains, add a domain or subdomain you control, and add the DNS records Resend shows you (an MX and SPF TXT on the sending subdomain, plus a DKIM TXT). On a company domain, someone with DNS access has to add them. Wait for Resend to show the domain as verified.
+   3. Under API Keys, create a key with "Sending access", limited to that domain.
+   4. Save it as the `RESEND_API_KEY` secret, and save the sender address as the `AUTH_EMAIL_FROM` variable.
+3. Run "Supabase migrations" from the Actions tab. "Deploy to GitHub Pages" runs after it.
+4. Add events to `supabase/events.json` and push. Each one needs an id (the `?event=` code), a name, and start and end times.
+5. Have legal review the privacy side. The game stores a random device id, initials and scores. If someone signs in, it also stores their email (in Supabase Auth) and their email domain.
 
 ## More ideas
 

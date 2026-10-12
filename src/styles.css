@@ -1,13 +1,14 @@
 /* Otter Crossing. Colors and type are variables so brand values can be swapped in one place. */
 
 :root {
-  /* Six named colors. The game art reads these too. */
+  /* Seven named colors. The game art reads these too. */
   --c-paper: #F3EEE4;
   --c-ink: #2A211C;
   --c-brand: #1D25E2; /* REVIEW: the blue used for links on otter.ai. Confirm with brand. */
   --c-teal: #0F2F37;
   --c-highlighter: #FFE14D;
   --c-red: #E5484D;
+  --c-water: #1F5FA8; /* the river */
 
   --c-paper-dark: color-mix(in srgb, var(--c-paper) 90%, var(--c-ink));
   --c-ink-soft: color-mix(in srgb, var(--c-ink) 70%, var(--c-paper));

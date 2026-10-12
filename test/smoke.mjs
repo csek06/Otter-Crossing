@@ -320,6 +320,20 @@ for (const start of [0, 120, 400]) {
 
 // ---------- M3: power-ups, teaching screen, leaderboard ----------
 
+// The feature card stays up for 3.5 seconds.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=3');
+  await page.click('#btn-play');
+  await page.evaluate(() => { window.__otter.game.debug.invincible = true; window.__otter.screens.feature('aiChat'); });
+  await wait(page, 3000);
+  const at3 = await page.isVisible('#feature-toast.show');
+  await wait(page, 900);
+  const at4 = await page.isVisible('#feature-toast.show');
+  check(at3 && !at4, `feature card shows for about 3.5 seconds (3s: ${at3}, 3.9s: ${at4})`);
+  check(errors.length === 0, `feature card timing: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 // Otter Notetaker absorbs one meeting hit, then the next one counts.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=meetings&seed=3&powerup=notetaker');

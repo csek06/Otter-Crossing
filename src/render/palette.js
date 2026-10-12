@@ -8,6 +8,7 @@ const FALLBACK = {
   teal: '#0F2F37',
   highlighter: '#FFE14D',
   red: '#E5484D',
+  water: '#1F5FA8',
 };
 
 export const PAL = { ...FALLBACK };
@@ -19,7 +20,7 @@ export function loadPalette() {
     const v = css.getPropertyValue('--c-' + key).trim();
     PAL[key] = v || FALLBACK[key];
   }
-  // Derived tones. Everything in the game is a mix of the six named colors.
+  // Derived tones. Everything in the game is a mix of the seven named colors.
   PAL.paperDark = mix(PAL.paper, PAL.ink, 0.07);
   PAL.paperDeep = mix(PAL.paper, PAL.ink, 0.14);
   PAL.track = mix(PAL.paper, PAL.brand, 0.13);
@@ -40,9 +41,11 @@ export function loadPalette() {
   PAL.screenFace = mix(PAL.teal, PAL.paper, 0.45);
   PAL.shadow = rgba(PAL.ink, 0.18);
   // Transcript river.
-  PAL.riverText = mix(PAL.teal, PAL.paper, 0.42);
-  PAL.riverSpeaker = mix(PAL.teal, PAL.paper, 0.7);
-  PAL.riverLine = mix(PAL.teal, PAL.ink, 0.4);
+  PAL.riverText = mix(PAL.water, PAL.paper, 0.5);
+  PAL.riverSpeaker = mix(PAL.water, PAL.paper, 0.82);
+  PAL.riverLine = mix(PAL.water, PAL.ink, 0.45);
+  PAL.waterDeep = mix(PAL.water, PAL.ink, 0.18);
+  PAL.waveCrest = rgba(PAL.paper, 0.42);
   PAL.highlighterEdge = mix(PAL.highlighter, PAL.ink, 0.35);
   PAL.glow = rgba(PAL.highlighter, 0.16);
   PAL.glowStrong = rgba(PAL.highlighter, 0.38);

@@ -422,8 +422,8 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
       clearTimeout(featureTimer);
       feature.classList.remove('show');
     },
-    // Feature name and tagline for about 1.5 seconds on pickup. Play continues.
-    feature(featureId, seconds = 1.5) {
+    // Feature name and tagline for about 3.5 seconds on pickup. Play continues.
+    feature(featureId, seconds = 3.5) {
       const f = CONTENT.features[featureId];
       if (!f) return;
       $('ft-icon').innerHTML = iconSvg(featureId);

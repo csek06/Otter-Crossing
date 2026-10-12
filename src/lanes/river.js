@@ -68,6 +68,8 @@ export const river = {
   update(lane, dt) {
     lane.phase = (lane.phase + lane.speed * lane.dir * dt) % lane.ring;
     if (lane.phase < 0) lane.phase += lane.ring;
+    // Wave offset. 600 tiles is a whole number of waves at both crest speeds, so the wrap is seamless.
+    lane.wave = ((lane.wave || 0) + lane.speed * lane.dir * dt) % 600;
     for (const p of lane.platforms) if (p.lit > 0) p.lit = Math.max(0, p.lit - dt);
   },
 
@@ -135,12 +137,16 @@ export const river = {
     });
   },
 
-  // The bold part: the water is transcript text.
+  // Blue water with wave crests, and a stream of feature blurbs flowing on it.
   drawGround(ctx, lane, v, y) {
     const t = v.tile;
     const top = y - v.rowH;
-    ctx.fillStyle = PAL.teal;
+    ctx.fillStyle = PAL.water;
     ctx.fillRect(v.ox - 1, top, t * GRID.COLS + 2, v.rowH + 0.5);
+    // A darker band along the far bank gives the water some depth.
+    ctx.fillStyle = PAL.waterDeep;
+    ctx.fillRect(v.ox - 1, top, t * GRID.COLS + 2, v.rowH * 0.22);
+    drawWaves(ctx, lane, v, top);
     const img = textSprite(lane, v);
     const ringPx = lane.ring * t;
     let x0 = v.ox + (lane.phase - lane.pad) * t;
@@ -166,6 +172,38 @@ export const river = {
     }
   },
 };
+
+// Two rows of scalloped crests above and below the text. They drift with the
+// current at slightly different rates, so the water looks like it is moving.
+const WAVE_LEN = 0.6; // tiles
+function drawWaves(ctx, lane, v, top) {
+  const t = v.tile;
+  const w = t * GRID.COLS;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(v.ox, top, w, v.rowH);
+  ctx.clip();
+  ctx.strokeStyle = PAL.waveCrest;
+  ctx.lineWidth = Math.max(1, v.line);
+  ctx.lineCap = 'round';
+  const rows = [
+    { y: top + v.rowH * 0.2, k: 1.25, off: 0 },
+    { y: top + v.rowH * 0.86, k: 0.8, off: WAVE_LEN / 2 },
+  ];
+  const len = WAVE_LEN * t;
+  const amp = t * 0.05;
+  ctx.beginPath();
+  for (const r of rows) {
+    let x = v.ox + (((((lane.wave || 0) * r.k + r.off) % WAVE_LEN) + WAVE_LEN) % WAVE_LEN) * t - len;
+    for (; x < v.ox + w; x += len) {
+      // One crest: a short arch, then a flat trough before the next.
+      ctx.moveTo(x, r.y);
+      ctx.quadraticCurveTo(x + len * 0.25, r.y - amp * 2, x + len * 0.5, r.y);
+    }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
 
 // Pre-render the lane's scrolling transcript text once, sized to the ring.
 function textSprite(lane, v) {

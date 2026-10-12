@@ -361,6 +361,51 @@ test('Live Assist is released and spawns in normal runs', () => {
   assert.ok(seen.has('liveAssist'), 'liveAssist never spawned');
 });
 
+test('Work Mode: a run takes 8 new lanes, then sweeps tokens ahead into a follow-up doc', async () => {
+  const { default: wm, STEPS, SWEEP_ROWS, DOC_BONUS } = await import('../src/powerups/workmode.js');
+  const lanes = new Map();
+  for (let r = 0; r < 40; r++) {
+    const l = newLane();
+    l.row = r;
+    l.tokens = [{ col: r % GRID.COLS, taken: false, t: 0 }];
+    lanes.set(r, l);
+  }
+  const msgs = [];
+  const game = {
+    active: [], maxRow: 5, actionItems: 0, player: { row: 5, x: 4 },
+    addActive(mod) { this.active.push({ mod, t: mod.duration, max: mod.duration }); },
+    removeActive(id) { this.active = this.active.filter((e) => e.mod.id !== id); },
+    getLane: (r) => lanes.get(r) || null,
+    takeToken() { game.actionItems++; },
+    message: (key, vars) => msgs.push([key, vars]),
+  };
+  const tick = () => {
+    for (const e of [...game.active]) {
+      wm.update(game, 1 / 60, e);
+      e.t -= 1 / 60;
+      if (e.t <= 0) game.removeActive(e.mod.id);
+    }
+  };
+  wm.apply(game);
+  // Time alone never finishes a run.
+  for (let i = 0; i < 600; i++) tick();
+  assert.equal(game.active.length, 1, 'still running after 10 seconds standing still');
+  assert.equal(game.active[0].left, STEPS);
+  for (let step = 1; step < STEPS; step++) {
+    game.maxRow++; game.player.row++;
+    tick();
+    assert.equal(game.active[0].left, STEPS - step, `step ${step}`);
+  }
+  assert.equal(game.actionItems, 0);
+  game.maxRow++; game.player.row++;
+  tick();
+  assert.equal(game.active.length, 0, 'the run ends when it finishes');
+  assert.equal(game.actionItems, SWEEP_ROWS + 1 + DOC_BONUS, 'sweeps one token per lane ahead plus the doc bonus');
+  assert.deepEqual(msgs, [['workModeDone', { n: SWEEP_ROWS + 1 + DOC_BONUS }]]);
+  assert.ok(lanes.get(game.player.row + SWEEP_ROWS).tokens[0].taken);
+  assert.ok(!lanes.get(game.player.row + SWEEP_ROWS + 1).tokens[0].taken, 'the sweep stops after SWEEP_ROWS lanes');
+});
+
 test('every power-up module has the shared interface and content', () => {
   for (const p of POWERUPS) {
     assert.equal(typeof p.id, 'string');

@@ -471,7 +471,10 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
       const d = CONTENT.deaths[cause] || CONTENT.deaths.meeting;
       lastMode = game.mode;
       $('over-cause').textContent = d.title;
-      $('over-tip').textContent = d.tip;
+      // A Work run still going when the otter went down: say how close it was.
+      const run = game.active.find((e) => e.mod.id === 'workMode');
+      const left = run ? run.left : 0;
+      $('over-tip').textContent = left > 0 ? `${d.tip} ${fmt(CONTENT.powerupMessages.workModeLeft, { n: left, total: run.max })}` : d.tip;
       $('over-score').textContent = String(game.score);
       $('over-best').textContent = String(daily ? daily.best : game.best);
       $('over-best-label').textContent = daily ? C.todayBest : C.best;

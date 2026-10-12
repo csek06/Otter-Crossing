@@ -370,7 +370,7 @@ for (const start of [0, 120, 400]) {
     return { t: e && e.t, slots: document.querySelectorAll('.hud-power').length, active: [...document.querySelectorAll('.hud-power.is-active')].map((c) => c.getAttribute('aria-label')) };
   });
   check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
-  check(r.slots === 5, `the tracker has a slot for each released power-up (${r.slots})`);
+  check(r.slots === 6, `the tracker has a slot for each released power-up (${r.slots})`);
   check(r.active.length === 1 && r.active[0] === 'Otter Notetaker, active', `the tracker shows the active power-up (${r.active})`);
   await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
   check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
@@ -397,9 +397,9 @@ for (const size of SIZES) {
     };
   });
   const a = await read();
-  check(a.labels.length === 5 && a.below && a.clear && a.inside, `${size.name}: tracker sits under the score, inside the screen, clear of pause`);
+  check(a.labels.length === 6 && a.below && a.clear && a.inside, `${size.name}: tracker sits under the score, inside the screen, clear of pause`);
   check(a.group === 'Power-ups', `${size.name}: tracker is a labeled group`);
-  check(a.labels.includes('AI Chat, ready') && a.labels.filter((l) => l.endsWith('not found yet')).length === 4, `${size.name}: held and not found states (${a.labels})`);
+  check(a.labels.includes('AI Chat, ready') && a.labels.filter((l) => l.endsWith('not found yet')).length === 5, `${size.name}: held and not found states (${a.labels})`);
   await page.screenshot({ path: join(shots, `${size.name}-6-tracker.png`) });
   await page.evaluate(() => window.__otter.game.kill('meeting', null));
   await wait(page, 120);
@@ -517,6 +517,48 @@ for (const size of SIZES) {
   check(tiles > 0, `Live Assist lights ${tiles} safe tiles`);
   await page.screenshot({ path: join(shots, 'm3-live-assist.png') });
   check(errors.length === 0, `live assist: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Work Mode: the run finishes after 8 new lanes and pays out; cut short, game over says how close it was.
+{
+  const { ctx, page, errors } = await open(SIZES[0], '?debug=1&lane=focus&seed=9&powerup=workMode');
+  await page.click('#btn-play');
+  await wait(page, 300);
+  const before = await page.evaluate(() => {
+    const g = window.__otter.game;
+    const chip = [...document.querySelectorAll('.hud-power')].find((c) => c.getAttribute('aria-label').startsWith('Work Mode'));
+    return { active: g.isActive('workMode'), chip: chip && chip.getAttribute('aria-label'), card: document.getElementById('ft-name').textContent };
+  });
+  check(before.active && before.chip === 'Work Mode, active', `Work Mode starts a run (${before.chip})`);
+  check(before.card === 'Work Mode', `Work Mode feature card (${before.card})`);
+  await page.screenshot({ path: join(shots, 'work-mode-running.png') });
+  // Count lanes directly so desks in the way do not make the check flaky.
+  for (let i = 0; i < 8; i++) { await page.evaluate(() => { window.__otter.game.maxRow++; }); await wait(page, 60); }
+  await wait(page, 200);
+  const after = await page.evaluate(() => {
+    const g = window.__otter.game;
+    return { active: g.isActive('workMode'), items: g.actionItems, toast: document.getElementById('toast').textContent };
+  });
+  check(!after.active, 'the run finishes after 8 new lanes');
+  check(after.items >= 3, `the follow-up doc pays out (${after.items} action items)`);
+  check(/^Work run done\. Your follow-up doc is worth \d+ action items\.$/.test(after.toast), `run done message (${after.toast})`);
+  await page.screenshot({ path: join(shots, 'work-mode-done.png') });
+  check(errors.length === 0, `work mode: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=focus&seed=9&powerup=workMode');
+  await page.click('#btn-play');
+  await wait(page, 300);
+  await page.evaluate(() => { window.__otter.game.maxRow += 3; });
+  await wait(page, 100);
+  await page.evaluate(() => window.__otter.game.kill('meeting', null));
+  await wait(page, 1800);
+  const tip = await page.evaluate(() => document.getElementById('over-tip').textContent);
+  check(/Your Work run had 5 of 8 lanes left\.$/.test(tip), `game over says how close the run was (${tip})`);
+  await page.screenshot({ path: join(shots, 'work-mode-cut-short.png') });
+  check(errors.length === 0, `work mode cut short: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }
 

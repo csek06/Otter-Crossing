@@ -172,6 +172,15 @@ export const CONTENT = {
       description: 'Live Assist follows your call and shows tips only you can see, like the next question to ask.',
       helpUrl: 'https://otter.ai/blog/your-calls-have-a-coach-now-how-to-use-live-assist',
     },
+    // Work Mode in AI Chat. External launch October 15, 2026. Help center article
+    // "Otter AI Chat Overview V2" covers Chat and Work, and is still rolling out.
+    workMode: {
+      draft: true,
+      name: 'Work Mode',
+      tagline: 'Hand Otter the whole task',
+      description: 'Switch AI Chat to Work and Otter completes tasks for you from your meetings and connected apps, like drafting a follow-up email in Gmail.',
+      helpUrl: 'https://help.otter.ai/hc/en-us/articles/43427281705623-Otter-AI-Chat-Overview-V2',
+    },
   },
 
   // Messages shown when a power-up does its job.
@@ -179,6 +188,8 @@ export const CONTENT = {
     draft: true,
     notetakerSaved: 'Otter Notetaker took that one for you.',
     aiChatRevive: 'AI Chat caught you up.',
+    workModeDone: 'Work run done. Your follow-up doc is worth {n} action items.',
+    workModeLeft: 'Your Work run had {n} of {total} lanes left.',
   },
 
   // Death causes, each with the game over tip that names the feature that would have helped.
@@ -248,6 +259,8 @@ export const CONTENT = {
       'Who owns them',
       'Highlights',
       'Key moments',
+      'Work Mode',
+      'Hand it to Work',
     ],
   },
 

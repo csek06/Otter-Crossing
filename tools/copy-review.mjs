@@ -36,6 +36,7 @@ export function buildCopyReview() {
     'These lines say a little more than the taglines, or depend on product details I could not confirm. Each one is a judgment call for you or PMM.',
     '',
     box('**Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. It is now switched on and shows in every run, so confirm the tagline with PMM. There is no help center article yet, so the link is the launch how-to blog post.'),
+    box('**Work Mode** is switched on ahead of its October 15 external launch, at your request. The copy follows the help center and the Notion naming decision. Free users see Work Mode locked in the product, so an external audience may need a "Pro and Business" note. The game over line "Your Work run had {n} of {total} lanes left" is game copy, not a product claim.'),
     box('**Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.'),
     box('**Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.'),
     box('**Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.'),
@@ -50,6 +51,7 @@ export function buildCopyReview() {
     actionItems: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     highlights: 'river (name, tagline), recap after riding a highlighted log (name, description, link)',
     liveAssist: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
+    workMode: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link), game over line when a run was cut short',
   };
   add(
     '## Validation, October 12, 2026',
@@ -64,6 +66,7 @@ export function buildCopyReview() {
     '',
   );
   const SOURCES = {
+    workMode: 'Otter AI Chat Overview V2 (help center): "Switch to Work when you want Otter to complete tasks for you, such as creating Jira tickets, adding pages to Notion, creating files in Google Drive, or drafting emails in Gmail." Notion: Naming Decision: Work Mode ("hand it to Work"), Chat: Work Mode PRD ("hand Otter the whole task"), GTM Enablement Hub (external launch October 15, first prompt to try is the follow-up email).',
     notetaker: 'Otter Notetaker Overview (help center): joins Zoom, Google Meet and Microsoft Teams meetings and takes notes, including meetings you cannot attend.',
     aiChat: 'Otter AI Chat Overview and AI Chat FAQs (help center): ask questions "anytime during the live meeting or post-meeting." On by default for all accounts. Notion onboarding script uses "I missed the last half, catch me up?"',
     summary: 'Meeting Summary Overview (help center): a quick overview of topics, action items and highlights that saves time after a meeting. Notion onboarding script: next steps "without listening back to the whole thing."',

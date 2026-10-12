@@ -166,7 +166,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     if (i >= 0) game.held.splice(i, 1);
   };
   game.isActive = (id) => game.active.some((e) => e.mod.id === id);
-  game.message = (key) => events.message(key);
+  game.message = (key, vars) => events.message(key, vars);
   game.markUsed = (featureId) => {
     if (!game.used.includes(featureId)) game.used.push(featureId);
   };

@@ -8,6 +8,7 @@ export const ICONS = {
   actionItems: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8 12l3 3 5-6',
   highlights: 'M14 4l6 6-8 8H6v-6zM4 21h16',
   liveAssist: 'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z',
+  workMode: 'M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M4 7h16v12H4zM4 12h16M11 12v2h2v-2',
 };
 
 export function iconSvg(id, cls = '') {

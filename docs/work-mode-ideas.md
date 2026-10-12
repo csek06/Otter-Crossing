@@ -1,6 +1,6 @@
 # Work Mode power-up ideas
 
-Draft for review, October 12, 2026. Nothing here is built yet.
+Draft for review, October 12, 2026. Idea 1 (Work run) is built and live as the `workMode` power-up. The others are not built.
 
 ## What the Notion docs say
 

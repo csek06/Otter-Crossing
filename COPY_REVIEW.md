@@ -11,6 +11,7 @@ Everything below is marked draft in the code until you sign off.
 These lines say a little more than the taglines, or depend on product details I could not confirm. Each one is a judgment call for you or PMM.
 
 - [ ] **Live Assist** copy is new and based on the draft GTM Enablement Hub in Notion, which says positioning is not final. Live Assist is live for Enterprise only. It is now switched on and shows in every run, so confirm the tagline with PMM. There is no help center article yet, so the link is the launch how-to blog post.
+- [ ] **Work Mode** is switched on ahead of its October 15 external launch, at your request. The copy follows the help center and the Notion naming decision. Free users see Work Mode locked in the product, so an external audience may need a "Pro and Business" note. The game over line "Your Work run had {n} of {total} lanes left" is game copy, not a product claim.
 - [ ] **Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.
 - [ ] **Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.
 - [ ] **Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.
@@ -100,6 +101,18 @@ Checked against: Notion: Live Assist roadmap card (GA July 21, 2026) and the Liv
 - [ ] Help link: https://otter.ai/blog/your-calls-have-a-coach-now-how-to-use-live-assist
 - Key in content.js: `features.liveAssist`
 
+### Work Mode
+
+Appears on: pickup card (name, tagline), river (name, tagline), recap (name, description, link), game over line when a run was cut short.
+
+Checked against: Otter AI Chat Overview V2 (help center): "Switch to Work when you want Otter to complete tasks for you, such as creating Jira tickets, adding pages to Notion, creating files in Google Drive, or drafting emails in Gmail." Notion: Naming Decision: Work Mode ("hand it to Work"), Chat: Work Mode PRD ("hand Otter the whole task"), GTM Enablement Hub (external launch October 15, first prompt to try is the follow-up email).
+
+- [ ] Name: "Work Mode"
+- [ ] Tagline (5 words, max 6): "Hand Otter the whole task"
+- [ ] Description: "Switch AI Chat to Work and Otter completes tasks for you from your meetings and connected apps, like drafting a follow-up email in Gmail."
+- [ ] Help link: https://help.otter.ai/hc/en-us/articles/43427281705623-Otter-AI-Chat-Overview-V2
+- Key in content.js: `features.workMode`
+
 ## 2. Game over causes and tips
 
 The cause is the big heading on the game over screen. The tip below it names the feature that would have helped.
@@ -115,6 +128,8 @@ Shown for a moment when a power-up does its job.
 
 - [ ] "Otter Notetaker took that one for you." (`powerupMessages.notetakerSaved`)
 - [ ] "AI Chat caught you up." (`powerupMessages.aiChatRevive`)
+- [ ] "Work run done. Your follow-up doc is worth {n} action items." (`powerupMessages.workModeDone`)
+- [ ] "Your Work run had {n} of {total} lanes left." (`powerupMessages.workModeLeft`)
 
 ## 4. The river
 
@@ -126,6 +141,7 @@ The water is a stream of these lines, built from the feature names and taglines 
 - [ ] "Action Items: Captures to-dos and who owns them"
 - [ ] "Highlights: Mark key moments as they happen"
 - [ ] "Live Assist: Private tips during your live calls"
+- [ ] "Work Mode: Hand Otter the whole task"
 
 The floating logs you ride carry these short phrases on a highlighter stripe (`river.phrases`):
 
@@ -139,6 +155,8 @@ The floating logs you ride carry these short phrases on a highlighter stripe (`r
 - [ ] "Who owns them"
 - [ ] "Highlights"
 - [ ] "Key moments"
+- [ ] "Work Mode"
+- [ ] "Hand it to Work"
 
 ## 5. Lane hints
 

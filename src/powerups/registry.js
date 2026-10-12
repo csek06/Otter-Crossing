@@ -14,8 +14,9 @@ import aiChat from './aichat.js';
 import summary from './summary.js';
 import actionItems from './actionitems.js';
 import liveAssist from './liveassist.js';
+import workMode from './workmode.js';
 
-export const POWERUPS = [notetaker, aiChat, summary, actionItems, liveAssist];
+export const POWERUPS = [notetaker, aiChat, summary, actionItems, liveAssist, workMode];
 
 export const POWERUP_BY_ID = Object.fromEntries(POWERUPS.map((p) => [p.id, p]));
 

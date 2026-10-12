@@ -51,7 +51,10 @@ game = createGame({
       if (screens) screens.score(g);
     },
     hint: (id) => screens && CONTENT.hints[id] && screens.hint(CONTENT.hints[id]),
-    message: (key) => screens && CONTENT.powerupMessages[key] && screens.hint(CONTENT.powerupMessages[key], 1.8),
+    message: (key, vars = {}) => {
+      const s = CONTENT.powerupMessages[key];
+      if (screens && s) screens.hint(s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)), key === 'workModeDone' ? 2.6 : 1.8);
+    },
     powerup: (mod) => screens && screens.feature(mod.featureId),
     gameOver: (g, info) => {
       // Every run's action items go into the outfit wallet.

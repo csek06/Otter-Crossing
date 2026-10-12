@@ -1,7 +1,7 @@
 // Entry point: wires the stage, input, game, renderer and screens together.
 
 import { CONTENT } from './content.js';
-import { FLAGS, BOOTH } from './config.js';
+import { FLAGS, BOOTH, GRID } from './config.js';
 import { PARAMS } from './core/params.js';
 import { createStage } from './core/stage.js';
 import { createInput } from './core/input.js';
@@ -84,12 +84,9 @@ function quit() {
   input.setEnabled(false);
   screens.hud(false);
   screens.clearHint();
-  game.reset();
-  if (booth) {
-    game.startDemo();
-    screens.resetOptin();
-  }
   screens.show('title');
+  game.startDemo();
+  if (booth) screens.resetOptin();
 }
 
 screens = createScreens(
@@ -104,7 +101,23 @@ screens = createScreens(
 game.outfit = wardrobe.wearing();
 
 const renderer = createRenderer(stage, game, { reducedMotion: () => reduced.matches, debug: PARAMS.debug });
-stage.onResize = () => renderer.layout();
+// Put the attract loop otter in the open gap between the title sign and the drawer.
+function fitDemoCamera() {
+  const title = document.getElementById('screen-title');
+  if (title.hidden) return;
+  const st = stage.el.getBoundingClientRect();
+  const posts = title.querySelector('.sign-posts').getBoundingClientRect();
+  const drawer = title.querySelector('.drawer').getBoundingClientRect();
+  if (!st.height || drawer.top <= posts.bottom) return;
+  const rowH = (stage.w / GRID.VIEW_COLS) * GRID.ROW_SCALE;
+  const y = drawer.top - st.top - (drawer.top - posts.bottom) * 0.25;
+  game.demoBehind = Math.max(2, (stage.h - y) / rowH);
+  if (game.demo) game.behind = game.demoBehind;
+}
+stage.onResize = () => {
+  renderer.layout();
+  fitDemoCamera();
+};
 
 // Debug tools.
 function toggleDebug(key) {
@@ -124,20 +137,20 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden && game.state === 'playing') pause();
 });
 
-// Booth mode: the attract loop plays behind the title. Tap the scene to start,
-// and any screen goes back to the title after a stretch without input.
+// The attract loop plays behind the title. Tap the scene to start. In booth mode,
+// any screen goes back to the title after a stretch without input.
 let lastInput = performance.now();
 if (booth) {
   const touch = () => { lastInput = performance.now(); };
   window.addEventListener('pointerdown', touch, true);
   window.addEventListener('keydown', touch, true);
   window.addEventListener('input', touch, true);
-  // The title screen covers the scene, so listen on its open area and the sign.
-  document.getElementById('screen-title').addEventListener('click', (e) => {
-    const open = e.target === e.currentTarget || e.target.closest('.sign');
-    if (open && game.state === 'demo' && screens.current() === 'title') play('free');
-  });
 }
+// The title screen covers the scene, so listen on its open area and the sign.
+document.getElementById('screen-title').addEventListener('click', (e) => {
+  const open = e.target === e.currentTarget || e.target.closest('.sign');
+  if (open && game.state === 'demo' && screens.current() === 'title') play('free');
+});
 const idleLimit = (PARAMS.idle || BOOTH.IDLE) * 1000;
 function checkIdle(now) {
   if (!booth || now - lastInput < idleLimit) return;
@@ -147,9 +160,9 @@ function checkIdle(now) {
   quit();
 }
 
-if (booth) game.startDemo();
-else game.reset();
 screens.show('title');
+fitDemoCamera();
+game.startDemo();
 
 // HUD chips for active and held power-ups.
 const chipItems = [];

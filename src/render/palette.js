@@ -46,6 +46,12 @@ export function loadPalette() {
   PAL.riverLine = mix(PAL.water, PAL.ink, 0.45);
   PAL.waterDeep = mix(PAL.water, PAL.ink, 0.18);
   PAL.waveCrest = rgba(PAL.paper, 0.42);
+  PAL.waterRing = rgba(PAL.ink, 0.16);
+  // Floating logs: warm wood from red and highlighter, shaded with ink.
+  PAL.wood = mix(mix(PAL.red, PAL.highlighter, 0.45), PAL.ink, 0.42);
+  PAL.woodDark = mix(PAL.wood, PAL.ink, 0.35);
+  PAL.woodEnd = mix(PAL.wood, PAL.paper, 0.5);
+  PAL.woodRing = mix(PAL.wood, PAL.ink, 0.1);
   PAL.highlighterEdge = mix(PAL.highlighter, PAL.ink, 0.35);
   PAL.glow = rgba(PAL.highlighter, 0.16);
   PAL.glowStrong = rgba(PAL.highlighter, 0.38);

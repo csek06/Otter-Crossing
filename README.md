@@ -1,6 +1,6 @@
 # Otter Crossing
 
-An endless lane-hopper for Otter.ai. Hop an otter across a workday full of meetings, a river of feature blurbs, the all-hands express and a deadline that will not wait. Power-ups teach Otter features, and the game over screen says which feature would have saved you.
+An endless lane-hopper for Otter.ai. Hop an otter across a workday full of meetings, a river of feature blurbs with highlighted logs to ride, the all-hands express and a deadline that will not wait. Power-ups teach Otter features, and the game over screen says which feature would have saved you.
 
 Runs are about 30 to 120 seconds. It works on phones, tablets and desktops, offline, from one HTML file.
 
@@ -15,6 +15,9 @@ Scores, the local top 10, today's daily best, the outfit wallet and the sound se
 
 ## Modes
 
+The title screen plays a silent demo behind the menu: an autopilot otter plays a run, throws it after 12 to 28 lanes so you see it lose, and starts again. Tap the open scene or Play to take over.
+
+
 - **Play:** a fresh random course every run. Good runs go on the local top 10.
 - **Daily challenge:** one course per calendar date, the same for everyone. The seed comes from the local date, so a given date always builds the same course. Game over shows today's best and a **Copy result** button with a one-line result to paste in Slack. Daily runs do not go on the top 10.
 - **Outfits:** every run's action items go into a wallet. Spend them on role outfits: Sales (a tie, 15), Customer success (a scarf, 25), Recruiting (a lanyard badge, 40) and Education (a cap and glasses, 60). Costs are in `src/game/wardrobe.js`, names and lines in `CONTENT.outfits`.
@@ -24,7 +27,6 @@ Scores, the local top 10, today's daily best, the outfit wallet and the sound se
 
 Turn it on with `BOOTH_MODE: true` in `src/config.js`, or add `?booth=1` to the URL without rebuilding.
 
-- **Attract loop:** an autopilot otter plays behind the title screen, silently. Tap the scene or Play to start.
 - **Idle reset:** after 20 seconds without input (`BOOTH.IDLE`), any screen or run goes back to the title and clears the sign-up form.
 - **Sign-up:** game over shows an optional email field with a consent box that starts unticked. Nothing is saved unless the box is ticked. The consent text (`booth.consent`) and privacy link (`booth.privacyUrl`) are placeholders for Legal. Sign-ups are stored in localStorage on the device only.
 - **Admin screen:** hold the Otter logo on the title for 3 seconds, or press Alt+Shift+O. It shows counts, exports sign-ups as a CSV, and clears sign-ups or scores and outfits. Clearing asks for a second tap. The admin screen ignores the idle timer.
@@ -76,7 +78,7 @@ Flags live in `src/config.js`. Change one, then run `npm run build`.
 |---|---|---|
 | `AUDIENCE` | `"external"` | `"internal"` swaps in internal meeting titles (for example "Forecast call") and hides the Try Otter button. |
 | `SHOW_UNRELEASED` | `false` | `true` lets unreleased features spawn and appear in the river. Today that is Live Assist, with placeholder copy. |
-| `BOOTH_MODE` | `false` | `true` turns on booth mode: attract loop, idle reset, email sign-up and the admin screen. See [Booth mode](#booth-mode). `?booth=1` does the same without a rebuild. |
+| `BOOTH_MODE` | `false` | `true` turns on booth mode: idle reset, email sign-up and the admin screen. See [Booth mode](#booth-mode). `?booth=1` does the same without a rebuild. |
 
 Tuning numbers (hop time, camera speed, difficulty ramp) are in `TUNING`. Generator rules that the tests check (traffic density caps, river timing, breather spacing, all-hands warning, hawk timing, power-up spacing) are in `RULES`.
 
@@ -193,7 +195,7 @@ test/
 
 ## Accessibility and comfort
 
-- Hazards read by shape and motion, not color alone: meetings are calendar cards with tick marks and a direction arrow, the all-hands is a long chain of envelopes behind signal lamps, highlights are marker strokes.
+- Hazards read by shape and motion, not color alone: meetings are calendar cards with tick marks and a direction arrow, the all-hands is a long chain of envelopes behind signal lamps, the logs you ride are round wood with a cut end and a highlighter stripe.
 - Nothing flashes faster than 3 times a second. The all-hands lamps flash 2 times a second, and the test suite checks it.
 - Menu buttons are at least 48px, with a visible focus ring. Menus work with the keyboard, and the initials picker takes typed letters.
 - `prefers-reduced-motion` turns off the hit shake and splash droplets.

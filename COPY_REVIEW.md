@@ -66,7 +66,7 @@ Appears on: pickup card (name, tagline), river (name, tagline), recap (name, des
 
 ### Highlights
 
-Appears on: river (name, tagline), recap after riding a highlight (name, description, link).
+Appears on: river (name, tagline), recap after riding a highlighted log (name, description, link).
 
 - [ ] Name: "Highlights"
 - [ ] Tagline (6 words, max 6): "Mark key moments as they happen"
@@ -110,7 +110,7 @@ The water is a stream of these lines, built from the feature names and taglines 
 - [ ] "Action items: Captures to-dos and who owns them"
 - [ ] "Highlights: Mark key moments as they happen"
 
-The highlights you ride show these short phrases (`river.phrases`):
+The floating logs you ride carry these short phrases on a highlighter stripe (`river.phrases`):
 
 - [ ] "Otter Notetaker"
 - [ ] "Takes notes"
@@ -128,7 +128,7 @@ The highlights you ride show these short phrases (`river.phrases`):
 Shown once, the first time each lane type appears in a run.
 
 - [ ] "Meetings incoming. Hop through the gaps." (`hints.meetings`)
-- [ ] "Ride the highlights across." (`hints.river`)
+- [ ] "Ride the highlighted logs across." (`hints.river`)
 - [ ] "Watch for the all-hands signal." (`hints.allhands`)
 - [ ] "Keep moving. The Deadline Hawk is circling." (`hints.hawk`)
 

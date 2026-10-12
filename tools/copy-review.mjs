@@ -54,7 +54,7 @@ export function buildCopyReview() {
     aiChat: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     summary: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     actionItems: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
-    highlights: 'river (name, tagline), recap after riding a highlight (name, description, link)',
+    highlights: 'river (name, tagline), recap after riding a highlighted log (name, description, link)',
     liveAssist: 'only with SHOW_UNRELEASED: pickup card, river and recap',
   };
   add('## 1. Feature claims', '');
@@ -83,7 +83,7 @@ export function buildCopyReview() {
 
   add('## 4. The river', '', 'The water is a stream of these lines, built from the feature names and taglines above. Change a tagline and the river changes with it.', '');
   for (const line of riverLines()) add(box(q(line)));
-  add('', 'The highlights you ride show these short phrases (`river.phrases`):', '');
+  add('', 'The floating logs you ride carry these short phrases on a highlighter stripe (`river.phrases`):', '');
   for (const p of C.river.phrases) add(box(`${q(p)}${p.length > 15 ? ' (long, shrinks to fit)' : ''}`));
   if (C.river.extraBlurbs.length) {
     add('', 'Extra blurbs (`river.extraBlurbs`):', '');

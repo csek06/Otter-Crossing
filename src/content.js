@@ -208,7 +208,7 @@ export const CONTENT = {
   hints: {
     draft: true,
     meetings: 'Meetings incoming. Hop through the gaps.',
-    river: 'Ride the highlights across.',
+    river: 'Ride the highlighted logs across.',
     allhands: 'Watch for the all-hands signal.',
     hawk: 'Keep moving. The Deadline Hawk is circling.',
   },
@@ -231,8 +231,8 @@ export const CONTENT = {
 
   // The river. Its water is a stream of feature blurbs: each feature's name and
   // tagline, built from the features above so it always matches reviewed copy.
-  // Extra blurbs below are added to the stream. The highlight platforms show the
-  // short phrases. Keep phrases to about 15 characters so they fit on a highlight.
+  // Extra blurbs below are added to the stream. The floating logs carry the short
+  // phrases on a highlighter stripe. Keep phrases to about 15 characters so they fit.
   river: {
     draft: true,
     extraBlurbs: [],

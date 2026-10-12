@@ -244,47 +244,91 @@ function textSprite(lane, v) {
   return c;
 }
 
+// A floating log with a highlighter stripe across the middle carrying the phrase.
+// The stripe keeps the link to Highlights: you ride the highlighted moments.
 function drawHighlight(ctx, x, y, plat, v) {
   const t = v.tile;
   const w = plat.len * t;
-  const lift = plat.lit > 0 ? t * 0.08 : t * 0.03;
-  const top = y - v.rowH * 0.86 - lift;
-  const h = v.rowH * 0.72;
-  // Soft glow: a wider translucent stroke, cheaper than shadowBlur.
-  ctx.fillStyle = plat.lit > 0 ? PAL.glowStrong : PAL.glow;
-  roundRect(ctx, x - t * 0.06, top - t * 0.05, w + t * 0.12, h + t * 0.1, t * 0.2);
-  ctx.fill();
-  // Raised edge so it reads as floating.
-  ctx.fillStyle = PAL.highlighterEdge;
-  roundRect(ctx, x + t * 0.04, top + lift + t * 0.04, w - t * 0.08, h, t * 0.12);
-  ctx.fill();
-  // The marker stroke, with a slightly ragged leading and trailing edge.
-  ctx.fillStyle = PAL.highlighter;
-  ctx.beginPath();
+  const sink = plat.lit > 0 ? t * 0.03 : 0;
+  const h = v.rowH * 0.62;
+  const top = y - v.rowH * 0.82 + sink;
+  const cap = Math.min(h * 0.32, w * 0.12);
   const x0 = x + t * 0.04;
   const x1 = x + w - t * 0.04;
-  ctx.moveTo(x0 + t * 0.05, top);
-  ctx.lineTo(x1 - t * 0.02, top + t * 0.01);
-  ctx.lineTo(x1 + t * 0.02, top + h * 0.3);
-  ctx.lineTo(x1 - t * 0.03, top + h * 0.6);
-  ctx.lineTo(x1, top + h);
-  ctx.lineTo(x0 + t * 0.02, top + h - t * 0.01);
-  ctx.lineTo(x0 - t * 0.02, top + h * 0.65);
-  ctx.lineTo(x0 + t * 0.03, top + h * 0.35);
-  ctx.closePath();
-  ctx.fill();
   ctx.lineWidth = v.line;
   ctx.strokeStyle = PAL.ink;
+
+  // Ripple in the water around the log, stronger while something stands on it.
+  ctx.fillStyle = plat.lit > 0 ? PAL.ripple : PAL.waterRing;
+  ctx.beginPath();
+  ctx.ellipse((x0 + x1) / 2, top + h * 0.78, (x1 - x0) / 2 + t * 0.08, h * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body: lighter on top, darker underside, then bark grooves.
+  ctx.fillStyle = PAL.wood;
+  roundRect(ctx, x0, top, x1 - x0, h, h / 2);
+  ctx.fill();
+  ctx.save();
+  roundRect(ctx, x0, top, x1 - x0, h, h / 2);
+  ctx.clip();
+  ctx.fillStyle = PAL.woodDark;
+  ctx.fillRect(x0, top + h * 0.66, x1 - x0, h * 0.34);
+  ctx.strokeStyle = PAL.woodDark;
+  ctx.lineWidth = Math.max(1, v.line * 0.8);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  // Same grooves every frame: offsets come from the log's own position in the ring.
+  const seed = Math.floor(plat.x * 7);
+  for (let k = 0; k < 3; k++) {
+    const gy = top + h * (0.2 + k * 0.17);
+    for (let gx = x0 + cap * 1.4 + ((seed + k * 3) % 5) * t * 0.07; gx < x1 - cap * 1.6; gx += t * 0.55) {
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(Math.min(gx + t * 0.22, x1 - cap * 1.6), gy);
+    }
+  }
   ctx.stroke();
-  // The highlighted phrase.
+  ctx.restore();
+  ctx.lineWidth = v.line;
+  ctx.strokeStyle = PAL.ink;
+  roundRect(ctx, x0, top, x1 - x0, h, h / 2);
+  ctx.stroke();
+
+  // Cut end with growth rings on the trailing side of the current.
+  const ex = x1 - cap;
+  ctx.fillStyle = PAL.woodEnd;
+  ctx.beginPath();
+  ctx.ellipse(ex, top + h / 2, cap, h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = PAL.woodRing;
+  ctx.lineWidth = Math.max(1, v.line * 0.7);
+  ctx.beginPath();
+  ctx.ellipse(ex, top + h / 2, cap * 0.55, h * 0.28, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Highlighter stripe with the phrase.
+  const left = x0 + cap * 0.6;
+  const right = ex - cap * 1.05;
+  const bh = h * 0.6;
+  const by = top + (h - bh) / 2 - h * 0.04;
+  ctx.fillStyle = PAL.highlighter;
+  ctx.beginPath();
+  ctx.moveTo(left + t * 0.03, by);
+  ctx.lineTo(right - t * 0.01, by + t * 0.01);
+  ctx.lineTo(right + t * 0.02, by + bh * 0.5);
+  ctx.lineTo(right, by + bh);
+  ctx.lineTo(left + t * 0.01, by + bh - t * 0.01);
+  ctx.lineTo(left - t * 0.02, by + bh * 0.5);
+  ctx.closePath();
+  ctx.fill();
   ctx.save();
   ctx.beginPath();
-  ctx.rect(x0, top, x1 - x0, h);
+  ctx.rect(left, by, right - left, bh);
   ctx.clip();
   ctx.fillStyle = PAL.ink;
-  fitText(ctx, plat.phrase, x1 - x0 - t * 0.12, t * 0.3, t * 0.16, 600, FONT_MONO);
+  fitText(ctx, plat.phrase, right - left - t * 0.08, t * 0.27, t * 0.15, 600, FONT_MONO);
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
-  ctx.fillText(plat.phrase, (x0 + x1) / 2, top + h * 0.54);
+  ctx.fillText(plat.phrase, (left + right) / 2, by + bh * 0.55);
   ctx.restore();
 }

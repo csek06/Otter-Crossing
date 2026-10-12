@@ -585,7 +585,7 @@ for (const size of SIZES) {
   const r0 = await page.evaluate(() => ({ state: window.__otter.game.state, row: window.__otter.game.player.row }));
   await wait(page, 3000);
   const r1 = await page.evaluate(() => ({ state: window.__otter.game.state, row: window.__otter.game.player.row, demo: window.__otter.game.demo }));
-  check(r0.state === 'demo' && r1.demo && r1.row > r0.row + 2, `booth: attract loop plays on the title (row ${r0.row} to ${r1.row})`);
+  check(r0.state === 'demo' && r1.demo && r1.row >= r0.row + 2, `booth: attract loop plays on the title (row ${r0.row} to ${r1.row})`);
   check(await page.isHidden('#btn-daily'), 'booth: daily challenge is off the shared title');
   await page.screenshot({ path: join(shots, 'booth-title.png') });
   const box = await page.locator('#game').boundingBox();
@@ -643,11 +643,22 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
-// Not booth mode: no attract loop, no sign-up, no admin.
+// Not booth mode: the attract loop still plays, but no sign-up and no admin.
 {
   const { ctx, page, errors } = await open(SIZES[3], '?debug=1&seed=7');
-  await wait(page, 1000);
-  check(await page.evaluate(() => window.__otter.game.state === 'title' && window.__otter.game.player.row === 0), 'normal: no attract loop');
+  await wait(page, 3000);
+  const d = await page.evaluate(() => ({ state: window.__otter.game.state, row: window.__otter.game.player.row, giveUp: window.__otter.game.demo }));
+  check(d.state === 'demo' && d.row > 2, `normal: attract loop plays behind the title (row ${d.row})`);
+  // Past its give-up point the demo charges ahead, loses, and starts a new run.
+  const runs0 = await page.evaluate(() => { const g = window.__otter.game; g.autopilot.setGiveUp(0); return g.demoRuns; });
+  let runs1 = runs0;
+  for (let i = 0; i < 40 && runs1 === runs0; i++) {
+    await wait(page, 250);
+    runs1 = await page.evaluate(() => window.__otter.game.demoRuns);
+  }
+  const after = await page.evaluate(() => ({ state: window.__otter.game.state, title: !document.getElementById('screen-title').hidden, hud: !document.getElementById('hud').hidden, over: !document.getElementById('screen-over').hidden }));
+  check(runs1 === runs0 + 1 && after.state === 'demo' && after.title && !after.hud && !after.over, `normal: the demo loses and starts over on its own (${runs0} to ${runs1} runs)`);
+  await page.screenshot({ path: join(shots, 'title-demo.png') });
   await page.locator('.logo-slot').dispatchEvent('pointerdown');
   await wait(page, 3200);
   check(await page.isHidden('#screen-admin'), 'normal: the logo does not open admin');

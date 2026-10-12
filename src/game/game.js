@@ -27,8 +27,10 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
   const game = {
     state: 'title', // title, demo, playing, paused, dying, over
     mode: 'free',      // free or daily
-    demo: false,       // true while the booth attract loop plays
+    demo: false,       // true while the title screen attract loop plays
+    demoRuns: 0,       // attract loop runs finished, for tests
     dailyKey: null,
+    autopilot,
     lanes: [],
     laneBase: 0,
     player: createPlayer(),
@@ -57,6 +59,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     debug: { invincible: false, hitboxes: false },
     viewRows: 20,
     behind: GRID.BEHIND,
+    demoBehind: 0,     // rows behind the otter during the attract loop
     outfit: 'classic', // set from the wardrobe
   };
 
@@ -98,9 +101,10 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     game.seed = daily ? dailySeed(game.dailyKey) : params.seed != null ? params.seed : randomSeed();
     game.startRow = daily ? 0 : params.start;
     game.gen = createGenerator({ seed: game.seed, startRow: game.startRow, only: daily ? null : params.lane });
-    // The attract loop keeps the camera further back so the otter plays above the title drawer.
-    game.behind = game.demo ? GRID.BEHIND + 4 : GRID.BEHIND;
-    game.laneBase = game.startRow - game.behind - 3;
+    // The attract loop sets the camera so the otter plays in the gap between the
+    // title sign and the drawer. main.js measures that gap into demoBehind.
+    game.behind = game.demo ? game.demoBehind || GRID.BEHIND + 4 : GRID.BEHIND;
+    game.laneBase = game.startRow - Math.ceil(game.behind) - 3;
     game.camRow = game.startRow - game.behind;
     resetPlayer(game.player, game.startRow);
     game.maxRow = game.startRow;
@@ -136,7 +140,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     if (mode === 'free' && params.powerup && POWERUP_BY_ID[params.powerup]) grantPowerup(POWERUP_BY_ID[params.powerup]);
   };
 
-  // Booth attract loop: the autopilot plays behind the title screen.
+  // Attract loop: the autopilot plays behind the title screen, loses, and starts over.
   game.startDemo = function startDemo() {
     game.demo = true;
     game.reset();
@@ -290,6 +294,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
 
   function finish() {
     if (game.demo) {
+      game.demoRuns++;
       game.startDemo();
       return;
     }

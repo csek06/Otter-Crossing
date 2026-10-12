@@ -591,12 +591,14 @@ for (const size of SIZES) {
       inside: card.top >= stage.top && card.bottom <= stage.bottom && card.left >= stage.left && card.right <= stage.right,
       centered: Math.abs((card.left + card.right) / 2 - (stage.left + stage.right) / 2) < 2 && Math.abs((card.top + card.bottom) / 2 - (stage.top + stage.bottom) / 2) < stage.height * 0.12,
       card: document.getElementById('feature-toast').classList.contains('show'),
+      labels: [...document.querySelectorAll('.learn-label')].map((l) => getComputedStyle(l).backgroundColor),
     };
   });
   check(open1.state === 'learn' && open1.frozen, `${size.name}: first pickup opens the explainer and freezes play`);
   check(open1.name === 'Work Mode' && open1.power.startsWith('Starts a Work run') && open1.work.startsWith('Switch AI Chat to Work'), `${size.name}: explainer shows the game power and the business use`);
   check(open1.inside && open1.centered, `${size.name}: explainer is centered and fits on screen`);
   check(!open1.card, `${size.name}: no bottom card behind the explainer`);
+  check(open1.labels.length === 2 && open1.labels[0] === 'rgb(255, 225, 77)' && open1.labels[1] === 'rgb(29, 37, 226)', `${size.name}: In the game and At work labels are color coded (${open1.labels.join(' / ')})`);
   check(open1.go === (size.touch ? 'Tap or swipe up to keep going' : 'Press up or W to keep going'), `${size.name}: how to close it (${open1.go})`);
   await page.screenshot({ path: join(shots, `${size.name}-7-explainer.png`) });
   // Sideways does not close it; forward does, without hopping.

@@ -488,11 +488,30 @@ canvas {
 .learn-icon svg { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .learn-name { margin: 0; font: 800 max(24px, calc(var(--u) * 7)) / 1.05 var(--f-display); }
 .learn-tagline { margin: calc(var(--u) * 2) 0 calc(var(--u) * 3); font: 800 max(16px, calc(var(--u) * 4.2)) / 1.25 var(--f-display); color: var(--c-ink-soft); }
-.learn-label {
-  margin: calc(var(--u) * 3) 0 calc(var(--u) * 1);
-  font: 600 max(13px, calc(var(--u) * 3.4)) / 1 var(--f-mono);
-  color: var(--c-ink-soft);
+/* The two halves are color coded: highlighter yellow for the game, brand blue
+   for work. Each gets a filled label chip with an icon and a matching rail. */
+.learn-part {
+  margin-top: calc(var(--u) * 3);
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 3) calc(var(--u) * 2.6);
+  border: 2px solid var(--c-ink);
+  border-left-width: calc(var(--u) * 1.6);
+  border-radius: 8px;
 }
+.learn-game { border-left-color: var(--c-highlighter); background: color-mix(in srgb, var(--c-highlighter) 18%, var(--c-paper)); }
+.learn-work { border-left-color: var(--c-brand); background: color-mix(in srgb, var(--c-brand) 8%, var(--c-paper)); }
+.learn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  margin: 0 0 calc(var(--u) * 1.6);
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 2.2) calc(var(--u) * 0.9);
+  border: 2px solid var(--c-ink);
+  border-radius: 999px;
+  font: 800 max(14px, calc(var(--u) * 3.6)) / 1 var(--f-display);
+}
+.learn-label svg { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.learn-game .learn-label { background: var(--c-highlighter); color: var(--c-ink); }
+.learn-work .learn-label { background: var(--c-brand); color: var(--c-paper); }
 .learn-text { margin: 0; font: 400 max(16px, calc(var(--u) * 4.2)) / 1.4 var(--f-ui); text-wrap: pretty; }
 .learn-go {
   display: flex;
@@ -768,10 +787,14 @@ canvas {
       <div class="learn-head"><span id="learn-icon" class="learn-icon"></span><h2 id="learn-name" class="learn-name"></h2></div>
       <p id="learn-tagline" class="learn-tagline"></p>
       <div id="learn-body">
-        <h3 class="learn-label" data-copy="learn.inGame"></h3>
-        <p id="learn-power" class="learn-text"></p>
-        <h3 class="learn-label" data-copy="learn.atWork"></h3>
-        <p id="learn-work" class="learn-text"></p>
+        <div class="learn-part learn-game">
+          <h3 class="learn-label"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3l2 5 5 .4-3.9 3.3 1.2 5L10 14l-4.3 2.7 1.2-5L3 8.4 8 8z"/></svg><span data-copy="learn.inGame"></span></h3>
+          <p id="learn-power" class="learn-text"></p>
+        </div>
+        <div class="learn-part learn-work">
+          <h3 class="learn-label"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 6V4.5A1 1 0 0 1 8 3.5h4a1 1 0 0 1 1 1V6M3 6h14v10H3zM3 10.5h14"/></svg><span data-copy="learn.atWork"></span></h3>
+          <p id="learn-work" class="learn-text"></p>
+        </div>
       </div>
       <p id="learn-go" class="learn-go"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 15V5M5 10l5-5 5 5"/></svg><span id="learn-go-text"></span></p>
     </div>

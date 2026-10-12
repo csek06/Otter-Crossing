@@ -89,6 +89,8 @@ export function createRenderer(stage, game, opts) {
       drawFacade(r, y);
       if (lane && lane.mod.drawSignals) lane.mod.drawSignals(c, lane, v, y);
     }
+    const showMarkers = game.markers && game.markers.length && game.state !== 'title' && game.state !== 'demo';
+    if (showMarkers) drawMarkerLines(c, first, last);
     // Object pass, far to near. Clipped to the playfield so traffic slides out
     // from behind the office facades.
     const p = game.player;
@@ -118,6 +120,7 @@ export function createRenderer(stage, game, opts) {
     }
     c.restore();
     if (game.hawk.swoopT >= 0 && game.state !== 'title') drawSwoop(c);
+    if (showMarkers) drawMarkerLabels(c, first, last);
 
     // Facade edges.
     c.fillStyle = PAL.wallDark;
@@ -216,6 +219,64 @@ export function createRenderer(stage, game, opts) {
       drawOtter(c, cx, gy, v, { facing: p.facing, lift, sx, sy, alpha, outfit: game.outfit });
     }
     if (!p.dead) drawShield(c, cx, gy - lift);
+  }
+
+  // Leaderboard names across the lanes (src/game/markers.js). The line is the
+  // far edge of the lane that score reached: cross it and you've beaten them.
+  const MARK = { you: PAL.highlighter, top: PAL.brand, near: PAL.paper };
+  function markerY(m) {
+    return rowY(game.startRow + m.score) - v.rowH;
+  }
+  function eachMarker(first, last, fn) {
+    for (const m of game.markers) {
+      const r = game.startRow + m.score;
+      if (r >= first && r <= last + 1) fn(m, markerY(m), game.score > m.score);
+    }
+  }
+  function drawMarkerLines(c, first, last) {
+    const t = v.tile;
+    c.lineWidth = Math.max(2, v.line * 2);
+    c.setLineDash([t * 0.22, t * 0.14]);
+    eachMarker(first, last, (m, y, passed) => {
+      c.globalAlpha = passed ? 0.35 : 0.9;
+      c.strokeStyle = PAL.ink;
+      c.lineWidth = Math.max(3, v.line * 3.2);
+      c.beginPath();
+      c.moveTo(v.ox, y);
+      c.lineTo(v.ox + t * GRID.COLS, y);
+      c.stroke();
+      c.strokeStyle = MARK[m.kind];
+      c.lineWidth = Math.max(2, v.line * 2);
+      c.stroke();
+    });
+    c.setLineDash([]);
+    c.globalAlpha = 1;
+  }
+  function drawMarkerLabels(c, first, last) {
+    const t = v.tile;
+    const size = Math.max(11, Math.round(t * 0.24));
+    c.font = `700 ${size}px "Overpass Mono", ui-monospace, Menlo, monospace`;
+    c.textBaseline = 'middle';
+    const padX = size * 0.5;
+    const h = size * 1.5;
+    const maxW = t * GRID.COLS - t * 0.24;
+    eachMarker(first, last, (m, y, passed) => {
+      let text = m.label;
+      while (text.length > 4 && c.measureText(text).width + padX * 2 > maxW) text = text.slice(0, -2) + '…';
+      const w = c.measureText(text).width + padX * 2;
+      const x = v.ox + t * 0.12;
+      const top = y - h / 2;
+      c.globalAlpha = passed ? 0.5 : 1;
+      c.fillStyle = MARK[m.kind];
+      roundRect(c, x, top, w, h, h / 2);
+      c.fill();
+      c.strokeStyle = PAL.ink;
+      c.lineWidth = Math.max(1.5, v.line * 1.5);
+      c.stroke();
+      c.fillStyle = m.kind === 'top' ? PAL.paper : PAL.ink;
+      c.fillText(text, x + padX, y + size * 0.06);
+    });
+    c.globalAlpha = 1;
   }
 
   // Live Assist: glowing outlines on the safe tiles ahead.

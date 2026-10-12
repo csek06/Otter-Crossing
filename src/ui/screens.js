@@ -196,6 +196,9 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
       li.appendChild(el('span', 'board-score', String(s.score)));
       ol.appendChild(li);
     });
+    // Long online boards: bring your own row into view.
+    const mine = ol.querySelector('.board-you');
+    if (mine && mine.closest('li').scrollIntoView) mine.closest('li').scrollIntoView({ block: 'nearest' });
   }
   function showAccount() {
     const sess = online.session();

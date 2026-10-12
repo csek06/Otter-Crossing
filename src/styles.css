@@ -822,3 +822,11 @@ canvas {
 .post-msg:empty { display: none; }
 .admin-event { display: grid; gap: calc(var(--u) * 2); }
 .admin-event[hidden] { display: none; }
+
+/* Top 100: the list scrolls on its own so the tabs and Back stay in reach. */
+#screen-board .board-list {
+  max-height: 46vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}

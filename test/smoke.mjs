@@ -85,6 +85,8 @@ function mockSupabase(route) {
         .map((s, i) => ({ rank: i + 1, initials: s.p_initials, score: s.p_score, items: s.p_items, is_you: s.p_device === body.p_device }));
       return json(200, [...rows, { rank: rows.length + 1, initials: 'JKL', score: 1, items: 0, is_you: false }]);
     }
+    case '/rest/v1/rpc/lane_markers':
+      return json(200, [{ rank: 12, initials: 'DEE', score: 5 }, { rank: 1, initials: 'ACE', score: 8 }, { rank: 2, initials: 'BOB', score: 8 }]);
     case '/rest/v1/rpc/event_info':
       return json(200, body.p_event === 'summit-2026' ? { id: 'summit-2026', name: 'Fictional Summit 2026' } : null);
     case '/auth/v1/otp':
@@ -705,7 +707,8 @@ for (const size of SIZES) {
   await page.waitForSelector('.board-you', { timeout: 3000 }).catch(() => {});
   const rows = await page.$$eval('#board-list .board-row', (r) => r.map((x) => x.textContent));
   check(rows.length === 2 && /You/.test(rows[0]), `global board marks you (${rows.join(' / ')})`);
-  check((await page.textContent('#board-heading')) === 'Top 10 worldwide', 'the heading follows the tab');
+  check((await page.textContent('#board-heading')) === 'Top 100 worldwide', 'the heading follows the tab');
+  check(mock.calls.some((c) => c.path === '/rest/v1/rpc/leaderboard' && c.body.p_board === 'global' && c.body.p_limit === 100), 'boards ask for the top 100');
   await page.screenshot({ path: join(shots, 'online-global.png') });
 
   await page.click('.board-tab[data-tab="company"]');
@@ -726,7 +729,7 @@ for (const size of SIZES) {
   await page.click('#btn-signin');
   await page.waitForFunction(() => /acme-robotics/.test(document.getElementById('board-status').textContent), null, { timeout: 3000 }).catch(() => {});
   check((await page.textContent('#board-status')) === 'Players at acme-robotics.com', 'signed in: the company board');
-  check((await page.textContent('#board-heading')) === 'Top 10 at your company', 'company heading');
+  check((await page.textContent('#board-heading')) === 'Top 100 at your company', 'company heading');
   check((await page.textContent('#board-account-text')) === 'Signed in as pat.lee@acme-robotics.com', 'shows who is signed in');
   await page.screenshot({ path: join(shots, 'online-company.png') });
 
@@ -757,6 +760,25 @@ for (const size of SIZES) {
   // The wrong code (403) and the offline check fail on purpose, and Chromium logs those loads.
   const unexpected = errors.filter((e) => !/^Failed to load resource: (the server responded with a status of 403|net::ERR_INTERNET_DISCONNECTED)/.test(e));
   check(unexpected.length === 0, `online boards: no console errors ${unexpected.join(' | ')}`);
+  await ctx.close();
+}
+
+// Names across the lanes: your best, nearby players and the top spots.
+{
+  const { ctx, page, errors } = await open(SIZES[1], `?debug=1&lane=focus&seed=6&sbUrl=${encodeURIComponent(MOCK)}&sbKey=anon-key`, { allow: MOCK });
+  await page.evaluate(() => localStorage.setItem('otterCrossing.best', '3'));
+  await page.reload();
+  await wait(page, 400);
+  await page.click('#btn-play');
+  await page.waitForFunction(() => window.__otter.game.markers.length === 3, null, { timeout: 3000 }).catch(() => {});
+  const marks = await page.evaluate(() => window.__otter.game.markers);
+  check(marks.map((m) => `${m.score}:${m.kind}:${m.label}`).join('|') === '3:you:Your best|5:near:#12 DEE|8:top:#1 ACE, #2 BOB', `lane markers (${marks.map((m) => m.label).join(' / ')})`);
+  const call = mock.calls.filter((c) => c.path === '/rest/v1/rpc/lane_markers').pop();
+  check(call && call.body.p_board === 'global' && call.body.p_around === 3, 'markers are looked up around your best');
+  await page.evaluate(() => { window.__otter.game.debug.invincible = true; });
+  await wait(page, 300);
+  await page.screenshot({ path: join(shots, 'lane-markers.png') });
+  check(errors.length === 0, `lane markers: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }
 

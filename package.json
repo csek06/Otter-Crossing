@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node tools/copy-review.mjs && node tools/build.mjs",
     "watch": "node tools/build.mjs --watch",
-    "test": "node --test test/generator.test.mjs test/stretch.test.mjs test/online.test.mjs",
+    "test": "node --test test/generator.test.mjs test/stretch.test.mjs test/online.test.mjs test/markers.test.mjs",
     "test:db": "bash test/db.test.sh",
     "smoke": "node tools/build.mjs && node test/smoke.mjs",
     "copy-review": "node tools/copy-review.mjs"

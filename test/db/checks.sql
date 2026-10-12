@@ -179,6 +179,34 @@ do $$ begin
 end $$;
 reset role;
 
+-- 8. Top 100 and lane markers. 120 more players scoring 1001 to 1120.
+with r as (
+  insert into public.runs (device, mode)
+  select 'device-m' || lpad(g::text, 15, '0'), 'free' from generate_series(1, 120) g
+  returning id, device
+)
+insert into public.scores (run_id, initials, score, items, mode, device)
+select r.id, 'MMM', 1000 + right(r.device, 15)::int, 0, 'free', r.device from r;
+set role anon;
+select pg_temp.as_anon();
+do $$ begin
+  assert (select count(*) from public.leaderboard('global')) = 100, 'boards default to the top 100';
+  assert (select count(*) from public.leaderboard('global', null, null, 500)) = 100, 'and never more';
+  assert (select count(*) from public.leaderboard('global', null, null, 10)) = 10, 'a smaller limit still works';
+  -- Chasing 1050 from the device that scored it: top 10, 8 ahead, 2 behind, never yourself.
+  assert (select count(*) from public.lane_markers('global', null, 'device-m000000000000050', 1050)) = 20, 'markers: top 10 + 8 ahead + 2 behind';
+  assert (select min(score) from public.lane_markers('global', null, 'device-m000000000000050', 1050)) = 1048, 'two behind';
+  assert (select max(score) from public.lane_markers('global', null, 'device-m000000000000050', 1050)) = 1120, 'the leader';
+  assert not exists (select 1 from public.lane_markers('global', null, 'device-m000000000000050', 1050) where score = 1050), 'your own score is left out';
+  assert (select rank from public.lane_markers('global', null, 'device-m000000000000050', 1050) where score = 1120) = 1, 'ranks come back';
+  -- Overlaps merge: near the top, ahead and the top 10 are the same rows.
+  assert (select count(*) from public.lane_markers('global', null, null, 1105)) = 17, 'ahead overlaps the top 10 without duplicates';
+  assert (select count(*) from public.lane_markers('daily', current_date::text, null, 0)) >= 0, 'daily markers';
+end $$;
+select pg_temp.expect_error($q$ select * from public.lane_markers('company') $q$, 'bad_board');
+select pg_temp.expect_error($q$ select * from public.lane_markers('daily', 'today') $q$, 'bad_daily_key');
+reset role;
+
 \o
 \pset tuples_only on
 select 'all database checks passed' as result;

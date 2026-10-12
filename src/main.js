@@ -15,6 +15,7 @@ import { createWardrobe } from './game/wardrobe.js';
 import { recordDaily } from './game/daily.js';
 import { spawnable, POWERUP_BY_ID } from './powerups/registry.js';
 import { createOnline } from './online/client.js';
+import { createMarkers } from './game/markers.js';
 import { ONLINE_CONFIG } from './online/config.js';
 import { load, save } from './core/storage.js';
 
@@ -32,6 +33,7 @@ const music = createMusic();
 // Online boards (off unless the build has a Supabase project). An ?event= code
 // in the URL is remembered on this device; booth staff can also set it in admin.
 const online = createOnline(ONLINE_CONFIG);
+const markers = createMarkers({ online, youLabel: CONTENT.online.markerYou });
 if (PARAMS.event) save('event', PARAMS.event);
 const eventCode = () => load('event', null);
 if (online.enabled) {
@@ -65,6 +67,7 @@ game = createGame({
   events: {
     score: (g) => {
       music.setLanes(g.score);
+      markers.score(g);
       if (screens) screens.score(g);
     },
     hint: (id) => screens && CONTENT.hints[id] && screens.hint(CONTENT.hints[id]),
@@ -99,6 +102,7 @@ function play(mode = 'free') {
   music.step = 0;
   music.setLanes(0);
   game.start(mode);
+  markers.reset(game);
   if (online.enabled) online.startRun(mode, game.dailyKey, eventCode());
 }
 function pause() { game.setPaused(true); }

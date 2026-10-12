@@ -157,9 +157,18 @@ export function createOnline({ url, anonKey, company = false, fetchImpl = global
     },
 
     // Rows: [{ rank, initials, score, items, is_you }]
-    board(name, key = null, limit = 10) {
+    board(name, key = null, limit = 100) {
       if (!enabled) return Promise.reject(new Error('offline'));
       return rpc('leaderboard', { p_board: name, p_key: key, p_device: device, p_limit: limit });
+    },
+
+    // Names to draw across the lanes: the top 10 and the players around `around`.
+    // Rows: [{ rank, initials, score }]. Empty when offline or on any error.
+    markers(name, key = null, around = 0) {
+      if (!enabled) return Promise.resolve([]);
+      return rpc('lane_markers', { p_board: name, p_key: key, p_device: device, p_around: Math.max(0, around | 0) })
+        .then((rows) => (Array.isArray(rows) ? rows : []))
+        .catch(() => []);
     },
 
     eventInfo(code) {

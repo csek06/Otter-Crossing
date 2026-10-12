@@ -12,6 +12,13 @@ The game works offline by default. When the build is given a Supabase project UR
 | Event | Everyone | Best score per player while an event code is set and the event is running. |
 | My company | Signed-in players with the same work domain | Best score per player whose verified email is on that domain. |
 
+- **Top 100.** Online boards show up to 100 players. The device board stays at 10.
+- **Names on the lanes.** As in Crossy Road, a dashed line crosses the lane where someone's best run ended, with a tag like `#4 PAT`. Cross the line and you've beaten them. A run shows:
+  - your own best (yellow), even offline
+  - the top 10 (blue)
+  - the 8 players just ahead of the score you're chasing and the 2 just behind (white)
+
+  When you pass everyone ahead, the game looks up the next ones, at most every 4 seconds. Daily runs use the daily board. `lane_markers()` in the migrations returns these.
 - **Event codes.** Open the game with `?event=summit-2026`, or set the code on the admin screen. The code sticks on that device until it's cleared. Events live in the `events` table with a name and start and end times. Scores only count while the event is running.
 - **Company boards.** A player types a work email and gets a 6-digit code from Supabase Auth. Once verified, `claim_company()` reads the confirmed email and stores only the domain. Free and disposable domains (gmail.com, yahoo.com, hotmail.com, outlook.com, msn.com, aol.com, icloud.com, and about 75 more) are rejected, so those players stay on the public boards. Emails stay in Supabase Auth and never land in the game tables.
 - **Posting is a choice each run.** The game over form has "Post to the online boards (initials only)" (on by default, remembered) and "Also post to the {domain} board" once signed in. Public boards show initials only.
@@ -23,6 +30,7 @@ The game works offline by default. When the build is given a Supabase project UR
 
 - `supabase/migrations/` is the whole database. Every table has row level security on with no policies, and the `anon` and `authenticated` roles have no table access. The browser can only call these functions:
   - `start_run`
+  - `lane_markers`
   - `submit_score`
   - `leaderboard`
   - `event_info`

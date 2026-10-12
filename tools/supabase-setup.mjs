@@ -79,7 +79,11 @@ const html = `<h2>Your Otter Crossing code</h2>
 <p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
 <p>Or <a href="{{ .ConfirmationURL }}">sign in with this link</a> on this device.</p>
 <p>The code works for one hour. If you didn't ask for it, you can ignore this email.</p>`;
-await call('Sign-in email', 'PATCH', '/config/auth', {
+// Free projects on Supabase's built-in sender can't change the email, so this
+// waits for a custom sender.
+const customSmtp = !!(env.RESEND_API_KEY && env.AUTH_EMAIL_FROM);
+if (!customSmtp) console.log('skip Sign-in email: needs a custom sender (Supabase refuses template changes on the built-in one).');
+else await call('Sign-in email', 'PATCH', '/config/auth', {
   mailer_otp_length: 6,
   mailer_otp_exp: 3600,
   mailer_subjects_magic_link: subject,

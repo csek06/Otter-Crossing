@@ -1,0 +1,341 @@
+/* Otter Crossing. Colors and type are variables so brand values can be swapped in one place. */
+
+:root {
+  /* Six named colors. The game art reads these too. */
+  --c-paper: #F3EEE4;
+  --c-ink: #2A211C;
+  --c-brand: #3B5BDB; /* PLACEHOLDER: swap in the official Otter blue. */
+  --c-teal: #0F2F37;
+  --c-highlighter: #FFE14D;
+  --c-red: #E5484D;
+
+  --c-paper-dark: color-mix(in srgb, var(--c-paper) 90%, var(--c-ink));
+  --c-ink-soft: color-mix(in srgb, var(--c-ink) 70%, var(--c-paper));
+
+  --f-display: "Overpass", system-ui, sans-serif;
+  --f-mono: "Overpass Mono", ui-monospace, Menlo, Consolas, monospace;
+  --f-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --stage-w: 360px;
+  --u: calc(var(--stage-w) / 100); /* 1% of stage width */
+  --edge: 3px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--c-ink);
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  font-family: var(--f-ui);
+  color: var(--c-ink);
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-ink);
+}
+
+canvas {
+  display: block;
+  touch-action: none;
+}
+
+[hidden] { display: none !important; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Buttons: flat paper plates with a hard ink edge, like the blocks in the game. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 calc(var(--u) * 4);
+  font: 700 max(16px, calc(var(--u) * 4.6)) / 1 var(--f-ui);
+  color: var(--c-ink);
+  background: var(--c-paper);
+  border: 2px solid var(--c-ink);
+  border-radius: 6px;
+  box-shadow: 0 var(--edge) 0 var(--c-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 60ms ease-out, box-shadow 60ms ease-out;
+}
+.btn:active {
+  transform: translateY(var(--edge));
+  box-shadow: 0 0 0 var(--c-ink);
+}
+.btn:focus-visible,
+.hud-pause:focus-visible,
+.debug input:focus-visible {
+  outline: 3px solid var(--c-brand);
+  outline-offset: 3px;
+}
+.btn-primary {
+  background: var(--c-brand);
+  color: var(--c-paper);
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: max(20px, calc(var(--u) * 6));
+  min-height: max(56px, calc(var(--u) * 15));
+}
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(var(--u) * 3);
+}
+
+/* Screens sit over the live scene. Content lives in a paper drawer at the bottom. */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 3.2);
+  padding: calc(var(--u) * 6) calc(var(--u) * 6) calc(var(--u) * 8);
+  background: var(--c-paper);
+  border-top: 3px solid var(--c-ink);
+}
+
+.drawer-heading {
+  margin: 0;
+  font: 800 calc(var(--u) * 8) / 1.05 var(--f-display);
+}
+
+/* Title: a road sign on two posts. */
+.screen-title {
+  justify-content: space-between;
+}
+.logo-slot {
+  align-self: center;
+  margin-top: calc(var(--u) * 8);
+  width: calc(var(--u) * 34);
+  height: calc(var(--u) * 10);
+  border: 2px dashed var(--c-paper-dark);
+  border-radius: 4px;
+  opacity: 0.6;
+}
+.logo-slot:not(:empty) { border: 0; opacity: 1; }
+.logo-slot svg { width: 100%; height: 100%; }
+
+.sign {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sign-plate {
+  margin: 0;
+  padding: calc(var(--u) * 4) calc(var(--u) * 7) calc(var(--u) * 3);
+  background: var(--c-brand);
+  color: var(--c-paper);
+  border: 3px solid var(--c-ink);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 calc(var(--u) * 1.2) var(--c-brand), inset 0 0 0 calc(var(--u) * 1.8) var(--c-paper);
+  font: 800 calc(var(--u) * 12.5) / 0.95 var(--f-display);
+  letter-spacing: -0.01em;
+  text-align: center;
+  max-width: calc(var(--u) * 86);
+}
+.sign-tag {
+  margin: calc(var(--u) * -0.6) 0 0;
+  padding: calc(var(--u) * 1.4) calc(var(--u) * 4) calc(var(--u) * 1);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  border: 3px solid var(--c-ink);
+  border-radius: 6px;
+  font: 600 calc(var(--u) * 3.8) / 1.2 var(--f-mono);
+}
+.sign-posts {
+  display: flex;
+  gap: calc(var(--u) * 30);
+  height: calc(var(--u) * 12);
+}
+.sign-posts span {
+  width: calc(var(--u) * 2.4);
+  background: var(--c-ink-soft);
+  border: 2px solid var(--c-ink);
+  border-top: 0;
+}
+
+/* HUD */
+.hud {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--u) * 2);
+  padding: calc(var(--u) * 3) calc(var(--u) * 3);
+  pointer-events: none;
+}
+.hud > * { pointer-events: auto; }
+.hud-score, .hud-items {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 1.5);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 3) calc(var(--u) * 0.6);
+  background: var(--c-paper);
+  border: 2px solid var(--c-ink);
+  border-radius: 6px;
+}
+.hud-num {
+  font: 800 calc(var(--u) * 7) / 1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+.hud-label {
+  font: 600 calc(var(--u) * 3.4) / 1 var(--f-mono);
+  color: var(--c-ink-soft);
+}
+.hud-items { align-items: center; margin-right: auto; }
+.hud-check {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+  fill: none;
+  stroke: var(--c-ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.hud-check path { stroke: var(--c-brand); stroke-width: 2.6; }
+.hud-pause {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: var(--c-paper);
+  border: 2px solid var(--c-ink);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.hud-pause svg { width: 20px; height: 20px; fill: var(--c-ink); }
+
+/* One-line hints. Plain ink chip, no animation beyond a fade. */
+.toast {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--u) * 20);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(var(--u) * 92);
+  padding: calc(var(--u) * 2.2) calc(var(--u) * 4) calc(var(--u) * 1.6);
+  background: var(--c-ink);
+  color: var(--c-paper);
+  border-radius: 6px;
+  font: 800 calc(var(--u) * 4.2) / 1.2 var(--f-display);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* How to play */
+.howto-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: calc(var(--u) * 2.6);
+  font: 400 max(15px, calc(var(--u) * 4.3)) / 1.4 var(--f-ui);
+}
+.howto-list li {
+  padding-left: calc(var(--u) * 6);
+  position: relative;
+}
+.howto-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  width: calc(var(--u) * 3);
+  height: calc(var(--u) * 3);
+  border: 2px solid var(--c-ink);
+  border-radius: 3px;
+}
+
+/* Game over */
+.over-cause {
+  margin: 0;
+  font: 800 calc(var(--u) * 9) / 1 var(--f-display);
+}
+.over-tip {
+  margin: 0;
+  font: 400 max(16px, calc(var(--u) * 4.6)) / 1.4 var(--f-ui);
+}
+.over-stats {
+  display: flex;
+  gap: calc(var(--u) * 8);
+  margin: calc(var(--u) * 1) 0 0;
+  padding-top: calc(var(--u) * 3);
+  border-top: 2px solid var(--c-paper-dark);
+}
+.over-stats dt {
+  font: 600 calc(var(--u) * 3.4) / 1 var(--f-mono);
+  color: var(--c-ink-soft);
+}
+.over-stats dd {
+  margin: calc(var(--u) * 1) 0 0;
+  font: 800 calc(var(--u) * 10) / 1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+.over-newbest {
+  margin: 0;
+  font: 600 calc(var(--u) * 3.8) / 1 var(--f-mono);
+  color: var(--c-brand);
+}
+
+/* Debug panel (?debug=1) */
+.debug {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--c-ink);
+  color: var(--c-paper);
+  font: 12px var(--f-mono);
+  border-radius: 4px;
+}
+.debug label { display: flex; align-items: center; gap: 6px; min-height: 24px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .toast { transition: none; }
+}
+
+/* Keep the debug panel out of the way of menus. */
+.stage:has(.screen:not([hidden])) .debug { display: none; }

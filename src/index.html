@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#2A211C">
+<title>Otter Crossing</title>
+<style>
+/*FONTS*/
+/*STYLES*/
+</style>
+</head>
+<body>
+<div id="stage" class="stage">
+  <canvas id="game" aria-label="Otter Crossing game"></canvas>
+
+  <div id="hud" class="hud" hidden>
+    <div class="hud-score"><span id="hud-lanes" class="hud-num">0</span><span class="hud-label" data-copy="game.lanes"></span></div>
+    <div class="hud-items" aria-live="off">
+      <svg class="hud-check" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="2" width="16" height="16" rx="3"/><path d="M6 10.5l3 3 5-7"/></svg>
+      <span id="hud-items" class="hud-num">0</span>
+      <span class="sr-only" data-copy="game.actionItems"></span>
+    </div>
+    <button id="btn-pause" class="hud-pause" type="button" data-copy-label="game.pause">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="4" width="3.5" height="12" rx="1"/><rect x="11.5" y="4" width="3.5" height="12" rx="1"/></svg>
+    </button>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <section id="screen-title" class="screen screen-title" hidden>
+    <div class="logo-slot" aria-label="Otter logo" data-copy-label="game.logoAlt"><!-- Drop the Otter logo SVG here. --></div>
+    <div class="sign">
+      <h1 class="sign-plate"><span data-copy="game.title"></span></h1>
+      <p class="sign-tag" data-copy="game.signTag"></p>
+      <div class="sign-posts" aria-hidden="true"><span></span><span></span></div>
+    </div>
+    <div class="drawer">
+      <button id="btn-play" class="btn btn-primary" type="button" data-copy="game.play"></button>
+      <div class="btn-row">
+        <button id="btn-howto" class="btn" type="button" data-copy="game.howTo"></button>
+        <button class="btn btn-mute" type="button" aria-pressed="false"></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-howto" class="screen" hidden>
+    <div class="drawer drawer-tall">
+      <h2 class="drawer-heading" data-copy="howTo.heading"></h2>
+      <ul id="howto-list" class="howto-list"></ul>
+      <button id="btn-howto-back" class="btn btn-primary" type="button" data-copy="game.back"></button>
+    </div>
+  </section>
+
+  <section id="screen-pause" class="screen" hidden>
+    <div class="drawer">
+      <h2 class="drawer-heading" data-copy="game.paused"></h2>
+      <button id="btn-resume" class="btn btn-primary" type="button" data-copy="game.resume"></button>
+      <div class="btn-row">
+        <button id="btn-restart" class="btn" type="button" data-copy="game.restart"></button>
+        <button class="btn btn-mute" type="button" aria-pressed="false"></button>
+      </div>
+      <button id="btn-quit" class="btn btn-quiet" type="button" data-copy="game.quit"></button>
+    </div>
+  </section>
+
+  <section id="screen-over" class="screen" hidden>
+    <div class="drawer drawer-tall">
+      <h2 id="over-cause" class="over-cause"></h2>
+      <p id="over-tip" class="over-tip"></p>
+      <dl class="over-stats">
+        <div><dt data-copy="game.score"></dt><dd id="over-score">0</dd></div>
+        <div><dt data-copy="game.best"></dt><dd id="over-best">0</dd></div>
+      </dl>
+      <p id="over-newbest" class="over-newbest" data-copy="game.newBest" hidden></p>
+      <button id="btn-again" class="btn btn-primary" type="button" data-copy="game.playAgain"></button>
+      <div class="btn-row">
+        <a id="btn-try" class="btn" target="_blank" rel="noopener"></a>
+        <button id="btn-over-quit" class="btn" type="button" data-copy="game.quit"></button>
+      </div>
+    </div>
+  </section>
+
+  <div id="debug" class="debug" hidden>
+    <label><input type="checkbox" id="dbg-inv"> <span data-copy="debug.invincible"></span></label>
+    <label><input type="checkbox" id="dbg-hit"> <span data-copy="debug.hitboxes"></span></label>
+  </div>
+</div>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>

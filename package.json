@@ -1,0 +1,28 @@
+{
+  "name": "otter-crossing",
+  "version": "0.1.0",
+  "description": "Otter Crossing: an endless lane-hopper for Otter.ai",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "watch": "node tools/build.mjs --watch",
+    "test": "node --test test/generator.test.mjs",
+    "smoke": "node tools/build.mjs && node test/smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csek06/Otter-Crossing.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/csek06/Otter-Crossing/issues"
+  },
+  "homepage": "https://github.com/csek06/Otter-Crossing#readme",
+  "devDependencies": {
+    "@fontsource/overpass": "^5.3.0",
+    "@fontsource/overpass-mono": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "playwright-core": "1.56"
+  },
+  "private": true,
+  "type": "module"
+}

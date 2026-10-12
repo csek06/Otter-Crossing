@@ -57,6 +57,23 @@ There is nothing to configure. Upload the one file.
 1. Run `npm run build`.
 2. Upload `dist/otter-crossing.html` to any static host. Rename it to `index.html` if you want it served at a folder's root URL.
 
+### GitHub Pages (set up)
+
+`.github/workflows/pages.yml` runs the unit tests, builds the game and publishes it on every push to the default branch. You can also run it by hand from the Actions tab.
+
+One-time setup:
+
+1. In the repo, open **Settings > Pages**, and under **Build and deployment** set **Source** to **GitHub Actions**.
+2. Push, or run **Deploy to GitHub Pages** from the Actions tab.
+3. The game is served at `https://<owner>.github.io/<repo>/` (for this repo, `https://csek06.github.io/Otter-Crossing/`).
+
+Notes:
+
+- A GitHub Pages site is public, even when the repo is private. Pages on a private repo needs a paid GitHub plan.
+- Copy marked draft in `COPY_REVIEW.md` is live on that URL until it is signed off.
+
+### Other static hosts
+
 Examples:
 
 - **Netlify or Cloudflare Pages:** drag a folder containing `index.html` into the dashboard.

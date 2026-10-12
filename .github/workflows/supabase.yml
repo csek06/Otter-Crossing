@@ -17,7 +17,7 @@ name: Supabase migrations
 on:
   push:
     branches: [ccr-abd75a4b-vapjnc]
-    paths: ['supabase/**', 'test/db/**', 'test/db.test.sh', 'tools/supabase-setup.mjs', '.github/workflows/supabase.yml']
+    paths: ['supabase/**', 'test/db/**', 'test/db.test.sh', 'tools/supabase-*.mjs', '.github/workflows/supabase.yml']
   workflow_dispatch:
 
 permissions:

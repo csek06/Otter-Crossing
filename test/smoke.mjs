@@ -320,16 +320,16 @@ for (const start of [0, 120, 400]) {
 
 // ---------- M3: power-ups, teaching screen, leaderboard ----------
 
-// The feature card stays up for 3.5 seconds.
+// The feature card stays up for 5.5 seconds.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=3');
   await page.click('#btn-play');
   await page.evaluate(() => { window.__otter.game.debug.invincible = true; window.__otter.screens.feature('aiChat'); });
-  await wait(page, 3000);
-  const at3 = await page.isVisible('#feature-toast.show');
+  await wait(page, 5000);
+  const at5 = await page.isVisible('#feature-toast.show');
   await wait(page, 900);
-  const at4 = await page.isVisible('#feature-toast.show');
-  check(at3 && !at4, `feature card shows for about 3.5 seconds (3s: ${at3}, 3.9s: ${at4})`);
+  const at6 = await page.isVisible('#feature-toast.show');
+  check(at5 && !at6, `feature card shows for about 5.5 seconds (5s: ${at5}, 5.9s: ${at6})`);
   check(errors.length === 0, `feature card timing: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }
@@ -367,11 +367,12 @@ for (const start of [0, 120, 400]) {
   const r = await page.evaluate(() => {
     const g = window.__otter.game;
     const e = g.active.find((a) => a.mod.id === 'notetaker');
-    return { t: e && e.t, slots: document.querySelectorAll('.hud-power').length, active: [...document.querySelectorAll('.hud-power.is-active')].map((c) => c.getAttribute('aria-label')) };
+    return { t: e && e.t, slots: document.querySelectorAll('.hud-power').length, active: [...document.querySelectorAll('.hud-power.is-active')].map((c) => c.getAttribute('aria-label')), glow: (() => { const c = document.querySelector('.hud-power.is-active'); const cs = c && getComputedStyle(c); return cs ? { shadow: cs.boxShadow, anim: cs.animationName, bg: cs.backgroundColor } : null; })() };
   });
   check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
   check(r.slots === 6, `the tracker has a slot for each released power-up (${r.slots})`);
   check(r.active.length === 1 && r.active[0] === 'Otter Notetaker, active', `the tracker shows the active power-up (${r.active})`);
+  check(r.glow && r.glow.shadow !== 'none' && r.glow.anim === 'power-glow' && r.glow.bg === 'rgb(29, 37, 226)', `the active slot is filled and glowing (${r.glow && r.glow.anim}, ${r.glow && r.glow.bg})`);
   await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
   check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
   await ctx.close();

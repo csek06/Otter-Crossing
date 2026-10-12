@@ -405,8 +405,27 @@ canvas {
   background: var(--c-ink-soft);
   transform: rotate(-45deg);
 }
-.hud-power.is-active { background: var(--c-paper); }
-.hud-power.is-held .ring-fg { stroke: var(--c-ink); }
+/* Active: filled with brand blue, a size up, and a soft glow that breathes once
+   every 1.6 seconds (well under 3 flashes a second). Held: the same glow, still. */
+.hud-power.is-active, .hud-power.is-held {
+  transform: scale(1.18);
+  z-index: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 35%, transparent),
+              0 0 14px 4px color-mix(in srgb, var(--c-brand) 55%, transparent);
+}
+.hud-power.is-active { background: var(--c-brand); animation: power-glow 1.6s ease-in-out infinite; }
+.hud-power.is-active .hud-power-icon { color: var(--c-paper); }
+.hud-power.is-active .ring-bg { stroke: color-mix(in srgb, var(--c-brand) 55%, var(--c-ink)); }
+.hud-power.is-active .ring-fg { stroke: var(--c-highlighter); }
+.hud-power.is-held { background: var(--c-paper); }
+.hud-power.is-held .ring-fg { stroke: var(--c-brand); }
+.hud-power.is-held .hud-power-icon { color: var(--c-brand); }
+@keyframes power-glow {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 35%, transparent),
+                         0 0 10px 2px color-mix(in srgb, var(--c-brand) 45%, transparent); }
+  50%      { box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-brand) 45%, transparent),
+                         0 0 22px 8px color-mix(in srgb, var(--c-brand) 70%, transparent); }
+}
 .hud-power-icon, .recap-icon svg, .ft-icon svg {
   fill: none;
   stroke: currentColor;
@@ -645,6 +664,7 @@ canvas {
 
 @media (prefers-reduced-motion: reduce) {
   .btn, .toast, .feature-toast { transition: none; }
+  .hud-power.is-active { animation: none; }
 }
 
 /* Keep the debug panel out of the way of menus. */

@@ -9,16 +9,26 @@ import { createPlayer, resetPlayer, tryHop, forceHop, updatePlayer, logicalRow, 
 import { POWERUP_BY_ID } from '../powerups/registry.js';
 import { createFx } from './fx.js';
 import { load, save } from '../core/storage.js';
+import { createAutopilot } from './autopilot.js';
+import { dateKey, dailySeed } from './daily.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // How long each death plays before the game over screen.
 const DEATH_TIME = { meeting: TUNING.DEATH_DELAY, allhands: TUNING.DEATH_DELAY, river: 1.0, hawk: 1.35 };
 
-export function createGame({ params, events, input, sfx, reducedMotion }) {
+export function createGame({ params, events: listeners, input, sfx: sounds, reducedMotion }) {
   const lanePool = new Pool(newLane);
+  const autopilot = createAutopilot();
+  // The booth attract loop plays silently and never reaches the UI.
+  const quiet = (fns) => Object.fromEntries(Object.entries(fns).map(([k, f]) => [k, (...a) => (game.demo ? undefined : f(...a))]));
+  const events = quiet(listeners);
+  const sfx = quiet(sounds);
   const game = {
-    state: 'title', // title, playing, paused, dying, over
+    state: 'title', // title, demo, playing, paused, dying, over
+    mode: 'free',      // free or daily
+    demo: false,       // true while the booth attract loop plays
+    dailyKey: null,
     lanes: [],
     laneBase: 0,
     player: createPlayer(),
@@ -46,6 +56,8 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     fx: createFx(),
     debug: { invincible: false, hitboxes: false },
     viewRows: 20,
+    behind: GRID.BEHIND,
+    outfit: 'classic', // set from the wardrobe
   };
 
   function getLane(row) {
@@ -76,14 +88,20 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     }
   }
 
-  game.reset = function reset() {
+  game.reset = function reset(mode = 'free') {
     for (const l of game.lanes) lanePool.release(l);
     game.lanes.length = 0;
-    game.seed = params.seed != null ? params.seed : randomSeed();
-    game.startRow = params.start;
-    game.gen = createGenerator({ seed: game.seed, startRow: game.startRow, only: params.lane });
-    game.laneBase = game.startRow - GRID.BEHIND - 3;
-    game.camRow = game.startRow - GRID.BEHIND;
+    game.mode = mode;
+    // The daily course ignores the debug parameters so every run of it is the same.
+    const daily = mode === 'daily';
+    game.dailyKey = daily ? dateKey() : null;
+    game.seed = daily ? dailySeed(game.dailyKey) : params.seed != null ? params.seed : randomSeed();
+    game.startRow = daily ? 0 : params.start;
+    game.gen = createGenerator({ seed: game.seed, startRow: game.startRow, only: daily ? null : params.lane });
+    // The attract loop keeps the camera further back so the otter plays above the title drawer.
+    game.behind = game.demo ? GRID.BEHIND + 4 : GRID.BEHIND;
+    game.laneBase = game.startRow - game.behind - 3;
+    game.camRow = game.startRow - game.behind;
     resetPlayer(game.player, game.startRow);
     game.maxRow = game.startRow;
     game.score = 0;
@@ -108,13 +126,23 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
     events.score(game);
   };
 
-  game.start = function start() {
-    game.reset();
+  game.start = function start(mode = 'free') {
+    game.demo = false;
+    game.reset(mode);
     game.state = 'playing';
     input.setEnabled(true);
     events.state(game);
     // Debug: ?powerup=<id> grants one at the start.
-    if (params.powerup && POWERUP_BY_ID[params.powerup]) grantPowerup(POWERUP_BY_ID[params.powerup]);
+    if (mode === 'free' && params.powerup && POWERUP_BY_ID[params.powerup]) grantPowerup(POWERUP_BY_ID[params.powerup]);
+  };
+
+  // Booth attract loop: the autopilot plays behind the title screen.
+  game.startDemo = function startDemo() {
+    game.demo = true;
+    game.reset();
+    game.state = 'demo';
+    input.setEnabled(false);
+    autopilot.reset();
   };
 
   // Power-up plumbing used by the modules in src/powerups/.
@@ -261,8 +289,12 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
   game.kill = kill;
 
   function finish() {
+    if (game.demo) {
+      game.startDemo();
+      return;
+    }
     game.state = 'over';
-    const isBest = game.score > game.best;
+    const isBest = game.mode === 'free' && game.score > game.best;
     if (isBest) {
       game.best = game.score;
       save('best', game.best);
@@ -394,7 +426,7 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
 
     // Start the next buffered move as soon as the otter is free.
     if (!isHopping(p) && !game.auto) {
-      const dir = input.next();
+      const dir = game.demo ? autopilot.next(game, dt) : input.next();
       if (dir) {
         const res = tryHop(p, dir, getLane);
         if (res === 'hop') {
@@ -471,7 +503,7 @@ export function createGame({ params, events, input, sfx, reducedMotion }) {
 
     // Camera: follows the otter and creeps forward on its own once play begins.
     const d = difficultyAt(game.maxRow);
-    const target = visualRow(p) - GRID.BEHIND;
+    const target = visualRow(p) - game.behind;
     let cam = game.camRow;
     if (game.moved) cam += lerp(TUNING.CAMERA_CREEP_MIN, TUNING.CAMERA_CREEP_MAX, d) * dt;
     if (target > cam) cam += (target - cam) * Math.min(1, TUNING.CAMERA_FOLLOW * dt);

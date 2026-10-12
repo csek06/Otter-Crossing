@@ -5,8 +5,15 @@ export const FLAGS = {
   AUDIENCE: 'external',
   // Unreleased features stay hidden until launch.
   SHOW_UNRELEASED: false,
-  // Trade show booth behavior (stretch goal, not built yet).
+  // Trade show booth: attract loop on the title, back to the title after BOOTH_IDLE
+  // seconds without input, an email sign-up on game over and a hidden admin screen.
+  // ?booth=1 in the URL turns it on without a rebuild.
   BOOTH_MODE: false,
+};
+
+export const BOOTH = {
+  IDLE: 20,           // seconds without input before returning to the title
+  ADMIN_HOLD: 3,      // seconds to hold the logo to open the admin screen
 };
 
 export const GRID = {

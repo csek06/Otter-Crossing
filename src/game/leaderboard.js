@@ -34,3 +34,11 @@ export function addScore(initials, score, items) {
 export function lastInitials() {
   return load('lastInitials', 'OTR');
 }
+
+// Booth admin: forget every score on this device.
+export function clearScores() {
+  save(KEY, []);
+  save('lastInitials', 'OTR');
+  save('best', 0);
+  save('daily', null);
+}

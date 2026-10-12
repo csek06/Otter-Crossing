@@ -201,7 +201,7 @@ export function createRenderer(stage, game, opts) {
       c.beginPath();
       c.rect(0, 0, v.w, gy);
       c.clip();
-      drawOtter(c, cx, gy + sink, v, { facing: p.facing, lift, sx, sy, alpha });
+      drawOtter(c, cx, gy + sink, v, { facing: p.facing, lift, sx, sy, alpha, outfit: game.outfit });
       c.restore();
       c.strokeStyle = PAL.ripple;
       c.lineWidth = v.line;
@@ -213,7 +213,7 @@ export function createRenderer(stage, game, opts) {
       c.globalAlpha = 1;
       if (swimming && !p.dead) drawSwimTimer(c, cx, gy - t * 0.78, 1 - p.swim / RULES.SWIM_TIME);
     } else {
-      drawOtter(c, cx, gy, v, { facing: p.facing, lift, sx, sy, alpha });
+      drawOtter(c, cx, gy, v, { facing: p.facing, lift, sx, sy, alpha, outfit: game.outfit });
     }
     if (!p.dead) drawShield(c, cx, gy - lift);
   }

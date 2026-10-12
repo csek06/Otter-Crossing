@@ -11,7 +11,26 @@ Open `dist/otter-crossing.html` in a modern browser (Chrome, Safari, Edge or Fir
 - Phone or tablet: tap to hop forward, swipe left, right or back.
 - Keyboard: arrow keys or WASD, Space hops forward, Esc or P pauses.
 
-Scores, the local top 10 and the sound setting are saved in the browser's localStorage on that device.
+Scores, the local top 10, today's daily best, the outfit wallet and the sound setting are saved in the browser's localStorage on that device. Nothing leaves the device.
+
+## Modes
+
+- **Play:** a fresh random course every run. Good runs go on the local top 10.
+- **Daily challenge:** one course per calendar date, the same for everyone. The seed comes from the local date, so a given date always builds the same course. Game over shows today's best and a **Copy result** button with a one-line result to paste in Slack. Daily runs do not go on the top 10.
+- **Outfits:** every run's action items go into a wallet. Spend them on role outfits: Sales (a tie, 15), Customer success (a scarf, 25), Recruiting (a lanyard badge, 40) and Education (a cap and glasses, 60). Costs are in `src/game/wardrobe.js`, names and lines in `CONTENT.outfits`.
+- **Music:** a synthesized four-bar loop that adds layers (pad and bass, hats, arpeggio, drums, lead) and speeds up from 104 to 128 BPM as you cross lanes, reaching full intensity at 100 lanes. It plays only during a run and stops on pause and game over. The sound button mutes music and effects together.
+
+## Booth mode
+
+Turn it on with `BOOTH_MODE: true` in `src/config.js`, or add `?booth=1` to the URL without rebuilding.
+
+- **Attract loop:** an autopilot otter plays behind the title screen, silently. Tap the scene or Play to start.
+- **Idle reset:** after 20 seconds without input (`BOOTH.IDLE`), any screen or run goes back to the title and clears the sign-up form.
+- **Sign-up:** game over shows an optional email field with a consent box that starts unticked. Nothing is saved unless the box is ticked. The consent text (`booth.consent`) and privacy link (`booth.privacyUrl`) are placeholders for Legal. Sign-ups are stored in localStorage on the device only.
+- **Admin screen:** hold the Otter logo on the title for 3 seconds, or press Alt+Shift+O. It shows counts, exports sign-ups as a CSV, and clears sign-ups or scores and outfits. Clearing asks for a second tap. The admin screen ignores the idle timer.
+- The daily challenge is hidden in booth mode because the device is shared.
+
+After an event: open the admin screen, export the CSV, send it to the team that owns the list, then clear sign-ups.
 
 ## Run it locally (for development)
 
@@ -21,7 +40,7 @@ You need Node.js 18 or later.
 npm install
 npm run build     # writes dist/otter-crossing.html (and regenerates COPY_REVIEW.md)
 npm run watch     # rebuilds when src/ changes; refresh the browser to see it
-npm test          # generator rules over 16,000 lanes, power-up rules, copy checks
+npm test          # generator rules over 16,000 lanes, power-ups, copy, daily, outfits, booth, music
 npm run smoke     # builds, then plays through every screen in headless Chromium
 ```
 
@@ -57,7 +76,7 @@ Flags live in `src/config.js`. Change one, then run `npm run build`.
 |---|---|---|
 | `AUDIENCE` | `"external"` | `"internal"` swaps in internal meeting titles (for example "Forecast call") and hides the Try Otter button. |
 | `SHOW_UNRELEASED` | `false` | `true` lets unreleased features spawn and appear in the river. Today that is Live Assist, with placeholder copy. |
-| `BOOTH_MODE` | `false` | Reserved for the booth stretch goal (attract loop, idle reset, opt-in). Not built yet. |
+| `BOOTH_MODE` | `false` | `true` turns on booth mode: attract loop, idle reset, email sign-up and the admin screen. See [Booth mode](#booth-mode). `?booth=1` does the same without a rebuild. |
 
 Tuning numbers (hop time, camera speed, difficulty ramp) are in `TUNING`. Generator rules that the tests check (traffic density caps, river timing, breather spacing, all-hands warning, hawk timing, power-up spacing) are in `RULES`.
 
@@ -146,6 +165,8 @@ Add these to the URL, for example `otter-crossing.html?debug=1&lane=river`:
 | `?start=<lanes>` | start at a later difficulty, for example `?start=300` |
 | `?powerup=<id>` | grant `notetaker`, `aiChat`, `summary`, `actionItems` or `liveAssist` at the start (works even with `SHOW_UNRELEASED` off) |
 | `?seed=<n>` | replay the same course |
+| `?booth=1` | booth mode, without changing the flag |
+| `?idle=<seconds>` | with `?debug=1`, a shorter booth idle timeout for testing |
 
 ## Project layout
 
@@ -154,8 +175,9 @@ src/
   config.js        flags, tuning and generator rules
   content.js       all copy
   main.js          wires everything together
-  core/            loop helpers: input, stage (9:16 letterbox), audio, rng, pool, storage
-  game/            game state, generator, player, effects, leaderboard
+  core/            loop helpers: input, stage (9:16 letterbox), audio, music, rng, pool, storage
+  game/            game state, generator, player, effects, leaderboard,
+                   daily challenge, wardrobe (outfits), booth sign-ups, autopilot
   lanes/           focus, meetings, river, allhands
   powerups/        notetaker, aichat, summary, actionitems, liveassist
   render/          renderer, palette, otter, hawk, pickups, icons
@@ -165,6 +187,7 @@ tools/
   copy-review.mjs  writes COPY_REVIEW.md from content.js
 test/
   generator.test.mjs  rules over 16,000 lanes, power-ups, copy
+  stretch.test.mjs    daily seeds, outfits, sign-up CSV, music layers
   smoke.mjs           headless browser play-through and screenshots
 ```
 
@@ -178,5 +201,7 @@ test/
 ## Known limits
 
 - Frame rate is verified at 60fps in headless Chromium on a desktop machine, not yet on a mid-range phone.
-- Sounds are synthesized with the Web Audio API and have not been checked by ear in automated tests.
+- Sounds and music are synthesized with the Web Audio API. The tests check that notes are scheduled and layers build, not how they sound.
+- The daily challenge seed uses the device's local date. Two people in different time zones get the same course for the same date, but not always at the same moment.
+- Booth sign-ups live in one browser on one device. Export them before clearing site data.
 - Scores are per device and per browser. Clearing site data clears them.

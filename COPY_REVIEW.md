@@ -19,6 +19,8 @@ These lines say a little more than the taglines, or depend on product details I 
 - [ ] **Help links** all point to the help center home page. Swap in the article for each feature.
 - [ ] **Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.
 - [ ] **Live Assist** copy is a placeholder. It only shows when `SHOW_UNRELEASED` is true.
+- [ ] **Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.
+- [ ] **Logo and brand blue** come from the otter.ai site header and link color. Confirm with brand before launch.
 
 ## 1. Feature claims
 
@@ -158,10 +160,32 @@ Drawn on the meeting blocks. All fictional. Internal titles only show when `AUDI
 
 - [ ] "Try Otter" button: https://otter.ai (external mode only)
 
-## 9. Screen labels
+## 9. Daily challenge and outfits
+
+- [ ] Daily tag: "Daily challenge, {date}"
+- [ ] Slack share text: "Otter Crossing daily challenge, {date}. Lanes: {lanes}. Action items: {items}."
+- [ ] Copy messages: "Copy result", "Copied. Paste it in Slack.", "Select the text above to copy it."
+- [ ] Outfit "Classic": "The headset. Always the headset." (`outfits.items.classic`)
+- [ ] Outfit "Sales": "A sharp tie for the big demo." (`outfits.items.sales`)
+- [ ] Outfit "Customer success": "A cozy scarf for every check-in." (`outfits.items.cs`)
+- [ ] Outfit "Recruiting": "A badge for interview day." (`outfits.items.recruiting`)
+- [ ] Outfit "Education": "Cap and glasses for office hours." (`outfits.items.education`)
+- [ ] "Outfits", "Action items to spend", "Wear", "Wearing", "Buy for {cost}", "Need {more} more"
+
+## 10. Booth mode
+
+Only shown when `BOOTH_MODE` is true. The sign-up box is unchecked by default and sign-ups are stored on the device only.
+
+- [ ] Heading: "Want news from Otter?", field: "Email"
+- [ ] Consent (Legal): "Placeholder consent text pending Legal review. Yes, Otter.ai can email me."
+- [ ] Privacy link (Legal): "Privacy policy" https://otter.ai/privacy-policy
+- [ ] "Sign up", "Thanks. You are on the list.", "Check the email address.", "Tick the box to sign up."
+- [ ] Staff admin screen: "Booth admin", "Everything here is stored only in this browser on this device.", "Sign-ups saved: {n}", "Top 10 scores saved: {n}", "Export sign-ups (CSV)", "Clear sign-ups", "Clear scores and outfits", "Tap again to confirm", "Cleared.", "Saved {file}."
+
+## 11. Screen labels
 
 Low risk, listed for completeness.
 
 - [ ] Title sign: "Otter Crossing", tag: "Next exit: end of day"
-- [ ] "Play", "How to play", "Back", "Resume", "Restart", "Back to title", "Play again", "Paused", "Pause", "Sound on", "Sound off", "lanes", "Action items", "Lanes crossed", "Best", "New best", "Otter logo", "Sound", "Top 10", "Top 10 on this device", "No scores yet. Play a run to set one.", "You made the top 10", "Your initials", "Next letter", "Previous letter", "Letter", "Save score", "Features you used", "Grab a glowing pickup next run to try an Otter feature.", "Learn more", "ready", "items"
+- [ ] "Play", "How to play", "Back", "Resume", "Restart", "Back to title", "Play again", "Paused", "Pause", "Sound on", "Sound off", "lanes", "Action items", "Lanes crossed", "Best", "New best", "Otter logo", "Sound", "Top 10", "Top 10 on this device", "No scores yet. Play a run to set one.", "You made the top 10", "Your initials", "Next letter", "Previous letter", "Letter", "Save score", "Features you used", "Grab a glowing pickup next run to try an Otter feature.", "Learn more", "ready", "items", "Daily challenge", "Outfits", "Today's best", "Action items to spend on outfits: {n}"
 - [ ] Train label: "All-hands"

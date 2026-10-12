@@ -44,6 +44,8 @@ export function buildCopyReview() {
     box('**Help links** all point to the help center home page. Swap in the article for each feature.'),
     box('**Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.'),
     box('**Live Assist** copy is a placeholder. It only shows when `SHOW_UNRELEASED` is true.'),
+    box('**Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.'),
+    box('**Logo and brand blue** come from the otter.ai site header and link color. Confirm with brand before launch.'),
     '',
   );
 
@@ -113,7 +115,23 @@ export function buildCopyReview() {
   add(box(`${q(C.links.tryOtter.label)} button: ${C.links.tryOtter.url} (external mode only)`));
   add('');
 
-  add('## 9. Screen labels', '', 'Low risk, listed for completeness.', '');
+  add('## 9. Daily challenge and outfits', '');
+  add(box(`Daily tag: ${q(C.daily.tag)}`));
+  add(box(`Slack share text: ${q(C.daily.share)}`));
+  add(box(`Copy messages: ${q(C.daily.copyResult)}, ${q(C.daily.copied)}, ${q(C.daily.copyManual)}`));
+  for (const [id, o] of Object.entries(C.outfits.items)) add(box(`Outfit ${q(o.name)}: ${q(o.line)} (\`outfits.items.${id}\`)`));
+  add(box(['heading', 'walletLabel', 'wear', 'wearing', 'buy', 'need'].map((k) => q(C.outfits[k])).join(', ')));
+  add('');
+
+  add('## 10. Booth mode', '', 'Only shown when `BOOTH_MODE` is true. The sign-up box is unchecked by default and sign-ups are stored on the device only.', '');
+  add(box(`Heading: ${q(C.booth.emailHeading)}, field: ${q(C.booth.emailLabel)}`));
+  add(box(`Consent (Legal): ${q(C.booth.consent)}`));
+  add(box(`Privacy link (Legal): ${q(C.booth.privacyLabel)} ${C.booth.privacyUrl}`));
+  add(box(['submit', 'thanks', 'invalid', 'needConsent'].map((k) => q(C.booth[k])).join(', ')));
+  add(box(`Staff admin screen: ${Object.values(C.admin).map(q).join(', ')}`));
+  add('');
+
+  add('## 11. Screen labels', '', 'Low risk, listed for completeness.', '');
   add(box(`Title sign: ${q(C.game.title)}, tag: ${q(C.game.signTag)}`));
   const skip = new Set(['title', 'signTag']);
   const labels = Object.entries(C.game).filter(([k]) => !skip.has(k)).map(([, v]) => q(v));

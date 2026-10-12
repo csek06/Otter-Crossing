@@ -565,6 +565,185 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
+// Booth mode: attract loop, tap to play, sign-up consent, idle reset, hidden admin.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&booth=1&idle=3&seed=7');
+  const r0 = await page.evaluate(() => ({ state: window.__otter.game.state, row: window.__otter.game.player.row }));
+  await wait(page, 3000);
+  const r1 = await page.evaluate(() => ({ state: window.__otter.game.state, row: window.__otter.game.player.row, demo: window.__otter.game.demo }));
+  check(r0.state === 'demo' && r1.demo && r1.row > r0.row + 2, `booth: attract loop plays on the title (row ${r0.row} to ${r1.row})`);
+  check(await page.isHidden('#btn-daily'), 'booth: daily challenge is off the shared title');
+  await page.screenshot({ path: join(shots, 'booth-title.png') });
+  const box = await page.locator('#game').boundingBox();
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.3);
+  await wait(page, 200);
+  const st = await page.evaluate(() => ({ state: window.__otter.game.state, demo: window.__otter.game.demo, score: window.__otter.game.score }));
+  check(st.state === 'playing' && !st.demo && st.score === 0, `booth: tapping the scene starts a real run (${st.state})`);
+  await page.evaluate(() => { window.__otter.game.actionItems = 4; window.__otter.game.kill('meeting', null); });
+  await wait(page, 1100);
+  check(await page.isVisible('#optin'), 'booth: sign-up shows on game over');
+  check(!(await page.isChecked('#optin-consent')), 'booth: consent box is unchecked by default');
+  const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('otterCrossing.signups') || '[]').length);
+  await page.fill('#optin-email', 'pat.lee@example.com');
+  await page.click('#btn-optin');
+  check((await stored()) === 0 && (await page.textContent('#optin-msg')).length > 0, 'booth: nothing is saved without consent');
+  await page.check('#optin-consent');
+  await page.fill('#optin-email', 'not an email');
+  await page.click('#btn-optin');
+  check((await stored()) === 0, 'booth: a bad email is not saved');
+  await page.fill('#optin-email', 'pat.lee@example.com');
+  await page.locator('#optin').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: join(shots, 'booth-signup.png') });
+  await page.click('#btn-optin');
+  check((await stored()) === 1, 'booth: a consented sign-up is saved on the device');
+  await wait(page, 3600);
+  const idle = await page.evaluate(() => ({ state: window.__otter.game.state, email: document.getElementById('optin-email').value, title: !document.getElementById('screen-title').hidden }));
+  check(idle.state === 'demo' && idle.title && idle.email === '', `booth: idle returns to the attract loop and clears the form (${idle.state})`);
+  // Mid-run idle: the run ends and the title comes back.
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.3);
+  await page.evaluate(() => { window.__otter.game.debug.invincible = true; });
+  await wait(page, 3600);
+  check(await page.evaluate(() => window.__otter.game.state === 'demo'), 'booth: an abandoned run returns to the title');
+  await page.evaluate(() => { window.__otter.game.debug.invincible = false; });
+
+  // Hidden admin: hold the logo.
+  await page.locator('.logo-slot').dispatchEvent('pointerdown');
+  await wait(page, 3200);
+  check(await page.isVisible('#screen-admin'), 'booth: holding the logo opens the admin screen');
+  check((await page.textContent('#admin-signups')).includes('1'), 'booth: admin shows the sign-up count');
+  await page.screenshot({ path: join(shots, 'booth-admin.png') });
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#btn-admin-export')]);
+  const { readFileSync } = await import('node:fs');
+  const csv = readFileSync(await dl.path(), 'utf8');
+  check(dl.suggestedFilename().endsWith('.csv') && csv.includes('pat.lee@example.com') && csv.startsWith('"email"'), `booth: CSV export (${dl.suggestedFilename()})`);
+  await wait(page, 4000);
+  check(await page.isVisible('#screen-admin'), 'booth: the admin screen is not cut short by the idle timer');
+  await page.click('#btn-admin-clear');
+  check((await stored()) === 1 && (await page.textContent('#btn-admin-clear')) === 'Tap again to confirm', 'booth: clearing asks for a second tap');
+  await page.click('#btn-admin-clear');
+  check((await stored()) === 0 && (await page.textContent('#admin-signups')).includes('0'), 'booth: clear removes sign-ups');
+  await page.click('#btn-admin-back');
+  await page.keyboard.press('Alt+Shift+KeyO');
+  check(await page.isVisible('#screen-admin'), 'booth: Alt+Shift+O opens admin from the title');
+  check(errors.length === 0, `booth: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Not booth mode: no attract loop, no sign-up, no admin.
+{
+  const { ctx, page, errors } = await open(SIZES[3], '?debug=1&seed=7');
+  await wait(page, 1000);
+  check(await page.evaluate(() => window.__otter.game.state === 'title' && window.__otter.game.player.row === 0), 'normal: no attract loop');
+  await page.locator('.logo-slot').dispatchEvent('pointerdown');
+  await wait(page, 3200);
+  check(await page.isHidden('#screen-admin'), 'normal: the logo does not open admin');
+  await page.click('#btn-play');
+  await page.evaluate(() => window.__otter.game.kill('meeting', null));
+  await wait(page, 1100);
+  check(await page.isHidden('#optin'), 'normal: no sign-up on game over');
+  check(errors.length === 0, `normal: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Daily challenge: the same course every time today, its own best, a result to share.
+{
+  const { ctx, page, errors } = await open(SIZES[3], '?debug=1&seed=7&lane=river');
+  const course = () => page.evaluate(() => {
+    const g = window.__otter.game;
+    return { mode: g.mode, seed: g.seed, lanes: g.lanes.filter((l) => l.row >= 0 && l.row < 30).map((l) => l.type + (l.type === 'focus' ? l.blocked : (l.speed || 0).toFixed(4))).join(',') };
+  });
+  await page.click('#btn-daily');
+  const a = await course();
+  await page.evaluate(() => { window.__otter.game.actionItems = 3; window.__otter.game.score = 9; window.__otter.game.kill('meeting', null); });
+  await wait(page, 1100);
+  check(await page.isVisible('#over-mode'), 'daily: game over shows the daily tag');
+  check(await page.isHidden('#initials'), 'daily: no initials entry for daily runs');
+  check((await page.textContent('#over-best-label')) === "Today's best" && (await page.textContent('#over-best')) === '9', 'daily: today\'s best is tracked');
+  const share = await page.textContent('#share-text');
+  check(/\d{4}-\d{2}-\d{2}/.test(share) && share.includes('9') && share.includes('3'), `daily: share text (${share})`);
+  await page.click('#btn-copy');
+  await wait(page, 200);
+  check((await page.textContent('#share-msg')).length > 0, 'daily: copy gives feedback');
+  await page.screenshot({ path: join(shots, 'daily-over.png') });
+  await page.click('#btn-again');
+  await wait(page, 100);
+  const b = await course();
+  check(a.mode === 'daily' && b.mode === 'daily' && a.seed === b.seed && a.lanes === b.lanes && a.lanes.length > 20, 'daily: play again gives the same course, ignoring debug lane filters');
+  await page.evaluate(() => window.__otter.quit());
+  await page.click('#btn-play');
+  const c = await course();
+  check(c.mode === 'free' && c.seed !== a.seed, 'daily: free play uses its own seed');
+  check(errors.length === 0, `daily: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Outfits: earn, buy, wear, and see it in play.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=7');
+  await page.click('#btn-outfits');
+  check((await page.getAttribute('[data-outfit="sales"]', 'aria-disabled')) === 'true', 'outfits: locked with an empty wallet');
+  await page.click('#btn-outfits-back');
+  await page.click('#btn-play');
+  await page.evaluate(() => { window.__otter.game.actionItems = 7; window.__otter.game.kill('meeting', null); });
+  await wait(page, 1100);
+  check((await page.textContent('#over-wallet')).includes('7'), 'outfits: a run adds its action items to the wallet');
+  await page.evaluate(() => { localStorage.setItem('otterCrossing.wallet', '200'); });
+  await page.reload();
+  await wait(page, 400);
+  await page.click('#btn-outfits');
+  await page.screenshot({ path: join(shots, 'outfits-shop.png') });
+  for (const id of ['sales', 'cs', 'recruiting', 'education']) await page.click(`[data-outfit="${id}"]`);
+  const w = await page.evaluate(() => ({ wallet: window.__otter.wardrobe.wallet(), wearing: window.__otter.game.outfit }));
+  check(w.wallet === 200 - 140 && w.wearing === 'education', `outfits: buying spends items and puts it on (${w.wallet}, ${w.wearing})`);
+  await page.screenshot({ path: join(shots, 'outfits-owned.png') });
+  for (const id of ['classic', 'sales', 'cs', 'recruiting', 'education']) {
+    await page.click(`[data-outfit="${id}"]`);
+    await page.click('#btn-outfits-back');
+    await page.click('#btn-play');
+    await page.evaluate(() => { window.__otter.game.debug.invincible = true; });
+    await page.keyboard.press('ArrowDown');
+    await wait(page, 250);
+    const clip = await page.evaluate(() => {
+      const r = document.getElementById('game').getBoundingClientRect();
+      return { x: r.x + r.width * 0.3, y: r.y + r.height * 0.55, width: r.width * 0.4, height: r.height * 0.25 };
+    });
+    await page.screenshot({ path: join(shots, `outfit-${id}.png`), clip });
+    await page.evaluate(() => window.__otter.quit());
+    await page.click('#btn-outfits');
+  }
+  await page.reload();
+  await wait(page, 300);
+  check(await page.evaluate(() => window.__otter.game.outfit === 'education'), 'outfits: the choice persists');
+  check(errors.length === 0, `outfits: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Music: plays during a run, builds with distance, stops on pause and game over.
+{
+  const { ctx, page, errors } = await open(SIZES[3], '?debug=1&seed=7');
+  await page.click('#btn-play');
+  await wait(page, 600);
+  const m0 = await page.evaluate(() => ({ playing: window.__otter.music.playing, n: window.__otter.music.scheduled, k: window.__otter.music.k }));
+  check(m0.playing && m0.n > 0 && m0.k === 0, `music: starts with the run (${m0.n} notes)`);
+  await page.evaluate(() => { window.__otter.game.score = 80; window.__otter.music.setLanes(80); });
+  const n1 = await page.evaluate(() => window.__otter.music.scheduled);
+  await wait(page, 1000);
+  const n2 = await page.evaluate(() => window.__otter.music.scheduled);
+  await page.evaluate(() => { window.__otter.music.setLanes(0); });
+  const n3 = await page.evaluate(() => window.__otter.music.scheduled);
+  await wait(page, 1000);
+  const n4 = await page.evaluate(() => window.__otter.music.scheduled);
+  check(n2 - n1 > (n4 - n3) * 1.8, `music: denser at 80 lanes than at 0 (${n2 - n1} vs ${n4 - n3} notes a second)`);
+  await page.keyboard.press('Escape');
+  check(await page.evaluate(() => !window.__otter.music.playing), 'music: stops on pause');
+  await page.keyboard.press('Escape');
+  check(await page.evaluate(() => window.__otter.music.playing), 'music: resumes');
+  await page.evaluate(() => window.__otter.game.kill('meeting', null));
+  check(await page.evaluate(() => !window.__otter.music.playing), 'music: stops when the otter is caught');
+  check(errors.length === 0, `music: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 await browser.close();
 if (failures.length) {
   console.log(`\n${failures.length} check(s) failed`);

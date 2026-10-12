@@ -45,6 +45,68 @@ export const CONTENT = {
     learnMore: 'Learn more',
     held: 'ready',
     itemsShort: 'items',
+    daily: 'Daily challenge',
+    outfits: 'Outfits',
+    todayBest: 'Today\'s best',
+    walletLine: 'Action items to spend on outfits: {n}',
+  },
+
+  // Daily challenge: the same course for everyone on a given date.
+  daily: {
+    draft: true,
+    tag: 'Daily challenge, {date}',
+    copyResult: 'Copy result',
+    copied: 'Copied. Paste it in Slack.',
+    copyManual: 'Select the text above to copy it.',
+    // {date}, {lanes} and {items} are filled in. Keep it to one line.
+    share: 'Otter Crossing daily challenge, {date}. Lanes: {lanes}. Action items: {items}.',
+  },
+
+  // Outfits bought with action items. Costs are in src/game/wardrobe.js.
+  outfits: {
+    draft: true,
+    heading: 'Outfits',
+    walletLabel: 'Action items to spend',
+    wear: 'Wear',
+    wearing: 'Wearing',
+    buy: 'Buy for {cost}',
+    need: 'Need {more} more',
+    items: {
+      classic: { name: 'Classic', line: 'The headset. Always the headset.' },
+      sales: { name: 'Sales', line: 'A sharp tie for the big demo.' },
+      cs: { name: 'Customer success', line: 'A cozy scarf for every check-in.' },
+      recruiting: { name: 'Recruiting', line: 'A badge for interview day.' },
+      education: { name: 'Education', line: 'Cap and glasses for office hours.' },
+    },
+  },
+
+  // Booth mode only (FLAGS.BOOTH_MODE). Consent text and the privacy link wait on Legal.
+  booth: {
+    draft: true,
+    emailHeading: 'Want news from Otter?',
+    emailLabel: 'Email',
+    consent: 'Placeholder consent text pending Legal review. Yes, Otter.ai can email me.',
+    privacyLabel: 'Privacy policy',
+    privacyUrl: 'https://otter.ai/privacy-policy', // REVIEW: Legal to confirm the link and consent text
+    submit: 'Sign up',
+    thanks: 'Thanks. You are on the list.',
+    invalid: 'Check the email address.',
+    needConsent: 'Tick the box to sign up.',
+  },
+
+  // Hidden booth admin screen for staff. Open it by holding the logo for 3 seconds,
+  // or with Alt+Shift+O on a keyboard.
+  admin: {
+    heading: 'Booth admin',
+    note: 'Everything here is stored only in this browser on this device.',
+    signups: 'Sign-ups saved: {n}',
+    scores: 'Top 10 scores saved: {n}',
+    exportCsv: 'Export sign-ups (CSV)',
+    clearSignups: 'Clear sign-ups',
+    clearScores: 'Clear scores and outfits',
+    confirm: 'Tap again to confirm',
+    cleared: 'Cleared.',
+    exported: 'Saved {file}.',
   },
 
   howTo: {

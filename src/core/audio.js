@@ -4,6 +4,7 @@ import { load, save } from './storage.js';
 
 let ac = null;
 let master = null;
+let musicBus = null;
 let muted = load('muted', false);
 
 function ensure() {
@@ -14,7 +15,19 @@ function ensure() {
   master = ac.createGain();
   master.gain.value = muted ? 0 : 0.5;
   master.connect(ac.destination);
+  musicBus = ac.createGain();
+  musicBus.gain.value = 0;
+  musicBus.connect(master);
   return ac;
+}
+
+// For the music sequencer in music.js.
+export function audioContext() {
+  return ensure();
+}
+export function getMusicBus() {
+  ensure();
+  return musicBus;
 }
 
 // Browsers only allow audio after a user gesture, so call this from one.

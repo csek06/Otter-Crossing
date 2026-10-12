@@ -563,6 +563,66 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
+// First pickup of each power-up in a run: a centered explainer that freezes play
+// and closes on a hop forward. Repeat pickups show the bottom card instead.
+for (const size of SIZES) {
+  const { ctx, page, errors } = await open(size, '?debug=1&lane=focus&seed=6');
+  await page.click('#btn-play');
+  await wait(page, 300);
+  const open1 = await page.evaluate(async () => {
+    const o = window.__otter;
+    const g = o.game;
+    const row = g.player.row;
+    o.input.clear();
+    g.grantPowerup(o.powerups.workMode);
+    const t0 = g.time;
+    const run0 = g.active.find((e) => e.mod.id === 'workMode').t;
+    await new Promise((r) => setTimeout(r, 600));
+    const card = document.querySelector('.learn-card').getBoundingClientRect();
+    const stage = document.getElementById('stage').getBoundingClientRect();
+    return {
+      state: g.state,
+      frozen: g.time === t0 && g.active.find((e) => e.mod.id === 'workMode').t === run0,
+      row,
+      name: document.getElementById('learn-name').textContent,
+      power: document.getElementById('learn-power').textContent,
+      work: document.getElementById('learn-work').textContent,
+      go: document.getElementById('learn-go-text').textContent,
+      inside: card.top >= stage.top && card.bottom <= stage.bottom && card.left >= stage.left && card.right <= stage.right,
+      centered: Math.abs((card.left + card.right) / 2 - (stage.left + stage.right) / 2) < 2 && Math.abs((card.top + card.bottom) / 2 - (stage.top + stage.bottom) / 2) < stage.height * 0.12,
+      card: document.getElementById('feature-toast').classList.contains('show'),
+    };
+  });
+  check(open1.state === 'learn' && open1.frozen, `${size.name}: first pickup opens the explainer and freezes play`);
+  check(open1.name === 'Work Mode' && open1.power.startsWith('Starts a Work run') && open1.work.startsWith('Switch AI Chat to Work'), `${size.name}: explainer shows the game power and the business use`);
+  check(open1.inside && open1.centered, `${size.name}: explainer is centered and fits on screen`);
+  check(!open1.card, `${size.name}: no bottom card behind the explainer`);
+  check(open1.go === (size.touch ? 'Tap or swipe up to keep going' : 'Press up or W to keep going'), `${size.name}: how to close it (${open1.go})`);
+  await page.screenshot({ path: join(shots, `${size.name}-7-explainer.png`) });
+  // Sideways does not close it; forward does, without hopping.
+  await page.keyboard.press('ArrowLeft');
+  await wait(page, 100);
+  check((await state(page)).state === 'learn', `${size.name}: other keys leave it open`);
+  if (size.touch) {
+    const b = await page.locator('#game').boundingBox();
+    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height * 0.7);
+  } else {
+    await page.keyboard.press('ArrowUp');
+  }
+  await wait(page, 150);
+  const closed = await page.evaluate(() => ({ state: window.__otter.game.state, row: window.__otter.game.player.row, hidden: document.getElementById('learn').hidden }));
+  check(closed.state === 'playing' && closed.hidden && closed.row === open1.row, `${size.name}: ${size.touch ? 'a tap' : 'up'} closes it without hopping`);
+  const again = await page.evaluate(async () => {
+    const o = window.__otter;
+    o.game.grantPowerup(o.powerups.workMode);
+    await new Promise((r) => setTimeout(r, 100));
+    return { state: o.game.state, card: document.getElementById('feature-toast').classList.contains('show') };
+  });
+  check(again.state === 'playing' && again.card, `${size.name}: a repeat pickup shows the bottom card, not the explainer`);
+  check(errors.length === 0, `${size.name} explainer: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 // A natural run: a power-up within 15 lanes, walk into it, then the teaching screen.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&seed=31');
@@ -590,7 +650,12 @@ for (const size of SIZES) {
   await wait(page, 250);
   const used = await page.evaluate(() => window.__otter.game.used.slice());
   check(used.length >= 1, `picking it up records the feature (${used.join(',')})`);
+  check((await state(page)).state === 'learn' && await page.isVisible('#learn'), 'the first pickup opens the power-up explainer');
   await page.screenshot({ path: join(shots, 'm3-pickup.png') });
+  await wait(page, 300);
+  await page.keyboard.press('ArrowUp');
+  await wait(page, 100);
+  check((await state(page)).state === 'playing', 'hopping forward closes the explainer');
   await page.evaluate(() => {
     const g = window.__otter.game;
     g.debug.invincible = false;

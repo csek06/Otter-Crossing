@@ -13,7 +13,7 @@ import { createScreens } from './ui/screens.js';
 import { createMusic } from './core/music.js';
 import { createWardrobe } from './game/wardrobe.js';
 import { recordDaily } from './game/daily.js';
-import { spawnable } from './powerups/registry.js';
+import { spawnable, POWERUP_BY_ID } from './powerups/registry.js';
 
 loadPalette();
 
@@ -56,6 +56,7 @@ game = createGame({
       if (screens && s) screens.hint(s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)), key === 'workModeDone' ? 2.6 : 1.8);
     },
     powerup: (mod) => screens && screens.feature(mod.featureId),
+    learn: (mod) => screens && screens.learn(mod),
     gameOver: (g, info) => {
       // Every run's action items go into the outfit wallet.
       const wallet = wardrobe.earn(g.actionItems);
@@ -63,9 +64,10 @@ game = createGame({
       screens.gameOver(g, { ...info, daily, wallet });
     },
     state: (g) => {
-      if (g.state === 'playing') music.start(false);
+      if (g.state === 'playing' || g.state === 'learn') music.start(false);
       else music.stop();
       if (!screens) return;
+      if (g.state !== 'learn') screens.hideLearn();
       if (g.state === 'playing') { screens.show(null); screens.hud(true); }
       if (g.state === 'paused') screens.show('pause');
       if (g.state === 'over') { screens.clearHint(); screens.hud(false); screens.show('over'); }
@@ -88,6 +90,7 @@ function quit() {
   input.setEnabled(false);
   screens.hud(false);
   screens.clearHint();
+  screens.hideLearn();
   screens.show('title');
   game.startDemo();
   if (booth) screens.resetOptin();
@@ -134,7 +137,7 @@ if (PARAMS.debug) {
   panel.hidden = false;
   document.getElementById('dbg-inv').addEventListener('change', (e) => { game.debug.invincible = e.target.checked; });
   document.getElementById('dbg-hit').addEventListener('change', (e) => { game.debug.hitboxes = e.target.checked; });
-  window.__otter = { game, input, play, pause, resume, quit, music, wardrobe, screens };
+  window.__otter = { game, input, play, pause, resume, quit, music, wardrobe, screens, powerups: POWERUP_BY_ID };
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -205,7 +208,7 @@ function frame(now) {
   }
   renderer.draw(PARAMS.debug ? fps : null);
   checkIdle(now);
-  if (game.state === 'playing' || game.state === 'dying') updatePowerChips();
+  if (game.state === 'playing' || game.state === 'dying' || game.state === 'learn') updatePowerChips();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

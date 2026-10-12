@@ -101,6 +101,8 @@ Tuning numbers (hop time, camera speed, difficulty ramp) are in `TUNING`. Genera
 
 Power-ups land on a random lane of any kind except the all-hands track (on a log when it's the river), in a random free column. The first one shows up by lane 15. After that the next is due a random 25 to 40 lanes later. Work Mode starts a Work run that counts the new lanes you cross. After 8 it finishes and pulls every action item on the next 6 lanes into a follow-up doc, plus 3 for the doc itself. If you go down first, the game over screen says how many lanes the run had left.
 
+The first time you pick up each power-up in a run, play freezes and a card in the middle of the screen explains it: what it does in the game (`CONTENT.powers`) and what the feature does at work (the feature description). Hop forward (up, W, a tap or a swipe up) to close it; that hop does not move the otter. Later pickups of the same power-up show the short card at the bottom instead. The title screen demo never shows it.
+
 The HUD tracker under the score has one slot for each power-up the run can spawn: faded until you find it, a draining ring while it's active, a full ring while AI Chat is held, and crossed out once it's spent.
 
 ## Edit the copy

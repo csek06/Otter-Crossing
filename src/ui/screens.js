@@ -433,6 +433,25 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
       clearTimeout(featureTimer);
       featureTimer = setTimeout(() => feature.classList.remove('show'), seconds * 1000);
     },
+    // First pickup of a power-up this run: what it does in the game and at work.
+    // Play is frozen behind it; hopping forward closes it (see game.js).
+    learn(mod) {
+      const f = CONTENT.features[mod.featureId];
+      const L = CONTENT.learn;
+      const box = $('learn');
+      this.clearHint();
+      box.hidden = false;
+      $('learn-icon').innerHTML = iconSvg(mod.featureId);
+      $('learn-name').textContent = f.name;
+      $('learn-tagline').textContent = f.tagline;
+      $('learn-power').textContent = CONTENT.powers[mod.id] || '';
+      $('learn-work').textContent = f.description;
+      const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      $('learn-go-text').textContent = coarse ? L.touch : L.keys;
+    },
+    hideLearn() {
+      $('learn').hidden = true;
+    },
     // items: [{ id, featureId, state: off | active | held | used, k (0 to 1 remaining) }]
     powers(items) {
       const seen = new Set();

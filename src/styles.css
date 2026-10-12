@@ -435,6 +435,68 @@ canvas {
 }
 .hud-power-icon { position: relative; width: 55%; height: 55%; color: var(--c-ink); }
 
+/* First-pickup explainer. Centered over the frozen game. It takes no pointer
+   input, so a tap lands on the canvas as a hop forward, which closes it. */
+.learn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--u) * 6);
+  background: color-mix(in srgb, var(--c-ink) 45%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+.learn[hidden] { display: none; }
+.learn-card {
+  width: 100%;
+  max-width: calc(var(--u) * 86);
+  padding: calc(var(--u) * 5) calc(var(--u) * 6) calc(var(--u) * 5);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  border: 2px solid var(--c-ink);
+  border-radius: 10px;
+  box-shadow: 0 var(--edge) 0 var(--c-ink);
+}
+.learn-kicker {
+  margin: 0 0 calc(var(--u) * 2);
+  font: 600 max(13px, calc(var(--u) * 3.4)) / 1 var(--f-mono);
+  color: var(--c-brand);
+}
+.learn-head { display: flex; align-items: center; gap: calc(var(--u) * 3); }
+.learn-icon {
+  flex: none;
+  width: calc(var(--u) * 12);
+  height: calc(var(--u) * 12);
+  display: grid;
+  place-items: center;
+  background: var(--c-brand);
+  border: 2px solid var(--c-ink);
+  border-radius: 8px;
+  color: var(--c-paper);
+}
+.learn-icon svg { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.learn-name { margin: 0; font: 800 max(24px, calc(var(--u) * 7)) / 1.05 var(--f-display); }
+.learn-tagline { margin: calc(var(--u) * 2) 0 calc(var(--u) * 3); font: 800 max(16px, calc(var(--u) * 4.2)) / 1.25 var(--f-display); color: var(--c-ink-soft); }
+.learn-label {
+  margin: calc(var(--u) * 3) 0 calc(var(--u) * 1);
+  font: 600 max(13px, calc(var(--u) * 3.4)) / 1 var(--f-mono);
+  color: var(--c-ink-soft);
+}
+.learn-text { margin: 0; font: 400 max(16px, calc(var(--u) * 4.2)) / 1.4 var(--f-ui); text-wrap: pretty; }
+.learn-go {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2);
+  margin: calc(var(--u) * 5) 0 0;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 3);
+  background: var(--c-ink);
+  color: var(--c-paper);
+  border-radius: 6px;
+  font: 800 max(15px, calc(var(--u) * 3.8)) / 1.2 var(--f-display);
+}
+.learn-go svg { flex: none; width: calc(var(--u) * 5); height: calc(var(--u) * 5); fill: none; stroke: var(--c-highlighter); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
 /* Feature card on pickup: sits low so the lanes ahead stay clear. */
 .feature-toast {
   position: absolute;

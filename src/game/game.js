@@ -11,6 +11,7 @@ import { createFx } from './fx.js';
 import { load, save } from '../core/storage.js';
 import { createAutopilot } from './autopilot.js';
 import { dateKey, dailySeed } from './daily.js';
+import { DIR } from '../core/input.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -25,7 +26,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
   const events = quiet(listeners);
   const sfx = quiet(sounds);
   const game = {
-    state: 'title', // title, demo, playing, paused, dying, over
+    state: 'title', // title, demo, playing, paused, learn, dying, over
     mode: 'free',      // free or daily
     demo: false,       // true while the title screen attract loop plays
     demoRuns: 0,       // attract loop runs finished, for tests
@@ -49,6 +50,8 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     seed: 0,
     hintsShown: new Set(),
     stats: { highlights: 0 },
+    learned: new Set(), // power-ups explained this run
+    learnT: 0,
     active: [],        // timed power-ups: { mod, t, max }
     held: [],          // held power-ups, like AI Chat
     used: [],          // feature ids used this run, in order, for the game over recap
@@ -120,6 +123,8 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     game.active.length = 0;
     game.held.length = 0;
     game.used.length = 0;
+    game.learned.clear();
+    game.learnT = 0;
     game.auto = null;
     game.lastSafeRow = game.startRow;
     game.hintsShown.clear();
@@ -137,7 +142,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     input.setEnabled(true);
     events.state(game);
     // Debug: ?powerup=<id> grants one at the start.
-    if (mode === 'free' && params.powerup && POWERUP_BY_ID[params.powerup]) grantPowerup(POWERUP_BY_ID[params.powerup]);
+    if (mode === 'free' && params.powerup && POWERUP_BY_ID[params.powerup]) grantPowerup(POWERUP_BY_ID[params.powerup], false);
   };
 
   // Attract loop: the autopilot plays behind the title screen, loses, and starts over.
@@ -171,11 +176,36 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     if (!game.used.includes(featureId)) game.used.push(featureId);
   };
 
-  function grantPowerup(mod) {
+  // The first pickup of each power-up in a run stops play and explains it
+  // (state 'learn'). Hopping forward closes it. Later pickups show the card.
+  function grantPowerup(mod, teach = true) {
     game.markUsed(mod.featureId);
     sfx.powerup();
-    events.powerup(mod);
+    const first = !game.learned.has(mod.id);
+    game.learned.add(mod.id);
     mod.apply(game);
+    if (teach && first && !game.demo && game.state === 'playing') {
+      game.state = 'learn';
+      game.learnT = 0;
+      input.clear();
+      events.learn(mod);
+      events.state(game);
+    } else {
+      events.powerup(mod);
+    }
+  }
+
+  game.grantPowerup = grantPowerup;
+
+  // Ignore input for a moment so a buffered hop does not close it unread.
+  const LEARN_MIN = 0.4;
+  function updateLearn(dt) {
+    game.learnT += dt;
+    const dir = input.next();
+    if (game.learnT < LEARN_MIN || dir !== DIR.up) return;
+    input.clear();
+    game.state = 'playing';
+    events.state(game);
   }
 
   // Summary: hop forward n lanes, then on to the next safe lane.
@@ -412,6 +442,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
       return;
     }
     if (game.state === 'paused') return;
+    if (game.state === 'learn') { updateLearn(dt); return; }
 
     game.time += dt;
     if (game.shake > 0) game.shake = Math.max(0, game.shake - dt);

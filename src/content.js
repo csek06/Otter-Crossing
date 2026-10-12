@@ -184,6 +184,26 @@ export const CONTENT = {
   },
 
   // Messages shown when a power-up does its job.
+  // What each power-up does in the game, for the first-pickup explainer. The
+  // "At work" half of that explainer is the feature description above.
+  powers: {
+    draft: true,
+    notetaker: 'Shields you from one hit for 12 seconds.',
+    aiChat: 'Saves you once. If you get caught, you pop back on the last safe lane.',
+    summary: 'Hops you 5 lanes ahead to a safe spot.',
+    actionItems: 'Pulls nearby action items to you for 6 seconds.',
+    liveAssist: 'Lights a safe path through the next 4 lanes for 4 seconds.',
+    workMode: 'Starts a Work run. Cross 8 new lanes and it pulls in the action items ahead, plus 3 for the follow-up doc.',
+  },
+  learn: {
+    draft: true,
+    newPower: 'New power-up',
+    inGame: 'In the game',
+    atWork: 'At work',
+    keys: 'Press up or W to keep going',
+    touch: 'Tap or swipe up to keep going',
+  },
+
   powerupMessages: {
     draft: true,
     notetakerSaved: 'Otter Notetaker took that one for you.',

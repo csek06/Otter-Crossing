@@ -117,8 +117,8 @@ All on-screen text is in `src/content.js`: feature names, taglines, descriptions
 
 ## Brand
 
-- **Colors:** seven CSS variables at the top of `src/styles.css`, including `--c-water` for the river. `--c-brand` is `#1D25E2`, the blue otter.ai uses for links. Confirm it with brand before launch. The game art reads these variables too, so one change updates menus and canvas.
-- **Logo:** the Otter logo mark from the otter.ai site header is inlined in `<div class="logo-slot">` in `src/index.html`. It uses `currentColor`, so it takes the ink color. Confirm usage with brand before launch. To swap it, replace the SVG in that slot.
+- **Colors:** eight CSS variables at the top of `src/styles.css`, including `--c-water` for the river and `--c-logo` for the logo. `--c-brand` is `#1D25E2`, the blue otter.ai uses for links. Confirm it with brand before launch. The game art reads these variables too, so one change updates menus and canvas.
+- **Logo:** the Otter logo mark from the otter.ai site header is inlined in `<div class="logo-slot">` in `src/index.html`. It uses `currentColor` and is drawn in `--c-logo` (#144FFF, the logo blue from the otter.ai media kit). The power-up explainer's "Inside Otter" label reuses the same mark. Confirm usage with brand before launch. To swap it, replace the SVG in that slot.
 - **Fonts:** Overpass ExtraBold (display) and Overpass Mono (numbers, the river), both SIL Open Font License 1.1, inlined as base64 at build time from `@fontsource`. Body text uses the system font.
 
 ## Add a lane type

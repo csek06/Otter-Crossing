@@ -44,6 +44,9 @@ export function createScreens(handlers, { wardrobe, booth = false } = {}) {
     const s = lookup(e.dataset.copyLabel);
     if (typeof s === 'string') e.setAttribute('aria-label', s);
   });
+  // One copy of the logo mark in the page; the explainer borrows it.
+  const mark = document.querySelector('.logo-slot svg');
+  if (mark) document.querySelectorAll('.learn-logo').forEach((e) => e.appendChild(mark.cloneNode(true)));
   const list = $('howto-list');
   for (const line of CONTENT.howTo.lines) list.appendChild(el('li', null, line));
   const tryBtn = $('btn-try');

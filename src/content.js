@@ -185,7 +185,7 @@ export const CONTENT = {
 
   // Messages shown when a power-up does its job.
   // What each power-up does in the game, for the first-pickup explainer. The
-  // "At work" half of that explainer is the feature description above.
+  // "Inside Otter" half of that explainer is the feature description above.
   powers: {
     draft: true,
     notetaker: 'Shields you from one hit for 12 seconds.',
@@ -199,7 +199,7 @@ export const CONTENT = {
     draft: true,
     newPower: 'New power-up',
     inGame: 'In the game',
-    atWork: 'At work',
+    insideOtter: 'Inside Otter',
     keys: 'Press up or W to keep going',
     touch: 'Tap or swipe up to keep going',
   },

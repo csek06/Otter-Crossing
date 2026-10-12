@@ -40,7 +40,7 @@ export function buildCopyReview() {
     box('**Action Items casing.** The help center calls the feature "Action Items," so the feature name now uses that casing. Generic counts in the game UI (the HUD and game over stats) stay sentence case.'),
     box('**Try Otter link** has no campaign tracking. Add UTM parameters if marketing wants booth and webinar traffic attributed.'),
     box('**Booth consent text and privacy link** are placeholders for Legal (`booth.consent`, `booth.privacyUrl`). They only show when `BOOTH_MODE` is true.'),
-    box('**Logo and brand blue** come from the otter.ai site header and link color. Confirm with brand before launch.'),
+    box('**Logo and brand blue.** The logo mark comes from the otter.ai site header and is now drawn in #144FFF, the logo blue in the otter.ai media kit (blue-horizontal.svg). The UI brand blue (#1D25E2) is still the otter.ai link color. Confirm both with brand before launch.'),
     '',
   );
 

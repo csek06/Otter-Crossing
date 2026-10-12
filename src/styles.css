@@ -9,6 +9,7 @@
   --c-highlighter: #FFE14D;
   --c-red: #E5484D;
   --c-water: #1F5FA8; /* the river */
+  --c-logo: #144FFF; /* the logo blue, from the otter.ai media kit (blue-horizontal.svg) */
 
   --c-paper-dark: color-mix(in srgb, var(--c-paper) 90%, var(--c-ink));
   --c-ink-soft: color-mix(in srgb, var(--c-ink) 70%, var(--c-paper));
@@ -159,7 +160,7 @@ canvas {
   border-radius: 6px;
   opacity: 1;
 }
-.logo-slot svg { display: block; width: calc(var(--u) * 20); height: auto; color: var(--c-ink); }
+.logo-slot svg { display: block; width: calc(var(--u) * 20); height: auto; color: var(--c-logo); }
 
 .sign {
   display: flex;
@@ -501,7 +502,10 @@ canvas {
 }
 .learn-label svg { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .learn-game .learn-label { background: var(--c-highlighter); color: var(--c-ink); }
-.learn-work .learn-label { background: var(--c-brand); color: var(--c-paper); }
+/* Inside Otter: paper chip so the logo can stay blue. */
+.learn-work .learn-label { background: var(--c-paper); color: var(--c-brand); border-color: var(--c-brand); }
+.learn-logo { display: inline-flex; }
+.learn-logo svg { width: 2.6em; height: 1em; color: var(--c-logo); }
 .learn-text { margin: 0; font: 400 max(16px, calc(var(--u) * 4.2)) / 1.4 var(--f-ui); text-wrap: pretty; }
 .learn-go {
   display: flex;

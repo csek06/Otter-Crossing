@@ -333,6 +333,15 @@ canvas {
   font: 800 calc(var(--u) * 10) / 1 var(--f-display);
   font-variant-numeric: tabular-nums;
 }
+.recap-count {
+  display: inline-block;
+  margin-left: 0.3em;
+  padding: 0.1em 0.4em 0;
+  background: var(--c-ink);
+  color: var(--c-highlighter);
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+}
 .over-newbest {
   margin: 0;
   font: 600 calc(var(--u) * 3.8) / 1 var(--f-mono);
@@ -433,11 +442,11 @@ canvas {
   flex-direction: column;
   justify-content: center;
   gap: clamp(8px, 1.6vh, 18px);
-  overflow: hidden;
+  overflow: visible;
   pointer-events: none;
   --fs: clamp(12px, 1.45vh, 16px);
 }
-.stage.sides .side { display: flex; }
+.stage.sides.in-run .side { display: flex; }
 .side.fit-1 .side-tagline { display: none; }
 .side.fit-2 .side-card .learn-label { display: none; }
 .side.fit-2 .side-card .learn-part { margin-top: calc(var(--fs) * 0.4); }
@@ -492,22 +501,42 @@ canvas {
   transform-origin: left center;
   background: var(--c-highlighter);
 }
-/* Not found yet, or used up: gray but still readable. */
-.side-card.is-off, .side-card.is-used { filter: grayscale(1); opacity: 0.66; box-shadow: none; }
-.side-card.is-used .side-badge { text-decoration: line-through; }
-/* Held (ready to use): full color with a steady outline. */
-.side-card.is-held { outline: 3px solid var(--c-highlighter); outline-offset: 2px; }
-.side-card.is-held .side-badge { color: var(--c-ink); font-weight: 800; }
-/* Active: brand blue edge and a soft glow that breathes every 1.6 seconds. */
+/* Pickup counter: a big count on the right of the card's head. It pops when it
+   goes up (off with reduced motion). */
+.side-count {
+  margin: 0 0 0 auto;
+  padding: calc(var(--fs) * 0.2) calc(var(--fs) * 0.55) calc(var(--fs) * 0.05);
+  background: var(--c-ink);
+  color: var(--c-highlighter);
+  border-radius: 8px;
+  font: 800 calc(var(--fs) * 1.7) / 1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+.side-count.bump { animation: count-bump 0.45s ease-out; }
+@keyframes count-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+/* Not found yet: gray but still readable. Once collected a card stays in full
+   color for the rest of the run; only an active power-up glows. */
+.side-card.is-off { filter: grayscale(1); opacity: 0.66; box-shadow: none; }
+.side-card.is-held .side-badge, .side-card.is-got .side-badge, .side-card.is-used .side-badge { color: var(--c-ink); font-weight: 800; }
+/* Active: scaled up, brand blue frame, a tinted face and a strong glow that
+   breathes every 1.2 seconds (well under 3 flashes a second). */
 .side-card.is-active {
-  border-color: var(--c-brand);
-  box-shadow: 0 0 0 3px var(--c-brand), 0 0 28px 6px color-mix(in srgb, var(--c-brand) 70%, transparent);
-  animation: side-glow 1.6s ease-in-out infinite;
+  z-index: 1;
+  transform: scale(1.04);
+  border: 3px solid var(--c-brand);
+  background: color-mix(in srgb, var(--c-brand) 10%, var(--c-paper));
+  box-shadow: 0 0 0 4px var(--c-highlighter), 0 0 30px 10px color-mix(in srgb, var(--c-brand) 80%, transparent);
+  animation: side-glow 1.2s ease-in-out infinite;
 }
 .side-card.is-active .side-badge { color: var(--c-brand); font-weight: 800; }
+.side-card.is-active .side-icon { box-shadow: 0 0 14px 4px color-mix(in srgb, var(--c-highlighter) 80%, transparent); }
 @keyframes side-glow {
-  0%, 100% { box-shadow: 0 0 0 3px var(--c-brand), 0 0 18px 4px color-mix(in srgb, var(--c-brand) 55%, transparent); }
-  50% { box-shadow: 0 0 0 3px var(--c-brand), 0 0 36px 10px color-mix(in srgb, var(--c-brand) 80%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 4px var(--c-highlighter), 0 0 22px 6px color-mix(in srgb, var(--c-brand) 65%, transparent); }
+  50% { box-shadow: 0 0 0 4px var(--c-highlighter), 0 0 48px 18px color-mix(in srgb, var(--c-brand) 95%, transparent); }
 }
 
 /* HUD power-up tracker: a second row under the score with one slot per power-up
@@ -534,6 +563,7 @@ canvas {
 .hud-power .ring { position: absolute; inset: -2px; width: calc(100% + 4px); height: calc(100% + 4px); transform: rotate(-90deg); }
 .hud-power .ring-bg { fill: none; stroke: var(--c-paper-dark); stroke-width: 4; }
 .hud-power .ring-fg { fill: none; stroke: var(--c-brand); stroke-width: 4; stroke-linecap: round; }
+.hud-power.is-got .ring { display: none; }
 .hud-power.is-off, .hud-power.is-used { border-style: dashed; border-color: var(--c-ink-soft); }
 .hud-power.is-off .ring, .hud-power.is-used .ring { display: none; }
 .hud-power.is-off .hud-power-icon { color: var(--c-ink-soft); opacity: 0.6; }
@@ -891,6 +921,7 @@ canvas {
   .btn, .toast, .feature-toast { transition: none; }
   .hud-power.is-active { animation: none; }
   .side-card.is-active { animation: none; }
+  .side-count.bump { animation: none; }
   .side-card { transition: none; }
 }
 

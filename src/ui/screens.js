@@ -8,6 +8,7 @@ import { isMuted, setMuted, isMusicOn, setMusicOn } from '../core/audio.js';
 import { iconSvg } from '../render/icons.js';
 import { topScores, qualifies, addScore, lastInitials, clearScores } from '../game/leaderboard.js';
 import { OUTFITS } from '../game/wardrobe.js';
+import { POWERUPS } from '../powerups/registry.js';
 import { shareText, dateKey } from '../game/daily.js';
 import { signups, addSignup, clearSignups, toCsv, validEmail } from '../game/booth.js';
 import { drawOtter } from '../render/otter.js';
@@ -622,7 +623,10 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
     titles.appendChild(el('h3', 'side-name', f.name));
     card.badge = el('p', 'side-badge', C.powerBadge.off);
     titles.appendChild(card.badge);
-    head.append(icon, titles);
+    // Pickups this run. Hidden until the first one.
+    card.count = el('p', 'side-count');
+    card.count.hidden = true;
+    head.append(icon, titles, card.count);
     card.appendChild(head);
     card.appendChild(el('p', 'side-tagline', f.tagline));
     const game = el('div', 'learn-part learn-game');
@@ -655,7 +659,7 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
       }
     }
   }
-  window.addEventListener('resize', fitSides);
+  window.addEventListener('resize', () => fitSides());
   function sides(items) {
     if (sideCards.size !== items.length) {
       for (const e of sideEls) e.textContent = '';
@@ -675,6 +679,20 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
         card.state = it.state;
         card.className = `side-card is-${it.state}`;
         card.badge.textContent = C.powerBadge[it.state];
+      }
+      const n = it.n || 0;
+      if (card.n !== n) {
+        const up = card.n != null && n > card.n;
+        card.n = n;
+        card.count.hidden = n === 0;
+        card.count.textContent = fmt(C.pickCount, { n });
+        card.count.setAttribute('aria-label', fmt(C.pickCountLabel, { n }));
+        if (up) {
+          // Restart the bump animation for the new pickup.
+          card.count.classList.remove('bump');
+          void card.count.offsetWidth;
+          card.count.classList.add('bump');
+        }
       }
       const k = it.state === 'active' ? Math.max(0, Math.min(1, it.k)) : 0;
       if (card.k !== k) {
@@ -756,6 +774,7 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
       $('learn').hidden = true;
     },
     sides,
+    fitSides,
     // items: [{ id, featureId, state: off | active | held | used, k (0 to 1 remaining) }]
     powers(items) {
       const seen = new Set();
@@ -851,7 +870,19 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
         form.hidden = true;
       }
 
-      // Features you used, each with its description and a Learn more link.
+      // Power-ups collected, in total and by feature below.
+      const byFeature = {};
+      let picked = 0;
+      for (const m of POWERUPS) {
+        const n = game.picked[m.id] || 0;
+        if (!n) continue;
+        byFeature[m.featureId] = (byFeature[m.featureId] || 0) + n;
+        picked += n;
+      }
+      byFeature.highlights = game.stats.highlights; // logs ridden
+      $('over-picked').textContent = String(picked);
+
+      // Features you used, each with how many times, its description and a Learn more link.
       const ul = $('recap-list');
       ul.textContent = '';
       for (const id of game.used) {
@@ -861,7 +892,14 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
         const icon = el('span', 'recap-icon');
         icon.innerHTML = iconSvg(id);
         const body = el('div', 'recap-body');
-        body.appendChild(el('strong', 'recap-name', f.name));
+        const name = el('strong', 'recap-name', f.name);
+        const n = byFeature[id] || 0;
+        if (n > 0) {
+          const count = el('span', 'recap-count', fmt(C.pickCount, { n }));
+          count.setAttribute('aria-label', fmt(id === 'highlights' ? C.rideCountLabel : C.pickCountLabel, { n }));
+          name.append(' ', count);
+        }
+        body.appendChild(name);
         body.appendChild(el('p', 'recap-desc', f.description));
         const a = el('a', 'recap-link', C.learnMore);
         a.href = f.helpUrl;

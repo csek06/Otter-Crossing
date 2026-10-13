@@ -1044,21 +1044,32 @@ for (const size of [SIZES[1], SIZES[3], { name: 'desktop-1920x1080', width: 1920
   check(wide ? drawer.width < size.width * 0.7 : Math.abs(drawer.width - size.width) <= 1, `full screen ${size.name}: title drawer ${wide ? 'sits over the playfield' : 'spans the screen'} (${Math.round(drawer.width)})`);
   const panels = () => page.evaluate(() => ({
     shown: getComputedStyle(document.getElementById('side-left')).display !== 'none',
-    cards: [...document.querySelectorAll('.side-card')].map((c) => c.dataset.id + ':' + c.className.replace(/.*is-/, '')),
+    cards: [...document.querySelectorAll('.side-card')].map((c) => c.dataset.id + ':' + c.className.replace(/.*is-/, '') + ':' + (c.querySelector('.side-count').hidden ? 0 : c.querySelector('.side-count').textContent)),
     fits: [...document.querySelectorAll('.side')].every((e) => e.scrollHeight <= e.clientHeight + 1),
   }));
   const before = await panels();
-  check(before.shown === wide && before.cards.length >= 4 && before.cards.every((c) => c.endsWith(':off')), `full screen ${size.name}: power-up panels ${wide ? 'beside the playfield, all grayed out' : 'hidden'} (${before.cards.length})`);
+  check(!before.shown && before.cards.length >= 4, `full screen ${size.name}: no power-up panels on the title (${before.cards.length} cards)`);
   if (wide) {
-    check(before.fits, `full screen ${size.name}: the panels fit the window`);
     await page.click('#btn-play');
     await wait(page, 500);
     const during = await panels();
-    check(during.cards.includes('liveAssist:active') && during.cards.filter((c) => c.endsWith(':off')).length === during.cards.length - 1, `full screen ${size.name}: the active power-up lights up (${during.cards.join(' ')})`);
+    check(during.shown && during.fits, `full screen ${size.name}: power-up panels beside the playfield during a run, and they fit`);
+    check(during.cards.includes('liveAssist:active:×1') && during.cards.filter((c) => c.endsWith(':off:0')).length === during.cards.length - 1, `full screen ${size.name}: the active power-up glows with its count, the rest are grayed out (${during.cards.join(' ')})`);
+    await page.evaluate(() => { window.__otter.game.picked.liveAssist = 2; });
+    await wait(page, 150);
+    const bumped = await page.evaluate(() => { const c = document.querySelector('.side-card[data-id="liveAssist"] .side-count'); return c.textContent + ':' + c.classList.contains('bump'); });
+    check(bumped === '×2:true', `full screen ${size.name}: another pickup bumps the counter (${bumped})`);
+    await page.evaluate(() => { window.__otter.game.picked.liveAssist = 1; });
     const hudBox = await page.locator('#hud').boundingBox();
     const side = await page.locator('#side-left').boundingBox();
     check(hudBox.x >= side.x + side.width - 1, `full screen ${size.name}: the HUD stays clear of the panels`);
     await page.screenshot({ path: join(shots, `wide-${size.name}.png`) });
+    await page.evaluate(() => { const g = window.__otter.game; g.maxRow = g.startRow + 3; g.score = 3; g.kill('meeting', null); });
+    await wait(page, 1300);
+    const after = await panels();
+    check(after.shown && after.cards.includes('liveAssist:got:×1') && !after.cards.some((c) => c.includes(':active:')), `full screen ${size.name}: on game over the panels stay, collected but no longer glowing`);
+    check((await page.textContent('#over-picked')) === '1' && /×1/.test(await page.textContent('#recap-list')), `full screen ${size.name}: game over counts the power-ups collected`);
+    await page.screenshot({ path: join(shots, `wide-over-${size.name}.png`) });
   }
   check(errors.length === 0, `full screen ${size.name}: no console errors ${errors.join(' | ')}`);
   await ctx.close();

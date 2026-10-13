@@ -199,13 +199,17 @@ game.startDemo();
 
 // HUD power-up tracker: one slot for every power-up this run can spawn, showing
 // whether it is waiting to be found, active (with time left), held, or used up.
+// n counts this run's pickups, for the desktop panels. Once the run is over
+// nothing shows as active.
 const trackerMods = spawnable();
-const trackerItems = trackerMods.map((m) => ({ id: m.id, featureId: m.featureId, state: 'off', k: 0 }));
+const trackerItems = trackerMods.map((m) => ({ id: m.id, featureId: m.featureId, state: 'off', k: 0, n: 0 }));
 function updatePowerChips() {
+  const live = game.state !== 'over';
   for (let i = 0; i < trackerMods.length; i++) {
     const m = trackerMods[i];
     const it = trackerItems[i];
-    const e = game.active.find((a) => a.mod === m);
+    it.n = game.picked[m.id] || 0;
+    const e = live && game.active.find((a) => a.mod === m);
     if (e) {
       it.state = 'active';
       it.k = e.max ? e.t / e.max : 1;
@@ -213,22 +217,25 @@ function updatePowerChips() {
       it.state = 'held';
       it.k = 1;
     } else {
-      it.state = m.oncePerRun && game.used.includes(m.featureId) ? 'used' : 'off';
+      it.state = m.oncePerRun && game.used.includes(m.featureId) ? 'used' : it.n > 0 ? 'got' : 'off';
       it.k = 0;
     }
   }
   screens.powers(trackerItems);
   screens.sides(trackerItems);
 }
-// Between runs the desktop panels go back to all "not found yet".
+// Between runs the desktop panels go back to all "not found yet" (and are
+// hidden on the title; see the in-run class below).
 function resetSides() {
   for (const it of trackerItems) {
     it.state = 'off';
     it.k = 0;
+    it.n = 0;
   }
   screens.sides(trackerItems);
 }
 resetSides();
+let lastState = null;
 
 // Main loop. Large frame gaps are split into small steps so collisions stay fair.
 let last = performance.now();
@@ -248,7 +255,15 @@ function frame(now) {
     updatePowerChips();
     screens.hawk(game);
   } else if (game.state === 'title' || game.state === 'demo') {
-    if (trackerItems.some((it) => it.state !== 'off')) resetSides();
+    if (trackerItems.some((it) => it.state !== 'off' || it.n)) resetSides();
+  }
+  if (game.state !== lastState) {
+    lastState = game.state;
+    // The panels belong to a run: shown while playing, paused and on game
+    // over, never on the title.
+    stage.el.classList.toggle('in-run', game.state !== 'title' && game.state !== 'demo');
+    if (game.state === 'over') updatePowerChips();
+    screens.fitSides();
   }
   requestAnimationFrame(frame);
 }

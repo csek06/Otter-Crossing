@@ -51,6 +51,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     seed: 0,
     hintsShown: new Set(),
     stats: { highlights: 0 },
+    picked: {},        // power-up pickups this run, by power-up id
     learned: new Set(), // power-ups explained this run
     learnT: 0,
     active: [],        // timed power-ups: { mod, t, max }
@@ -131,6 +132,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     game.hawk.swoopT = -1;
     resetAlarm();
     game.stats.highlights = 0;
+    game.picked = {};
     game.active.length = 0;
     game.held.length = 0;
     game.used.length = 0;
@@ -191,6 +193,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
   // (state 'learn'). Hopping forward closes it. Later pickups show the card.
   function grantPowerup(mod, teach = true) {
     game.markUsed(mod.featureId);
+    game.picked[mod.id] = (game.picked[mod.id] || 0) + 1;
     sfx.powerup();
     const first = !game.learned.has(mod.id);
     game.learned.add(mod.id);

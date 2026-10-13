@@ -50,9 +50,14 @@ export const CONTENT = {
     powerPanels: 'Power-ups and the Otter features behind them',
     // The HUD countdown to the Deadline Hawk. {n} is whole seconds left.
     hawkTimer: 'Seconds until the hawk strikes: {n}. Hop forward to reset it.',
-    powerState: { off: 'not found yet', active: 'active', held: 'ready', used: 'used' },
+    powerState: { off: 'not found yet', got: 'collected', active: 'active', held: 'ready', used: 'used' },
     // Badges on the desktop power-up panels.
-    powerBadge: { off: 'Not found yet', active: 'Active', held: 'Ready', used: 'Used this run' },
+    powerBadge: { off: 'Not found yet', got: 'Collected', active: 'Active', held: 'Ready', used: 'Used this run' },
+    // The pickup counter on each panel card, and the game over count. {n} is a number.
+    pickCount: '×{n}',
+    pickCountLabel: 'Collected {n} times this run',
+    rideCountLabel: 'Rode {n} highlighted logs this run',
+    powerupsShort: 'Power-ups',
     itemsShort: 'items',
     daily: 'Daily',
     outfits: 'Outfits',

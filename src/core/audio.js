@@ -121,6 +121,12 @@ export const sfx = {
     tone({ type: 'square', from: f, to: f, time: 0.08, gain: 0.06 + 0.06 * k });
     tone({ type: 'sine', from: 140, to: 90, time: 0.12, gain: 0.12 + 0.08 * k });
   },
+  // A crocodile bite: a low snap with a crunch.
+  chomp: () => {
+    noise({ time: 0.09, gain: 0.4, freq: 2400 });
+    tone({ type: 'square', from: 220, to: 70, time: 0.18, gain: 0.18 });
+    noise({ time: 0.3, gain: 0.25, freq: 500, type: 'lowpass', delay: 0.08 });
+  },
   screech: () => {
     tone({ type: 'sawtooth', from: 1800, to: 900, time: 0.45, gain: 0.1 });
     tone({ type: 'square', from: 2400, to: 1300, time: 0.35, gain: 0.05, delay: 0.03 });

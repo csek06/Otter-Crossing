@@ -266,6 +266,45 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
+// Crocodiles: the back rides like a log, landing on the head is a bite.
+{
+  const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=river&start=40&seed=4');
+  await page.click('#btn-play');
+  await wait(page, 200);
+  const found = await page.evaluate(async () => {
+    const g = window.__otter.game;
+    g.debug.invincible = true;
+    const lane = g.lanes.filter((l) => l.crocs && l.row > g.player.row).sort((a, b) => a.row - b.row)[0];
+    if (!lane) return false;
+    const c = lane.platforms.find((q) => q.croc);
+    // Wait for the crocodile to swim into the middle of the river.
+    for (let i = 0; i < 400; i++) {
+      const [a, b] = lane.mod.headSpan(lane, c);
+      const l0 = lane.mod.left(lane, c);
+      if (Math.min(a, l0) > 0.5 && Math.max(b, l0 + c.len) < 7.5) break;
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    const p = g.player;
+    p.row = p.toRow = lane.row; g.maxRow = lane.row;
+    p.x = p.toX = window.__otter.game.getLane(lane.row).mod.left(lane, c) + c.len / 2 - 0.5;
+    await new Promise((r) => setTimeout(r, 250));
+    const riding = p.riding === c && g.state === 'playing';
+    g.debug.invincible = false;
+    const [a, b] = lane.mod.headSpan(lane, c);
+    p.x = p.toX = (a + b) / 2 - 0.5; p.land = 0.08; p.swim = -1;
+    return { riding };
+  });
+  check(found && found.riding, 'crocodile: its back carries the otter like a log');
+  await wait(page, 60);
+  await page.screenshot({ path: join(shots, 'river-croc-bite.png') });
+  await wait(page, 1500);
+  const s = await state(page);
+  check(s.cause === 'croc', `crocodile: landing on the head is a bite (cause ${s.cause})`);
+  check((await page.textContent('#over-cause')) === 'Snapped up by a crocodile', 'crocodile death message');
+  check(errors.length === 0, `crocodile run: no console errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 // All-hands express: the signal fires at least 1 second before the train hits.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=allhands&start=40&seed=8');
@@ -1122,16 +1161,18 @@ for (const size of [SIZES[1], SIZES[3], { name: 'desktop-1920x1080', width: 1920
   await page.evaluate(() => { window.__otter.game.actionItems = 7; window.__otter.game.kill('meeting', null); });
   await wait(page, 1100);
   check((await page.textContent('#over-wallet')).includes('7'), 'outfits: a run adds its action items to the wallet');
-  await page.evaluate(() => { localStorage.setItem('otterCrossing.wallet', '200'); });
+  await page.evaluate(() => { localStorage.setItem('otterCrossing.wallet', '2500'); });
   await page.reload();
   await wait(page, 400);
   await page.click('#btn-outfits');
   await page.screenshot({ path: join(shots, 'outfits-shop.png') });
-  for (const id of ['sales', 'cs', 'recruiting', 'education']) await page.click(`[data-outfit="${id}"]`);
+  const BUY = ['sales', 'pumpkin', 'cs', 'witch', 'recruiting', 'vampire', 'education', 'mummy', 'ghost'];
+  check((await page.$$('.outfit-tag')).length === 5, 'outfits: the five Halloween costumes are tagged');
+  for (const id of BUY) await page.click(`[data-outfit="${id}"]`);
   const w = await page.evaluate(() => ({ wallet: window.__otter.wardrobe.wallet(), wearing: window.__otter.game.outfit }));
-  check(w.wallet === 200 - 140 && w.wearing === 'education', `outfits: buying spends items and puts it on (${w.wallet}, ${w.wearing})`);
+  check(w.wallet === 2500 - 2225 && w.wearing === 'ghost', `outfits: buying spends items and puts it on (${w.wallet}, ${w.wearing})`);
   await page.screenshot({ path: join(shots, 'outfits-owned.png') });
-  for (const id of ['classic', 'sales', 'cs', 'recruiting', 'education']) {
+  for (const id of ['classic', ...BUY]) {
     await page.click(`[data-outfit="${id}"]`);
     await page.click('#btn-outfits-back');
     await page.click('#btn-play');
@@ -1148,7 +1189,7 @@ for (const size of [SIZES[1], SIZES[3], { name: 'desktop-1920x1080', width: 1920
   }
   await page.reload();
   await wait(page, 300);
-  check(await page.evaluate(() => window.__otter.game.outfit === 'education'), 'outfits: the choice persists');
+  check(await page.evaluate(() => window.__otter.game.outfit === 'ghost'), 'outfits: the choice persists');
   check(errors.length === 0, `outfits: no console errors ${errors.join(' | ')}`);
   await ctx.close();
 }

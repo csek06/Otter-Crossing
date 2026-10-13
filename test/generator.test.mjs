@@ -12,7 +12,7 @@ import { CONTENT } from '../src/content.js';
 import { createGenerator, newLane, maxHazardRun, difficultyAt } from '../src/game/generator.js';
 import { meetingCap, bigGapFor } from '../src/lanes/meetings.js';
 import { spread, bitCount } from '../src/lanes/focus.js';
-import { river } from '../src/lanes/river.js';
+import { river, CROC } from '../src/lanes/river.js';
 import { allhands } from '../src/lanes/allhands.js';
 import { POWERUPS, POWERUP_BY_ID, spawnable } from '../src/powerups/registry.js';
 
@@ -490,6 +490,77 @@ test('meeting titles are short enough to fit their block, with no repeats', () =
       assert.ok(list.length >= (aud === 'external' ? 25 : 12), `${aud} ${len}: only ${list.length} titles`);
       assert.equal(new Set(list).size, list.length, `${aud} ${len}: repeated title`);
       for (const title of list) assert.ok(title.length <= MAX[len], `${aud} ${len}: "${title}" is longer than ${MAX[len]} characters`);
+    }
+  }
+});
+
+test('river crocodiles: occasional, never early, and the head fits in the water ahead', () => {
+  let lanes = 0;
+  let crocs = 0;
+  for (const run of RUNS) {
+    for (const l of playable(run)) {
+      if (l.type !== 'river') continue;
+      lanes++;
+      const cs = l.platforms.filter((p) => p.croc);
+      assert.ok(cs.length <= 1, `row ${l.row}: ${cs.length} crocodiles`);
+      if (!cs.length) continue;
+      assert.ok(l.row >= CROC.MIN_ROW, `row ${l.row}: crocodile too early`);
+      crocs++;
+      // Run the lane and check the head never overlaps a log.
+      const lane = { ...l, platforms: l.platforms.map((p) => ({ ...p })) };
+      const c = lane.platforms.find((p) => p.croc);
+      for (let i = 0; i < 400; i++) {
+        river.update(lane, 1 / 60);
+        const [a, b] = river.headSpan(lane, c);
+        for (const p of lane.platforms) {
+          if (p === c) continue;
+          const pl = river.left(lane, p);
+          const ring = lane.ring;
+          for (const k of [-ring, 0, ring]) assert.ok(pl + k >= b - EPS || pl + k + p.len <= a + EPS, `row ${l.row}: head overlaps a log`);
+        }
+      }
+    }
+  }
+  const share = crocs / lanes;
+  assert.ok(share > 0.1 && share < 0.6, `crocodiles on ${(share * 100).toFixed(0)}% of river lanes`);
+});
+
+test('river crocodiles: landing on the head bites, the back rides, a swimmer is left alone', () => {
+  const run = RUNS[0];
+  const l = playable(run).find((x) => x.type === 'river' && x.crocs);
+  const lane = { ...l, platforms: l.platforms.map((p) => ({ ...p })) };
+  const c = lane.platforms.find((p) => p.croc);
+  // Let the current bring the crocodile into the middle of the river.
+  for (let i = 0; i < 6000; i++) {
+    const [h0, h1] = river.headSpan(lane, c);
+    const l0 = river.left(lane, c);
+    if (Math.min(h0, l0) > 0.5 && Math.max(h1, l0 + c.len) < GRID.COLS - 1.5) break;
+    river.update(lane, 1 / 60);
+  }
+  const [a, b] = river.headSpan(lane, c);
+  const onHead = { x: (a + b) / 2 - 0.5, swim: -1, land: 0.08, riding: null, bite: null };
+  river.carry(lane, onHead, 1 / 60);
+  const hit = river.collide(lane, onHead);
+  assert.equal(hit && hit.cause, 'croc');
+  assert.equal(hit.plat, c);
+  assert.equal(onHead.bite, null, 'the bite is reported once');
+
+  const back = river.left(lane, c) + c.len / 2 - 0.5;
+  const onBack = { x: back, swim: -1, land: 0.08, riding: null, bite: null };
+  assert.equal(river.carry(lane, onBack, 1 / 60), 'ride');
+  assert.equal(river.collide(lane, onBack), null);
+
+  const swimmer = { x: (a + b) / 2 - 0.5, swim: 0.2, land: 0, riding: null, bite: null };
+  river.carry(lane, swimmer, 1 / 60);
+  assert.equal(swimmer.bite, null);
+  assert.equal(river.collide(lane, swimmer), null);
+});
+
+test('all-hands express: crosses the playfield in well under half a second', () => {
+  for (const run of RUNS) {
+    for (const l of playable(run)) {
+      if (l.type !== 'allhands') continue;
+      assert.ok(GRID.COLS / l.speed < 0.4, `row ${l.row}: ${(GRID.COLS / l.speed).toFixed(2)}s to cross`);
     }
   }
 });

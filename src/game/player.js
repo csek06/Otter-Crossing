@@ -42,6 +42,7 @@ export function resetPlayer(p, row) {
   p.invuln = 0;
   p.swim = -1;
   p.riding = null;
+  p.bite = null;
 }
 
 export function isHopping(p) {

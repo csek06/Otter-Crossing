@@ -21,7 +21,10 @@ export const allhands = {
   weight: (d, row) => (row < allhands.minRow ? 0 : lerp(0.2, 0.35, d)),
 
   generate(lane, row, d, rng) {
-    lane.speed = lerp(12, 17, d) + rng.range(0, 3);
+    // Crossy Road style: the train is a blur that crosses the screen in about a
+    // third of a second at any difficulty. The signal is the only warning you
+    // get, so its lead time does not shrink.
+    lane.speed = lerp(24, 27, d) + rng.range(0, 3);
     lane.dir = rng.chance(0.5) ? 1 : -1;
     lane.trainLen = rng.int(9, 13);
     lane.warnTime = Math.max(RULES.ALLHANDS_MIN_WARNING + 0.2, lerp(1.7, 1.3, d));

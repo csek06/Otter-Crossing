@@ -91,7 +91,14 @@ export const CONTENT = {
       cs: { name: 'Customer success', line: 'A cozy scarf for every check-in.' },
       recruiting: { name: 'Recruiting', line: 'A badge for interview day.' },
       education: { name: 'Education', line: 'Cap and glasses for office hours.' },
+      pumpkin: { name: 'Pumpkin', line: 'A carved pumpkin hat with a grin.' },
+      witch: { name: 'Witch', line: 'A tall pointed hat with a buckle.' },
+      vampire: { name: 'Vampire', line: 'A high collar cape and tiny fangs.' },
+      mummy: { name: 'Mummy', line: 'Wrapped head to toe. Eyes still on the road.' },
+      ghost: { name: 'Ghost', line: 'A sheet with two eye holes. Boo.' },
     },
+    // A tag on the costumes added for October.
+    seasonTag: 'Halloween',
   },
 
   // Booth mode only (FLAGS.BOOTH_MODE). Consent text and the privacy link wait on Legal.
@@ -287,6 +294,11 @@ export const CONTENT = {
       title: 'Swept away by notes',
       tip: 'Highlights and summaries keep you out of the flood.',
     },
+    croc: {
+      draft: true,
+      title: 'Snapped up by a crocodile',
+      tip: 'Ride the back, never the head. AI Chat can bring you back once a run.',
+    },
     allhands: {
       draft: true,
       title: 'Steamrolled by the all-hands',
@@ -304,6 +316,7 @@ export const CONTENT = {
     draft: true,
     meetings: 'Meetings incoming. Hop through the gaps.',
     river: 'Ride the logs across.',
+    croc: 'Crocodile. Ride its back, stay off its head.',
     allhands: 'Watch for the all-hands signal.',
     hawk: 'Keep moving. The Deadline Hawk is circling.',
   },
@@ -321,6 +334,10 @@ export const CONTENT = {
         title: 'Carried off downstream',
         tip: 'Even otters tire. Reach a log within a second.',
       },
+      croc: {
+        title: 'Snapped up by a crocodile',
+        tip: 'Its back is safe to ride. Its jaws are not.',
+      },
       allhands: {
         title: 'Caught on the goose flyway',
         tip: 'Red lights mean the flock is coming in low.',
@@ -333,6 +350,7 @@ export const CONTENT = {
     hints: {
       meetings: 'Animals on the trail. Hop through the gaps.',
       river: 'Hop across on the floating logs.',
+      croc: 'Crocodile. Ride its back, stay off its head.',
       allhands: 'Red lights mean geese are coming in low.',
       hawk: 'Keep moving. A hawk is circling.',
     },

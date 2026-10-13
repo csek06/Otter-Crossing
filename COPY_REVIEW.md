@@ -79,7 +79,7 @@ Checked against: Action Items Overview (help center): action items are assigned 
 
 ### Highlights
 
-Appears on: river (name, tagline), recap after riding a highlighted log (name, description, link).
+Appears on: river (name, tagline), recap after riding a log (name, description, link).
 
 Checked against: Add highlights to your conversation (help center): highlight during the live recording or after.
 
@@ -119,6 +119,7 @@ The cause is the big heading on the game over screen. The tip below it names the
 
 - [ ] "Pulled into a meeting": "Otter Notetaker could have joined that meeting for you." (`deaths.meeting`)
 - [ ] "Swept away by notes": "Highlights and summaries keep you out of the flood." (`deaths.river`)
+- [ ] "Snapped up by a crocodile": "Ride the back, never the head. AI Chat can bring you back once a run." (`deaths.croc`)
 - [ ] "Steamrolled by the all-hands": "Missed it? AI Chat can catch you up." (`deaths.allhands`)
 - [ ] "The Deadline Hawk": "Summaries and action items save time on follow-up." (`deaths.hawk`)
 
@@ -142,6 +143,7 @@ Shown once, the first time each lane type appears in a run.
 
 - [ ] "Meetings incoming. Hop through the gaps." (`hints.meetings`)
 - [ ] "Ride the logs across." (`hints.river`)
+- [ ] "Crocodile. Ride its back, stay off its head." (`hints.croc`)
 - [ ] "Watch for the all-hands signal." (`hints.allhands`)
 - [ ] "Keep moving. The Deadline Hawk is circling." (`hints.hawk`)
 
@@ -183,6 +185,11 @@ Drawn on the meeting blocks. All fictional. Internal titles only show when `AUDI
 - [ ] Outfit "Customer success": "A cozy scarf for every check-in." (`outfits.items.cs`)
 - [ ] Outfit "Recruiting": "A badge for interview day." (`outfits.items.recruiting`)
 - [ ] Outfit "Education": "Cap and glasses for office hours." (`outfits.items.education`)
+- [ ] Outfit "Pumpkin": "A carved pumpkin hat with a grin." (`outfits.items.pumpkin`)
+- [ ] Outfit "Witch": "A tall pointed hat with a buckle." (`outfits.items.witch`)
+- [ ] Outfit "Vampire": "A high collar cape and tiny fangs." (`outfits.items.vampire`)
+- [ ] Outfit "Mummy": "Wrapped head to toe. Eyes still on the road." (`outfits.items.mummy`)
+- [ ] Outfit "Ghost": "A sheet with two eye holes. Boo." (`outfits.items.ghost`)
 - [ ] "Outfits", "Action items to spend", "Wear", "Wearing", "Buy for {cost}", "Need {more} more"
 
 ## 10. Booth mode

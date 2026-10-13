@@ -230,6 +230,12 @@ export function createRenderer(stage, game, opts) {
       } else if (p.deathCause === 'river') {
         sink = t * 0.2 + p.deathT * t * 0.6;
         alpha = Math.max(0, 1 - p.deathT / 0.8);
+      } else if (p.deathCause === 'croc') {
+        // Caught in the jaws: squashed, then pulled under.
+        sx = 1.15;
+        sy = 0.7;
+        sink = t * 0.1 + p.deathT * t * 0.5;
+        alpha = Math.max(0, 1 - p.deathT / 0.5);
       }
     }
     if (p.invuln > 0 && Math.floor(p.invuln * 6) % 2 === 1) alpha *= 0.4;

@@ -14,6 +14,8 @@ import { signups, addSignup, clearSignups, toCsv, validEmail } from '../game/boo
 import { drawOtter } from '../render/otter.js';
 import { load, save } from '../core/storage.js';
 
+const TALL_OUTFITS = new Set(['witch', 'pumpkin', 'education']);
+
 const $ = (id) => document.getElementById(id);
 const C = CONTENT.game;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -420,7 +422,8 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
     const c = canvas.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, size, size);
-    const t = size * 0.92;
+    // Hats stand tall, so those previews are drawn a little smaller to fit.
+    const t = size * (TALL_OUTFITS.has(id) ? 0.66 : 0.92);
     const v = { tile: t, rowH: t * 0.9, line: Math.max(1, t / 40) };
     drawOtter(c, size / 2, size * 0.9, v, { facing: 'down', lift: 0, sx: 1, sy: 1, alpha: 1, outfit: id });
   }
@@ -437,6 +440,7 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
       cv.setAttribute('aria-hidden', 'true');
       const text = el('div', 'outfit-text');
       text.append(el('strong', 'outfit-name', copy.name), el('p', 'outfit-line', copy.line));
+      if (o.season) text.prepend(el('span', 'outfit-tag', O.seasonTag));
       const btn = el('button', 'btn');
       btn.type = 'button';
       btn.dataset.outfit = o.id;

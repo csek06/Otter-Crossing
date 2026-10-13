@@ -86,6 +86,18 @@ export function loadPalette() {
   PAL.goose = mix(PAL.ink, PAL.paper, 0.55);
   PAL.beak = mix(PAL.highlighter, PAL.red, 0.35);
   PAL.berry = PAL.red;
+  // River crocodiles.
+  PAL.croc = mix(PAL.grass, PAL.ink, 0.38);
+  PAL.crocDark = mix(PAL.croc, PAL.ink, 0.38);
+  PAL.crocBelly = mix(PAL.grass, PAL.paper, 0.4);
+  PAL.mouth = mix(PAL.red, PAL.ink, 0.35);
+  // Halloween costumes.
+  PAL.pumpkin = mix(PAL.red, PAL.highlighter, 0.48);
+  PAL.pumpkinDark = mix(PAL.pumpkin, PAL.ink, 0.3);
+  PAL.witch = mix(mix(PAL.brand, PAL.red, 0.45), PAL.ink, 0.35);
+  PAL.witchDark = mix(PAL.witch, PAL.ink, 0.4);
+  PAL.bandage = mix(PAL.paper, PAL.highlighter, 0.12);
+  PAL.bandageLine = mix(PAL.paper, PAL.ink, 0.3);
   return PAL;
 }
 

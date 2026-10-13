@@ -62,7 +62,9 @@ test('outfits: costs, buying, wearing and persistence', () => {
   assert.equal(OUTFITS[0].cost, 0);
   for (const o of OUTFITS) assert.ok(CONTENT.outfits.items[o.id], `copy for ${o.id}`);
   for (const role of ['sales', 'cs', 'recruiting', 'education']) assert.ok(OUTFITS.some((o) => o.id === role), role);
+  for (const c of ['pumpkin', 'witch', 'vampire', 'mummy', 'ghost']) assert.ok(OUTFITS.some((o) => o.id === c && o.season === 'halloween'), c);
   for (let i = 1; i < OUTFITS.length; i++) assert.ok(OUTFITS[i].cost > OUTFITS[i - 1].cost, 'costs go up');
+  assert.ok(OUTFITS[1].cost >= 50, 'the first outfit takes a few runs');
 
   const store = memoryStore();
   const w = createWardrobe(store);
@@ -70,7 +72,7 @@ test('outfits: costs, buying, wearing and persistence', () => {
   assert.equal(w.wearing(), 'classic');
   assert.equal(w.buy('sales'), false, 'cannot buy without items');
   assert.equal(w.wear('sales'), false, 'cannot wear what you do not own');
-  w.earn(20);
+  w.earn(55);
   assert.equal(w.buy('sales'), true);
   assert.equal(w.wallet(), 5);
   assert.equal(w.wearing(), 'sales');

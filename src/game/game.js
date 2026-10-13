@@ -16,7 +16,7 @@ import { DIR } from '../core/input.js';
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // How long each death plays before the game over screen.
-const DEATH_TIME = { meeting: TUNING.DEATH_DELAY, allhands: TUNING.DEATH_DELAY, river: 1.0, hawk: 1.35 };
+const DEATH_TIME = { meeting: TUNING.DEATH_DELAY, allhands: TUNING.DEATH_DELAY, river: 1.0, croc: 1.0, hawk: 1.35 };
 
 export function createGame({ params, events: listeners, input, sfx: sounds, reducedMotion }) {
   const lanePool = new Pool(newLane);
@@ -330,6 +330,12 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     } else if (cause === 'river') {
       game.fx.splash(p.x + 0.5, p.row, reducedMotion());
       sfx.splash();
+    } else if (cause === 'croc') {
+      // The jaws snap shut and the crocodile swims off with the otter.
+      if (hit && hit.plat) hit.plat.chomp = 0;
+      game.shake = 0.25;
+      game.fx.splash(p.x + 0.5, p.row, reducedMotion());
+      sfx.chomp();
     } else {
       game.shake = 0.3;
       sfx.hit();
@@ -365,6 +371,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
     for (let r = pr; r <= pr + 4; r++) {
       const lane = getLane(r);
       if (lane && lane.first && lane.mod.hint) hint(lane.mod.hint);
+      if (lane && lane.crocs) hint('croc');
     }
   }
 
@@ -469,7 +476,7 @@ export function createGame({ params, events: listeners, input, sfx: sounds, redu
       p.deathT += dt;
       if (game.hawk.swoopT >= 0) game.hawk.swoopT += dt;
       // Pulled along by whatever caught you.
-      if (p.deathLane && p.deathLane.speed && p.deathCause === 'meeting') p.x += p.deathLane.speed * p.deathLane.dir * dt;
+      if (p.deathLane && p.deathLane.speed && (p.deathCause === 'meeting' || p.deathCause === 'croc')) p.x += p.deathLane.speed * p.deathLane.dir * dt;
       if (p.deathT >= (DEATH_TIME[p.deathCause] || TUNING.DEATH_DELAY)) finish();
       return;
     }

@@ -48,7 +48,7 @@ export function buildCopyReview() {
     aiChat: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     summary: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     actionItems: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
-    highlights: 'river (name, tagline), recap after riding a highlighted log (name, description, link)',
+    highlights: 'river (name, tagline), recap after riding a log (name, description, link)',
     liveAssist: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link)',
     workMode: 'pickup card (name, tagline), river (name, tagline), recap (name, description, link), game over line when a run was cut short',
   };

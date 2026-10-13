@@ -31,7 +31,7 @@ export function breatherChance(d) {
 }
 
 export function newLane() {
-  return { row: 0, type: 'focus', mod: null, obstacles: [], blocked: 0, cars: [], platforms: [], tokens: [], powerup: null, first: false };
+  return { row: 0, type: 'focus', mod: null, obstacles: [], blocked: 0, cars: [], platforms: [], tokens: [], powerup: null, first: false, crocs: 0 };
 }
 
 // only: restrict hazard lanes to one type id (debug ?lane=). Breathers still appear,
@@ -147,6 +147,7 @@ export function createGenerator({ seed, startRow = 0, only = null, powerups = sp
     lane.type = mod.id;
     lane.mod = mod;
     lane.difficulty = d;
+    lane.crocs = 0; // lanes are pooled; only the river sets this
     mod.generate(lane, row, d, rng, ctx);
     placeTokens(lane, row);
     placePowerup(lane, row);

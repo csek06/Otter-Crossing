@@ -3,12 +3,19 @@
 
 import { load, save } from '../core/storage.js';
 
+// A typical run picks up somewhere around 5 to 15, so the first outfit takes a
+// few runs and the last one takes a season. Listed cheapest first.
 export const OUTFITS = [
   { id: 'classic', cost: 0 },
-  { id: 'sales', cost: 15 },
-  { id: 'cs', cost: 25 },
-  { id: 'recruiting', cost: 40 },
-  { id: 'education', cost: 60 },
+  { id: 'sales', cost: 50 },
+  { id: 'pumpkin', cost: 100, season: 'halloween' },
+  { id: 'cs', cost: 125 },
+  { id: 'witch', cost: 175, season: 'halloween' },
+  { id: 'recruiting', cost: 225 },
+  { id: 'vampire', cost: 275, season: 'halloween' },
+  { id: 'education', cost: 350 },
+  { id: 'mummy', cost: 425, season: 'halloween' },
+  { id: 'ghost', cost: 500, season: 'halloween' },
 ];
 
 const BY_ID = Object.fromEntries(OUTFITS.map((o) => [o.id, o]));

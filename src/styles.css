@@ -101,6 +101,29 @@ canvas {
   font-size: max(20px, calc(var(--u) * 6));
   min-height: max(56px, calc(var(--u) * 15));
 }
+.btn-cta {
+  gap: calc(var(--u) * 2);
+  background: var(--c-power);
+  color: var(--c-ink);
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: max(20px, calc(var(--u) * 6));
+  min-height: max(56px, calc(var(--u) * 15));
+  border-width: 3px;
+  box-shadow: 0 var(--edge) 0 var(--c-ink), 0 0 0 4px color-mix(in srgb, var(--c-power) 35%, transparent), 0 0 28px color-mix(in srgb, var(--c-power) 55%, transparent);
+}
+.btn-cta:active {
+  box-shadow: 0 0 0 var(--c-ink), 0 0 0 4px color-mix(in srgb, var(--c-power) 35%, transparent);
+}
+.btn-cta-arrow {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .btn-quiet {
   background: transparent;
   border-color: transparent;

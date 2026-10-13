@@ -190,6 +190,7 @@ export const CONTENT = {
       'Tap to hop forward. Swipe left, right or back to dodge.',
       'On a keyboard, use the arrow keys or WASD. Esc pauses.',
       'Cross as many lanes of your workday as you can.',
+      'Not your usual lane crosser: otters can swim! Fall in the river and you have 1 second to reach a log before the current sweeps you away.',
       'Keep moving. Stall too long and the Deadline Hawk swoops in.',
       'Grab glowing pickups to try an Otter feature.',
     ],
@@ -406,6 +407,7 @@ export const CONTENT = {
     tryOtter: {
       draft: true,
       label: 'Try Otter',
+      newTab: 'opens in a new tab',
       url: 'https://otter.ai', // REVIEW: add campaign tracking if marketing wants it
     },
   },

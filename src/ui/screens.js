@@ -58,7 +58,8 @@ export function createScreens(handlers, { wardrobe, booth = false, online = null
   const list = $('howto-list');
   for (const line of CONTENT.howTo.lines) list.appendChild(el('li', null, line));
   const tryBtn = $('btn-try');
-  tryBtn.textContent = CONTENT.links.tryOtter.label;
+  $('btn-try-label').textContent = CONTENT.links.tryOtter.label;
+  tryBtn.setAttribute('aria-label', `${CONTENT.links.tryOtter.label} (${CONTENT.links.tryOtter.newTab})`);
   tryBtn.href = CONTENT.links.tryOtter.url;
   tryBtn.hidden = FLAGS.AUDIENCE !== 'external';
   // A booth device is shared, so the daily challenge stays off the title there.

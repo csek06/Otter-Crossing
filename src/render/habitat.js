@@ -2,7 +2,7 @@
 // play exactly as they do in the office (same course, same hitboxes); only the
 // look changes. Meetings become animals on the trail, the all-hands express is a
 // flock of geese coming in low, focus lanes are meadow with rocks and trees, and
-// the logs drift without the highlighter stripe.
+// the river keeps its logs.
 
 import { PAL } from './palette.js';
 import { roundRect, block, shadow } from './primitives.js';

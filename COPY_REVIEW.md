@@ -141,7 +141,7 @@ No text on the water or the logs.
 Shown once, the first time each lane type appears in a run.
 
 - [ ] "Meetings incoming. Hop through the gaps." (`hints.meetings`)
-- [ ] "Ride the highlighted logs across." (`hints.river`)
+- [ ] "Ride the logs across." (`hints.river`)
 - [ ] "Watch for the all-hands signal." (`hints.allhands`)
 - [ ] "Keep moving. The Deadline Hawk is circling." (`hints.hawk`)
 
@@ -201,5 +201,5 @@ Only shown when `BOOTH_MODE` is true. The sign-up box is unchecked by default an
 Low risk, listed for completeness.
 
 - [ ] Title sign: "Otter Crossing", tag: "Next exit: end of day"
-- [ ] "Play", "How to play", "Back", "Resume", "Restart", "Back to title", "Play again", "Paused", "Pause", "Sound on", "Sound off", "lanes", "Action items", "Lanes crossed", "Best", "New best", "Otter logo", "Sound", "Music", "Music on", "Music off", "Leaderboards", "Top 10 on this device", "No scores yet. Play a run to set one.", "You made the top 10", "Your initials", "Next letter", "Previous letter", "Letter", "Save score", "Features you used", "Grab a glowing pickup next run to try an Otter feature.", "Learn more", "Power-ups", "Power-ups and the Otter features behind them", "Seconds until the hawk strikes: {n}. Hop forward to reset it.", "not found yet", "collected", "active", "ready", "used", "Not found yet", "Collected", "Active", "Ready", "Used this run", "×{n}", "Collected {n} times this run", "Rode {n} highlighted logs this run", "Power-ups", "items", "Daily", "Outfits", "Today's best", "Action items to spend on outfits: {n}"
+- [ ] "Play", "How to play", "Back", "Resume", "Restart", "Back to title", "Play again", "Paused", "Pause", "Sound on", "Sound off", "lanes", "Action items", "Lanes crossed", "Best", "New best", "Otter logo", "Sound", "Music", "Music on", "Music off", "Leaderboards", "Top 10 on this device", "No scores yet. Play a run to set one.", "You made the top 10", "Your initials", "Next letter", "Previous letter", "Letter", "Save score", "Features you used", "Grab a glowing pickup next run to try an Otter feature.", "Learn more", "Power-ups", "Power-ups and the Otter features behind them", "Seconds until the hawk strikes: {n}. Hop forward to reset it.", "not found yet", "collected", "active", "ready", "used", "Not found yet", "Collected", "Active", "Ready", "Used this run", "×{n}", "Collected {n} times this run", "Rode {n} logs this run", "Power-ups", "items", "Daily", "Outfits", "Today's best", "Action items to spend on outfits: {n}"
 - [ ] Train label: "All-hands"

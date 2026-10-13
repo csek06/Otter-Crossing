@@ -56,7 +56,7 @@ export const CONTENT = {
     // The pickup counter on each panel card, and the game over count. {n} is a number.
     pickCount: '×{n}',
     pickCountLabel: 'Collected {n} times this run',
-    rideCountLabel: 'Rode {n} highlighted logs this run',
+    rideCountLabel: 'Rode {n} logs this run',
     powerupsShort: 'Power-ups',
     itemsShort: 'items',
     daily: 'Daily',
@@ -303,7 +303,7 @@ export const CONTENT = {
   hints: {
     draft: true,
     meetings: 'Meetings incoming. Hop through the gaps.',
-    river: 'Ride the highlighted logs across.',
+    river: 'Ride the logs across.',
     allhands: 'Watch for the all-hands signal.',
     hawk: 'Keep moving. The Deadline Hawk is circling.',
   },

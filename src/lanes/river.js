@@ -1,5 +1,5 @@
-// The river: floating logs with a highlighter stripe (Highlights) act as
-// platforms. No text on the water or the logs, so the logs and pickups read.
+// The river: floating logs act as platforms. Plain logs on wavy water, with no
+// text, so the logs and pickups read clearly.
 //
 // Otters swim, so falling in is not instant: the current carries the otter
 // sideways and it has SWIM_TIME seconds to reach a highlight.
@@ -156,8 +156,8 @@ export const river = {
   },
 };
 
-// Two rows of scalloped crests above and below the text. They drift with the
-// current at slightly different rates, so the water looks like it is moving.
+// Rows of scalloped crests across the whole lane. They drift with the current
+// at slightly different rates, so the water looks like it is moving.
 const WAVE_LEN = 0.6; // tiles
 function drawWaves(ctx, lane, v, top) {
   const t = v.tile;
@@ -168,9 +168,13 @@ function drawWaves(ctx, lane, v, top) {
   ctx.strokeStyle = PAL.waveCrest;
   ctx.lineWidth = Math.max(1, v.line);
   ctx.lineCap = 'round';
+  // Four evenly spaced rows across the whole lane, each drifting at its own
+  // rate (600 tiles is still a whole number of waves at every rate).
   const rows = [
     { y: top + v.rowH * 0.2, k: 1.25, off: 0 },
-    { y: top + v.rowH * 0.86, k: 0.8, off: WAVE_LEN / 2 },
+    { y: top + v.rowH * 0.42, k: 0.95, off: WAVE_LEN / 2 },
+    { y: top + v.rowH * 0.64, k: 1.1, off: WAVE_LEN / 4 },
+    { y: top + v.rowH * 0.86, k: 0.8, off: (WAVE_LEN * 3) / 4 },
   ];
   const len = WAVE_LEN * t;
   const amp = t * 0.05;
@@ -188,8 +192,7 @@ function drawWaves(ctx, lane, v, top) {
   ctx.restore();
 }
 
-// A floating log with a highlighter stripe across the middle.
-// The stripe keeps the link to Highlights: you ride the highlighted moments.
+// A floating log: bark, grooves and a cut end.
 function drawHighlight(ctx, x, y, plat, v) {
   const t = v.tile;
   const w = plat.len * t;
@@ -249,21 +252,4 @@ function drawHighlight(ctx, x, y, plat, v) {
   ctx.beginPath();
   ctx.ellipse(ex, top + h / 2, cap * 0.55, h * 0.28, 0, 0, Math.PI * 2);
   ctx.stroke();
-
-  // Highlighter stripe, with no text. In the habitat a log is just a log.
-  if (v.habitat) return;
-  const left = x0 + cap * 0.6;
-  const right = ex - cap * 1.05;
-  const bh = h * 0.6;
-  const by = top + (h - bh) / 2 - h * 0.04;
-  ctx.fillStyle = PAL.highlighter;
-  ctx.beginPath();
-  ctx.moveTo(left + t * 0.03, by);
-  ctx.lineTo(right - t * 0.01, by + t * 0.01);
-  ctx.lineTo(right + t * 0.02, by + bh * 0.5);
-  ctx.lineTo(right, by + bh);
-  ctx.lineTo(left + t * 0.01, by + bh - t * 0.01);
-  ctx.lineTo(left - t * 0.02, by + bh * 0.5);
-  ctx.closePath();
-  ctx.fill();
 }

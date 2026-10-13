@@ -224,7 +224,7 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
-// River: riding a highlighted log carries the otter, swimming too long sweeps it away.
+// River: riding a log carries the otter, swimming too long sweeps it away.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=river&seed=21');
   await page.click('#btn-play');

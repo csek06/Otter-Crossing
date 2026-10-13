@@ -326,10 +326,10 @@ export function createRenderer(stage, game, opts) {
       const col = e.tiles[i + 1];
       const x = v.ox + col * t;
       const y = rowY(r) - v.rowH;
-      c.fillStyle = rgba(PAL.brand, 0.18 * fade);
+      c.fillStyle = rgba(PAL.power, 0.22 * fade);
       roundRect(c, x + t * 0.1, y + v.rowH * 0.12, t * 0.8, v.rowH * 0.76, t * 0.12);
       c.fill();
-      c.strokeStyle = rgba(PAL.brand, 0.9 * fade);
+      c.strokeStyle = rgba(PAL.powerDeep, 0.95 * fade);
       c.setLineDash([t * 0.12, t * 0.08]);
       c.stroke();
       c.setLineDash([]);
@@ -345,8 +345,8 @@ export function createRenderer(stage, game, opts) {
     const t = v.tile;
     const cy = gy - t * 0.38;
     c.lineWidth = v.line * 1.6;
-    c.strokeStyle = PAL.brand;
-    c.fillStyle = rgba(PAL.brand, 0.12);
+    c.strokeStyle = PAL.power;
+    c.fillStyle = rgba(PAL.power, 0.16);
     c.beginPath();
     c.ellipse(cx, cy, t * 0.52, t * 0.56, 0, 0, Math.PI * 2);
     c.fill();
@@ -354,14 +354,14 @@ export function createRenderer(stage, game, opts) {
     const a = v.time * 2.4;
     const ix = cx + Math.cos(a) * t * 0.52;
     const iy = cy + Math.sin(a) * t * 0.56;
-    c.fillStyle = PAL.brand;
+    c.fillStyle = PAL.power;
     c.beginPath();
     c.arc(ix, iy, t * 0.15, 0, Math.PI * 2);
     c.fill();
     c.strokeStyle = PAL.ink;
     c.lineWidth = v.line;
     c.stroke();
-    drawIcon(c, 'notetaker', ix, iy, t * 0.2, PAL.paper, v.line);
+    drawIcon(c, 'notetaker', ix, iy, t * 0.2, PAL.ink, v.line);
   }
 
   // How long the otter can keep swimming, as a shrinking ring.

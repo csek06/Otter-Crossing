@@ -1,5 +1,5 @@
-// Transcript river: the water is a stream of Otter feature blurbs flowing past.
-// Highlights glow on top of key phrases and act as platforms.
+// The river: floating logs with a highlighter stripe (Highlights) act as
+// platforms. No text on the water or the logs, so the logs and pickups read.
 //
 // Otters swim, so falling in is not instant: the current carries the otter
 // sideways and it has SWIM_TIME seconds to reach a highlight.
@@ -7,24 +7,13 @@
 // Rule (checked by the generator test): every gap between highlights is at most
 // RIVER_MAX_WAIT seconds of current, so a highlight passes any column at least that often.
 
-import { GRID, RULES, FLAGS } from '../config.js';
-import { CONTENT } from '../content.js';
+import { GRID, RULES } from '../config.js';
 import { PAL } from '../render/palette.js';
-import { roundRect, fitText, FONT_MONO } from '../render/primitives.js';
+import { roundRect } from '../render/primitives.js';
 import { drawToken } from '../render/token.js';
 import { drawPickup } from '../render/pickup.js';
 
 const lerp = (a, b, t) => a + (b - a) * t;
-
-// "Feature name: tagline" for every feature that is live, plus any extra blurbs.
-export function riverLines() {
-  const lines = [];
-  for (const f of Object.values(CONTENT.features)) {
-    if (f.unreleased && !FLAGS.SHOW_UNRELEASED) continue;
-    lines.push(`${f.name}: ${f.tagline}`);
-  }
-  return lines.concat(CONTENT.river.extraBlurbs || []);
-}
 
 export function riverSpeed(d, rng) {
   return lerp(1.3, 1.7, d) + rng.range(0, lerp(0.5, 1.0, d));
@@ -45,7 +34,6 @@ export const river = {
     const minGap = maxGap * lerp(0.55, 0.75, d);
     const maxLen = d < 0.4 ? 3 : 2;
     const minLen = 2;
-    const phrases = CONTENT.river.phrases;
 
     lane.platforms.length = 0;
     let x = 0;
@@ -54,7 +42,8 @@ export const river = {
     const minRing = GRID.COLS + 2 * maxLen + 1;
     while (x < minRing || lane.platforms.length < 3) {
       const len = rng.int(minLen, maxLen);
-      lane.platforms.push({ x, len, phrase: rng.pick(phrases), token: false, taken: false, lit: 0 });
+      rng.next(); // was the log's phrase; still drawn so every course stays the same
+      lane.platforms.push({ x, len, token: false, taken: false, lit: 0 });
       x += len + rng.range(minGap, maxGap);
     }
     lane.ring = x;
@@ -62,8 +51,7 @@ export const river = {
     lane.dir = ctx.riverDir;
     lane.pad = (lane.ring - GRID.COLS) / 2;
     lane.phase = rng.range(0, lane.ring);
-    lane.lineIndex = rng.int(0, 31);
-    lane.sprite = null;
+    rng.int(0, 31); // was the transcript's first line; kept for the same reason
   },
 
   update(lane, dt) {
@@ -138,8 +126,7 @@ export const river = {
     });
   },
 
-  // Blue water with wave crests, and a stream of feature blurbs flowing on it.
-  // In the habitat it's just the river.
+  // Blue water with wave crests. No text, so the logs and pickups stand out.
   drawGround(ctx, lane, v, y) {
     const t = v.tile;
     const top = y - v.rowH;
@@ -151,19 +138,7 @@ export const river = {
     ctx.fillStyle = PAL.waterDeep;
     ctx.fillRect(x0, top, w, v.rowH * 0.22);
     drawWaves(ctx, lane, v, top);
-    if (!v.habitat) {
-      const img = textSprite(lane, v);
-      const ringPx = lane.ring * t;
-      let tx = v.ox + (lane.phase - lane.pad) * t;
-      while (tx > x0) tx -= ringPx;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x0, top, w, v.rowH);
-      ctx.clip();
-      for (let x = tx; x < x0 + w; x += ringPx) ctx.drawImage(img, x, top, ringPx, v.rowH);
-      ctx.restore();
-    }
-    // Line break between transcript lines.
+    // A thin line along the near bank.
     ctx.fillStyle = PAL.riverLine;
     ctx.fillRect(x0, top, w, 1);
   },
@@ -213,46 +188,7 @@ function drawWaves(ctx, lane, v, top) {
   ctx.restore();
 }
 
-// Pre-render the lane's scrolling transcript text once, sized to the ring.
-function textSprite(lane, v) {
-  const key = v.tile + '|' + v.scale;
-  if (lane.sprite && lane.spriteKey === key) return lane.sprite;
-  const t = v.tile;
-  const w = Math.ceil(lane.ring * t);
-  const h = Math.ceil(v.rowH);
-  const c = lane.sprite || document.createElement('canvas');
-  c.width = Math.ceil(w * v.scale);
-  c.height = Math.ceil(h * v.scale);
-  const g = c.getContext('2d');
-  g.setTransform(v.scale, 0, 0, v.scale, 0, 0);
-  g.clearRect(0, 0, w, h);
-  const lines = riverLines();
-  const size = t * 0.3;
-  g.font = `600 ${size}px ${FONT_MONO}`;
-  g.textBaseline = 'middle';
-  let x = t * 0.2;
-  let i = lane.lineIndex;
-  while (x < w) {
-    const line = lines[i % lines.length];
-    const colon = line.indexOf(':');
-    const speaker = colon > 0 ? line.slice(0, colon + 1) : '';
-    const said = colon > 0 ? line.slice(colon + 1) : line;
-    g.fillStyle = PAL.riverSpeaker;
-    g.fillText(speaker, x, h * 0.52);
-    x += g.measureText(speaker).width;
-    g.fillStyle = PAL.riverText;
-    g.fillText(said, x, h * 0.52);
-    x += g.measureText(said).width + t * 0.6;
-    i++;
-  }
-  // Clear the text under each highlight so the phrase on top reads cleanly.
-  for (const p of lane.platforms) g.clearRect(p.x * t - t * 0.25, 0, p.len * t + t * 0.5, h);
-  lane.sprite = c;
-  lane.spriteKey = key;
-  return c;
-}
-
-// A floating log with a highlighter stripe across the middle carrying the phrase.
+// A floating log with a highlighter stripe across the middle.
 // The stripe keeps the link to Highlights: you ride the highlighted moments.
 function drawHighlight(ctx, x, y, plat, v) {
   const t = v.tile;
@@ -314,7 +250,7 @@ function drawHighlight(ctx, x, y, plat, v) {
   ctx.ellipse(ex, top + h / 2, cap * 0.55, h * 0.28, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Highlighter stripe with the phrase. In the habitat a log is just a log.
+  // Highlighter stripe, with no text. In the habitat a log is just a log.
   if (v.habitat) return;
   const left = x0 + cap * 0.6;
   const right = ex - cap * 1.05;
@@ -330,14 +266,4 @@ function drawHighlight(ctx, x, y, plat, v) {
   ctx.lineTo(left - t * 0.02, by + bh * 0.5);
   ctx.closePath();
   ctx.fill();
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(left, by, right - left, bh);
-  ctx.clip();
-  ctx.fillStyle = PAL.ink;
-  fitText(ctx, plat.phrase, right - left - t * 0.08, t * 0.27, t * 0.15, 600, FONT_MONO);
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  ctx.fillText(plat.phrase, (left + right) / 2, by + bh * 0.55);
-  ctx.restore();
 }

@@ -224,7 +224,7 @@ for (const size of SIZES) {
   await ctx.close();
 }
 
-// Transcript river: riding a highlight carries the otter, swimming too long sweeps it away.
+// River: riding a highlighted log carries the otter, swimming too long sweeps it away.
 {
   const { ctx, page, errors } = await open(SIZES[1], '?debug=1&lane=river&seed=21');
   await page.click('#btn-play');
@@ -433,7 +433,7 @@ for (const start of [0, 120, 400]) {
   check(r.t > 11 && r.t <= 12, `shield timer starts at 12 seconds (${r.t && r.t.toFixed(2)})`);
   check(r.slots === 6, `the tracker has a slot for each released power-up (${r.slots})`);
   check(r.active.length === 1 && r.active[0] === 'Otter Notetaker, active', `the tracker shows the active power-up (${r.active})`);
-  check(r.glow && r.glow.shadow !== 'none' && r.glow.anim === 'power-glow' && r.glow.bg === 'rgb(20, 79, 255)', `the active slot is filled and glowing (${r.glow && r.glow.anim}, ${r.glow && r.glow.bg})`);
+  check(r.glow && r.glow.shadow !== 'none' && r.glow.anim === 'power-glow' && r.glow.bg === 'rgb(34, 211, 94)', `the active slot is filled power-up green and glowing (${r.glow && r.glow.anim}, ${r.glow && r.glow.bg})`);
   await page.screenshot({ path: join(shots, 'm3-hud-shield.png') });
   check(errors.length === 0, `shield timer: no console errors ${errors.join(' | ')}`);
   await ctx.close();

@@ -481,3 +481,15 @@ test('the hawk alarm starts before the shadow and pulses at most 3 times a secon
   assert.ok(RULES.HAWK_ALARM > 0 && RULES.HAWK_ALARM < RULES.HAWK_WARN && RULES.HAWK_WARN < RULES.HAWK_STRIKE);
   assert.ok(RULES.HAWK_ALARM_HZ <= 3);
 });
+
+test('meeting titles are short enough to fit their block, with no repeats', () => {
+  const MAX = { 1: 9, 2: 14, 3: 20 };
+  for (const aud of ['external', 'internal']) {
+    for (const len of [1, 2, 3]) {
+      const list = CONTENT.meetingTitles[aud][len];
+      assert.ok(list.length >= (aud === 'external' ? 25 : 12), `${aud} ${len}: only ${list.length} titles`);
+      assert.equal(new Set(list).size, list.length, `${aud} ${len}: repeated title`);
+      for (const title of list) assert.ok(title.length <= MAX[len], `${aud} ${len}: "${title}" is longer than ${MAX[len]} characters`);
+    }
+  }
+});

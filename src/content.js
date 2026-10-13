@@ -201,8 +201,8 @@ export const CONTENT = {
     aiChat: {
       draft: true,
       name: 'AI Chat',
-      tagline: 'Ask what you missed, mid-meeting',
-      description: 'Ask AI Chat what you missed while the meeting is still going.',
+      tagline: 'Ask anything about your meetings',
+      description: 'Ask AI Chat about a meeting while it is still going or after it ends, or across many meetings at once. Catch up on what you missed, pull out the decisions, concerns and next steps, compare interview candidates, or draft a follow-up email.',
       helpUrl: 'https://help.otter.ai/hc/en-us/articles/19682180167575-Otter-AI-Chat-Overview',
     },
     summary: {
@@ -339,42 +339,49 @@ export const CONTENT = {
   },
 
   // Meeting block titles, keyed by length in tiles (1 = 30 min, 2 = 60 min, 3 = 90 min).
-  // Clearly fictional. Keep them short so they fit on the block.
+  // Each block picks one at random. Clearly fictional, and the kinds of meetings
+  // Otter records: sales, customer success, recruiting, product and engineering,
+  // marketing, leadership, HR, finance and education. Keep them short so they fit
+  // the block: at most 9, 14 and 20 characters (checked by a test).
   meetingTitles: {
     draft: true,
     external: {
-      1: ['Sync?', '1:1', 'Huddle', 'Coffee', 'Check-in', 'Prep'],
-      2: ['Quick sync?', 'Weekly 1:1', 'Budget review', 'Team retro', 'Design crit', 'Stand-up'],
-      3: ['Quarterly planning', 'Vendor demo', 'Roadmap review', 'Interview loop', 'Launch readiness'],
+      1: ['Sync?', '1:1', 'Huddle', 'Coffee', 'Check-in', 'Prep', 'Debrief', 'Demo', 'Intro', 'Kickoff',
+        'Recap', 'Q&A', 'Lunch', 'Retro', 'Triage', 'Pairing', 'Catch-up', 'Review', 'Pitch', 'Training',
+        'Screen', 'Standup', 'Planning', 'Lecture', 'Seminar', 'Tutoring', 'Advising', 'Feedback', 'Pulse'],
+      2: ['Quick sync?', 'Weekly 1:1', 'Budget review', 'Team retro', 'Design crit', 'Stand-up',
+        'Sprint review', 'Pipeline call', 'Deal review', 'Discovery call', 'Product demo', 'QBR prep',
+        'Renewal call', 'Onboarding', 'Phone screen', 'Panel prep', 'Hiring sync', 'Offer review',
+        'Office hours', 'Study group', 'Board prep', 'Town hall', 'Roadmap sync', 'Bug bash', 'Launch sync',
+        'Content review', 'Brand review', 'Vendor call', 'Legal review', 'Security sync', 'Forecast call',
+        'Ops review', 'Skip level', 'Team lunch', 'Brainstorm', 'Interview', 'Coaching call', 'Escalation',
+        'Health check', 'Partner sync', 'Press prep', 'Webinar prep', 'Expense review', 'Benefits Q&A',
+        'Policy review', 'Lesson plan', 'Parent meeting', 'Faculty sync', 'Research sync', 'Lab meeting',
+        'Advisor 1:1', 'Campaign sync', 'Data review', 'Hiring panel'],
+      3: ['Quarterly planning', 'Vendor demo', 'Roadmap review', 'Interview loop', 'Launch readiness',
+        'Annual kickoff', 'Board meeting', 'All-hands prep', 'Customer onboarding', 'Executive briefing',
+        'Account planning', 'Pipeline review', 'Sales kickoff', 'Contract negotiation', 'Renewal strategy',
+        'Churn risk review', 'Hiring committee', 'Candidate debrief', 'Performance review', 'Comp planning',
+        'Org design review', 'Incident postmortem', 'Architecture review', 'Sprint planning',
+        'Product strategy', 'User research', 'Usability testing', 'Campaign kickoff', 'Brand workshop',
+        'Earnings prep', 'Budget planning', 'Audit walkthrough', 'Investor update', 'Partner summit',
+        'Leadership offsite', 'Strategy workshop', 'Department meeting', 'Faculty meeting', 'Thesis defense',
+        'Guest lecture', 'Study session', 'Parent conference', 'Grant review', 'Research seminar',
+        'Training workshop', 'Compliance training', 'New hire orientation', 'Benefits enrollment'],
     },
     internal: {
-      1: ['Sync?', '1:1', 'Deal desk', 'SE huddle', 'Prep'],
-      2: ['Quick sync?', 'Weekly 1:1', 'Forecast call', 'Demo dry run', 'Account plan', 'QBR prep'],
-      3: ['MEDDPICC deal review', 'Territory planning', 'Win/loss review', 'Renewal strategy'],
+      1: ['Sync?', '1:1', 'Deal desk', 'SE huddle', 'Prep', 'Pipeline', 'Forecast', 'Win room', 'Debrief',
+        'Coaching', 'Standup', 'Kickoff', 'Demo', 'Recap', 'Q&A'],
+      2: ['Quick sync?', 'Weekly 1:1', 'Forecast call', 'Demo dry run', 'Account plan', 'QBR prep',
+        'Discovery call', 'Deal review', 'Pipeline scrub', 'Renewal call', 'POC check-in', 'Pricing review',
+        'SE sync', 'Champion call', 'Security Q&A', 'Legal redlines', 'Handoff to CS', 'Onboarding',
+        'Expansion call', 'Win/loss chat', 'Call coaching', 'Deal strategy'],
+      3: ['MEDDPICC deal review', 'Territory planning', 'Win/loss review', 'Renewal strategy',
+        'Mutual action plan', 'Executive briefing', 'Procurement call', 'Sales kickoff', 'Proof of concept',
+        'Security review', 'Competitive review', 'Quarterly review', 'Champion enablement',
+        'Pricing negotiation', 'Account planning', 'Pipeline generation', 'Forecast deep dive',
+        'Customer onboarding'],
     },
-  },
-
-  // The river. Its water is a stream of feature blurbs: each feature's name and
-  // tagline, built from the features above so it always matches reviewed copy.
-  // Extra blurbs below are added to the stream. The floating logs carry the short
-  // phrases on a highlighter stripe. Keep phrases to about 15 characters so they fit.
-  river: {
-    draft: true,
-    extraBlurbs: [],
-    phrases: [
-      'Otter Notetaker',
-      'Takes notes',
-      'AI Chat',
-      'Ask what you missed',
-      'Summary',
-      'Get the gist',
-      'Action Items',
-      'Who owns them',
-      'Highlights',
-      'Key moments',
-      'Work Mode',
-      'Hand it to Work',
-    ],
   },
 
   links: {

@@ -1,6 +1,6 @@
 # Otter Crossing
 
-An endless lane-hopper for Otter.ai. Hop an otter across a workday full of meetings, a river of feature blurbs with highlighted logs to ride, the all-hands express and a deadline that will not wait. Power-ups teach Otter features, and the game over screen says which feature would have saved you.
+An endless lane-hopper for Otter.ai. Hop an otter across a workday full of meetings, a river with highlighted logs to ride, the all-hands express and a deadline that will not wait. Power-ups teach Otter features, and the game over screen says which feature would have saved you.
 
 Runs are about 30 to 120 seconds. It works on phones, tablets and desktops, offline, from one HTML file. The game fills the screen. On a laptop or monitor the playfield stays centered, and during a run the space on each side shows a panel of power-up cards with the same content as the first-pickup explainer: what each one does in the game and inside Otter. Cards are grayed out until you find that power-up. Once collected, a card stays in full color for the rest of the run with a counter of how many times you picked it up, and it glows only while that power-up is active. The panels aren't shown on the title screen, and stay up on game over so you can see what your run collected. They show when there's at least 300px beside the playfield, and drop the taglines and labels on short windows so the cards fit. Game over (on every screen size) shows lanes crossed, your best, action items and power-ups collected, and lists each feature you used with how many times. The pickup toast and the explainer still show as before.
 
@@ -112,7 +112,7 @@ The HUD tracker under the score has one slot for each power-up the run can spawn
 
 ## Edit the copy
 
-All on-screen text is in `src/content.js`: feature names, taglines, descriptions, help links, death messages, tips, hints, meeting titles, river phrases, links and button labels. Non-engineers can edit it without touching game code.
+All on-screen text is in `src/content.js`: feature names, taglines, descriptions, help links, death messages, tips, hints, meeting titles, links and button labels. Meeting blocks pick a title at random from long lists of everyday business meetings (sales, customer success, recruiting, product, marketing, leadership, HR, finance and education), kept to 9, 14 and 20 characters for 30, 60 and 90 minute blocks so they fit. Non-engineers can edit it without touching game code.
 
 - Features use the same shape as our other game: `{ name, tagline, description, helpUrl }`.
 - Rules: sentence case, taglines 6 words or fewer, no em-dashes, no claims beyond the taglines. `npm test` checks the tagline length and the em-dashes.
@@ -122,7 +122,7 @@ All on-screen text is in `src/content.js`: feature names, taglines, descriptions
 
 ## Brand
 
-- **Colors:** eight CSS variables at the top of `src/styles.css`, including `--c-water` for the river and `--c-grass` for the daily habitat. `--c-brand` is `#144FFF`, the logo blue from the otter.ai media kit, and it is the only brand blue in the game: logo, buttons, signs, glows and pickups. The game art reads these variables too, so one change updates menus and canvas.
+- **Colors:** nine CSS variables at the top of `src/styles.css`, including `--c-water` for the river, `--c-grass` for the daily habitat and `--c-power` for power-ups. `--c-brand` is `#144FFF`, the logo blue from the otter.ai media kit, and it is the only brand blue in the game: logo, buttons and signs. Power-ups and their effects (pickups, the Live Assist path, the Notetaker shield, active HUD chips and panel cards) are superhero green, `#22D35E`, so they stand out from the blue meetings and river. The game art reads these variables too, so one change updates menus and canvas.
 - **Logo:** the Otter logo mark from the otter.ai site header is inlined in `<div class="logo-slot">` in `src/index.html`. It uses `currentColor` and is drawn in `--c-brand`. The power-up explainer's "Inside Otter" label reuses the same mark. Confirm usage with brand before launch. To swap it, replace the SVG in that slot.
 - **Fonts:** Overpass ExtraBold (display) and Overpass Mono (numbers, the river), both SIL Open Font License 1.1, inlined as base64 at build time from `@fontsource`. Body text uses the system font.
 

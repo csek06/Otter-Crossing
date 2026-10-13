@@ -10,6 +10,7 @@ const FALLBACK = {
   red: '#E5484D',
   water: '#1F5FA8',
   grass: '#5E9E4A',
+  power: '#22D35E',
 };
 
 export const PAL = { ...FALLBACK };
@@ -21,7 +22,7 @@ export function loadPalette() {
     const v = css.getPropertyValue('--c-' + key).trim();
     PAL[key] = v || FALLBACK[key];
   }
-  // Derived tones. Everything in the game is a mix of the eight named colors.
+  // Derived tones. Everything in the game is a mix of the nine named colors.
   PAL.paperDark = mix(PAL.paper, PAL.ink, 0.07);
   PAL.paperDeep = mix(PAL.paper, PAL.ink, 0.14);
   PAL.track = mix(PAL.paper, PAL.brand, 0.13);
@@ -42,8 +43,6 @@ export function loadPalette() {
   PAL.screenFace = mix(PAL.teal, PAL.paper, 0.45);
   PAL.shadow = rgba(PAL.ink, 0.18);
   // Transcript river.
-  PAL.riverText = mix(PAL.water, PAL.paper, 0.5);
-  PAL.riverSpeaker = mix(PAL.water, PAL.paper, 0.82);
   PAL.riverLine = mix(PAL.water, PAL.ink, 0.45);
   PAL.waterDeep = mix(PAL.water, PAL.ink, 0.18);
   PAL.waveCrest = rgba(PAL.paper, 0.42);
@@ -63,6 +62,9 @@ export function loadPalette() {
   PAL.railSteel = mix(PAL.ink, PAL.paper, 0.6);
   PAL.redSoft = rgba(PAL.red, 0.35);
   PAL.redDim = mix(PAL.red, PAL.ink, 0.6);
+  // Power-ups: the green badge, its darker edge and the light center of its glow.
+  PAL.powerDeep = mix(PAL.power, PAL.ink, 0.38);
+  PAL.powerLight = mix(PAL.power, PAL.paper, 0.55);
   // The daily challenge's habitat: meadow, trail, forest and riverbank.
   PAL.grassLight = mix(PAL.grass, PAL.highlighter, 0.18);
   PAL.grassDark = mix(PAL.grass, PAL.teal, 0.3);
